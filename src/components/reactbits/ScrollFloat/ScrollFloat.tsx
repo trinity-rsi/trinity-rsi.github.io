@@ -43,8 +43,6 @@ interface ScrollFloatProps {
   smoothing?: number;
   /** 'scrub' ties the animation to the scroll position; 'enter' plays it once, in time, when the text scrolls into view */
   mode?: 'scrub' | 'enter';
-  /** where 'enter' mode starts playing */
-  enterStart?: string;
 }
 
 const clampToScroll = (position: string) =>
@@ -98,8 +96,7 @@ const ScrollFloat: React.FC<ScrollFloatProps> = ({
   distance = 120,
   stretch = 2.3,
   smoothing = 0,
-  mode = 'scrub',
-  enterStart = 'top 92%'
+  mode = 'scrub'
 }) => {
   const containerRef = useRef<HTMLHeadingElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
@@ -120,13 +117,14 @@ const ScrollFloat: React.FC<ScrollFloatProps> = ({
 
   const splitText = useMemo(() => {
     if (text === null) return null;
+    let n = 0;
     return text.split(/(\s+)/).map((word, wordIndex) =>
       word.trim() === '' ? (
         word
       ) : (
         <span className="inline-block whitespace-nowrap" data-word key={wordIndex}>
           {Array.from(word).map((char, charIndex) => (
-            <span className="inline-block" data-char key={charIndex} style={shiftStyle}>
+            <span className="inline-block" data-char key={charIndex} style={{ ...shiftStyle, ['--sf-i' as string]: n++ }}>
               {char}
             </span>
           ))}
@@ -135,11 +133,33 @@ const ScrollFloat: React.FC<ScrollFloatProps> = ({
     );
   }, [text, shiftStyle]);
 
+  // 'enter' mode: a CSS entrance that plays once when the heading scrolls into view. It leaves no
+  // inline transforms behind, so later layout changes (fonts, images, lazy sections) cannot strand
+  // the letters half-way.
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (mode !== 'enter') return;
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setEntered(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [mode]);
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   useIsomorphicLayoutEffect(() => {
+    if (mode === 'enter') return;
     const el = containerRef.current;
     const textEl = textRef.current;
     if (!el || !textEl) return;
@@ -171,17 +191,14 @@ const ScrollFloat: React.FC<ScrollFloatProps> = ({
 
     mm.add('(prefers-reduced-motion: no-preference)', () => {
       const timeline = gsap.timeline({
-        scrollTrigger:
-          mode === 'enter'
-            ? { trigger: el, scroller, start: enterStart, toggleActions: 'play none none none', invalidateOnRefresh: true }
-            : {
-                trigger: el,
-                scroller,
-                start: scrollStart,
-                end: clampToScroll(scrollEnd),
-                scrub: smoothing > 0 ? smoothing : true,
-                invalidateOnRefresh: true
-              }
+        scrollTrigger: {
+          trigger: el,
+          scroller,
+          start: scrollStart,
+          end: clampToScroll(scrollEnd),
+          scrub: smoothing > 0 ? smoothing : true,
+          invalidateOnRefresh: true
+        }
       });
       const add = (fromVars: gsap.TweenVars, toVars: gsap.TweenVars) => {
         gsap.set(targets, { willChange: 'opacity, transform', ...fromVars });
@@ -265,7 +282,6 @@ const ScrollFloat: React.FC<ScrollFloatProps> = ({
   }, [
     mounted,
     mode,
-    enterStart,
     scrollContainerRef,
     text,
     effect,
@@ -286,7 +302,10 @@ const ScrollFloat: React.FC<ScrollFloatProps> = ({
   return (
     <h2
       ref={containerRef}
-      className={`my-5 ${effect === 'float' ? 'overflow-hidden' : 'overflow-x-clip overflow-y-visible'} ${containerClassName}`}
+      className={`my-5 ${mode === 'enter' ? 'overflow-visible' : effect === 'float' ? 'overflow-hidden' : 'overflow-x-clip overflow-y-visible'} ${containerClassName}`}
+      data-sf-enter={mode === 'enter' ? '' : undefined}
+      data-sf-in={mode === 'enter' && entered ? '' : undefined}
+      style={mode === 'enter' ? ({ '--sf-dur': `${animationDuration}s`, '--sf-stagger': `${stagger}s` } as CSSProperties) : undefined}
     >
       {text !== null && <span className="sr-only">{text}</span>}
       <span

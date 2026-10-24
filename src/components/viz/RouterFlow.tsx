@@ -6,7 +6,7 @@ import { e1Frame } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 import { useLoopClock, seg, easeOut, easeOutBack } from '@/lib/anim';
-import { CheckmarkBadge01Icon, Database02Icon, DatabaseAddIcon, FileSearchIcon, Target02Icon } from '@hugeicons/core-free-icons';
+import { CheckmarkBadge01Icon, Database02Icon, DatabaseAddIcon, FileSearchIcon, PauseIcon, PlayIcon, RepeatIcon, Target02Icon } from '@hugeicons/core-free-icons';
 
 /**
  * The Router's context–action–feedback loop on one unseen task (Section 3.6, Figure 2 bottom):
@@ -32,8 +32,10 @@ export default function RouterFlow() {
   const [ref, near] = useNearViewport<HTMLDivElement>('-10% 0px');
   const tasks = UNSEEN_SETTINGS;
   const [key, setKey] = useState('nethack');
-  const [p, setP] = useLoopClock(10, near && !reduce, reduce ? 0.99 : 0);
+  const [paused, setPaused] = useState(false);
+  const [p, setP] = useLoopClock(10, near && !reduce && !paused, reduce ? 0.99 : 0);
   useEffect(() => setP(0), [key, setP]);
+  const jump = (i: number) => setP(T[i] + 0.002);
   const task = tasks.find((x) => x.key === key)!;
   const node = task.bench.node as Nid;
   const step = T.findIndex((v, i) => p >= v && p < T[i + 1]);
@@ -78,18 +80,58 @@ export default function RouterFlow() {
       </div>
 
       <div className="figure-frame p-5">
+        {/* how to drive it */}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-[12.5px] font-[600] text-ink-3">
+            <span className="relative flex h-2 w-2" aria-hidden>
+              {!paused && !reduce && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />}
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: paused || reduce ? t.ink3 : t.accent }} />
+            </span>
+            {reduce ? 'Click a step to see it' : paused ? 'Paused · click a step to see it' : 'Playing the loop · click any step to jump'}
+          </p>
+          {!reduce && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setPaused((v) => !v)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-rule bg-surface px-3 text-[12.5px] font-[680] text-ink-2 transition-colors hover:border-rule-2 hover:text-ink"
+              >
+                <Icon icon={paused ? PlayIcon : PauseIcon} size={14} stroke={2} />
+                {paused ? 'Play' : 'Pause'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setP(0);
+                  setPaused(false);
+                }}
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-rule bg-surface px-3 text-[12.5px] font-[680] text-ink-2 transition-colors hover:border-rule-2 hover:text-ink"
+              >
+                <Icon icon={RepeatIcon} size={14} stroke={2} />
+                Replay
+              </button>
+            </div>
+          )}
+        </div>
         {/* the loop */}
         <ol className="grid grid-cols-5 gap-2">
           {STEPS.map((s, i) => {
             const on = i === step;
             const done = i < step;
             return (
-              <li key={s.k} className={`relative flex items-center gap-2 rounded-xl border px-2.5 py-2 transition-all duration-500 ${on ? 'border-accent/50 bg-accent-wash' : 'border-rule bg-surface'}`}>
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-colors duration-500" style={{ background: on || done ? t.accent : t.paper2, color: on || done ? '#fff' : t.ink3 }}>
-                  <Icon icon={s.icon} size={14} />
-                </span>
-                <span className="hidden text-[12.5px] font-[700] leading-tight text-ink md:block">{s.title}</span>
-                {on && <span className="absolute inset-x-2 bottom-0 h-[2px] origin-left rounded-full bg-accent" style={{ transform: `scaleX(${seg(p, T[i], T[i + 1])})` }} />}
+              <li key={s.k}>
+                <button
+                  type="button"
+                  onClick={() => jump(i)}
+                  aria-current={on ? 'step' : undefined}
+                  className={`group/st relative flex w-full items-center gap-2 overflow-hidden rounded-xl border px-2.5 py-2 text-left transition-all duration-500 ${on ? 'border-accent/50 bg-accent-wash' : 'border-rule bg-surface hover:border-rule-2 hover:bg-surface-2'}`}
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-colors duration-500" style={{ background: on || done ? t.accent : t.paper2, color: on || done ? '#fff' : t.ink3 }}>
+                    <Icon icon={s.icon} size={14} />
+                  </span>
+                  <span className="hidden text-[12.5px] font-[700] leading-tight text-ink md:block">{s.title}</span>
+                  {on && <span className="absolute inset-x-2 bottom-0 h-[2px] origin-left rounded-full bg-accent" style={{ transform: `scaleX(${seg(p, T[i], T[i + 1])})` }} />}
+                </button>
               </li>
             );
           })}

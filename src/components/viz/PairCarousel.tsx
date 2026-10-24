@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { animate, useMotionValue, type AnimationPlaybackControls } from 'motion/react';
 import { AnimatePresence, motion } from 'motion/react';
 import FlipCard from '@/components/reactbits/FlipCard/FlipCard';
 import Icon from '@/components/ui/Icon';
@@ -86,11 +87,15 @@ export default function PairCarousel() {
   const wide = useMediaQuery('(min-width: 900px)');
   const [ref, near] = useNearViewport<HTMLDivElement>('0px');
   const [idx, setIdx] = useState(0);
+  const [cycle, setCycle] = useState(0); // bumps when the same pair is picked again
   const [playing, setPlaying] = useState(true);
   const [hold, setHold] = useState(false);
-  const [phase, setPhase] = useState(0); // 0..1 within the current pair
+  const [autoFlip, setAutoFlip] = useState(false);
   const [manual, setManual] = useState<boolean | null>(null); // a click overrides the auto flip
-  const raf = useRef(0);
+  // the cycle's progress lives in a motion value: it drives the chip's fill directly, so the
+  // carousel re-renders only twice per pair (at the flip and at the change), not every frame
+  const phase = useMotionValue(0);
+  const clock = useRef<AnimationPlaybackControls | null>(null);
 
   const pair = PAIRS[idx];
   const A = benchById[pair.a];
@@ -98,34 +103,48 @@ export default function PairCarousel() {
   const node = A.node;
 
   const running = playing && !hold && near && !reduce;
+  const runningRef = useRef(running);
+  runningRef.current = running;
   useEffect(() => {
-    if (!running) return;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      setPhase((p) => {
-        const v = p + dt / CYCLE;
-        if (v >= 1) {
-          setIdx((i) => (i + 1) % PAIRS.length);
-          setManual(null);
-          return 0;
-        }
-        return v;
-      });
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
+    phase.set(0);
+    setAutoFlip(false);
+    setManual(null);
+    setHold(false); // a card that leaves under the pointer never reports the pointer leaving
+    clock.current?.stop();
+    const c = animate(phase, 1, {
+      duration: CYCLE,
+      ease: 'linear',
+      onUpdate: (v) => {
+        if (v > 0.42) setAutoFlip(true);
+      },
+      onComplete: () => setIdx((i) => (i + 1) % PAIRS.length),
+    });
+    if (!runningRef.current) c.pause();
+    clock.current = c;
+    return () => c.stop();
+  }, [idx, cycle, phase]);
+  useEffect(() => {
+    const c = clock.current;
+    if (!c) return;
+    if (running) c.play();
+    else c.pause();
   }, [running]);
 
-  const autoFlip = phase > 0.42;
+  useEffect(() => {
+    const next = PAIRS[(idx + 1) % PAIRS.length];
+    [next.a, next.b].forEach((id) => {
+      const im = new Image();
+      im.src = e1Frame(id, 'start');
+      im.decode?.().catch(() => undefined);
+    });
+  }, [idx]);
+
   const flipped = manual ?? (reduce ? false : autoFlip);
-  const go = (d: number) => {
-    setIdx((i) => (i + d + PAIRS.length) % PAIRS.length);
-    setPhase(0);
-    setManual(null);
+  const pick = (i: number) => {
+    setIdx(i);
+    setCycle((k) => k + 1);
   };
+  const go = (d: number) => pick((idx + d + PAIRS.length) % PAIRS.length);
 
   const caption = useMemo(() => {
     if (pair.note) return pair.note;
@@ -156,7 +175,7 @@ export default function PairCarousel() {
   );
 
   return (
-    <div ref={ref} onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)}>
+    <div ref={ref}>
       {/* pair selector */}
       <div className="flex flex-wrap items-center justify-center gap-2">
         {PAIRS.map((p, i) => {
@@ -165,18 +184,12 @@ export default function PairCarousel() {
             <button
               key={p.a}
               type="button"
-              onClick={() => {
-                setIdx(i);
-                setPhase(0);
-                setManual(null);
-              }}
+              onClick={() => pick(i)}
               className={`relative overflow-hidden rounded-full border px-3 py-1.5 text-[12.5px] font-[650] transition-colors ${
                 on ? 'border-accent/50 bg-surface text-ink' : 'border-rule bg-surface/60 text-ink-3 hover:text-ink-2'
               }`}
             >
-              {on && (
-                <span className="absolute inset-y-0 left-0 bg-accent-wash" style={{ width: `${(reduce ? 1 : phase) * 100}%` }} aria-hidden />
-              )}
+              {on && <motion.span className="absolute inset-0 origin-left bg-accent-wash" style={{ scaleX: reduce ? 1 : phase }} aria-hidden />}
               <span className="relative">
                 {benchById[p.a].short ?? benchById[p.a].name} <span className="text-accent">×</span> {benchById[p.b].short ?? benchById[p.b].name}
               </span>
@@ -186,13 +199,15 @@ export default function PairCarousel() {
       </div>
 
       <div className="relative mt-10 grid items-center justify-items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={`a-${idx}`}
+            onMouseEnter={() => setHold(true)}
+            onMouseLeave={() => setHold(false)}
             className="lg:justify-self-end"
             initial={{ opacity: 0, x: -36, rotate: -3, scale: 0.97 }}
             animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, x: -24, scale: 0.98 }}
+            exit={{ opacity: 0, x: -24, scale: 0.98, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
           >
             {card(A, 'a')}
@@ -223,8 +238,21 @@ export default function PairCarousel() {
             <button type="button" onClick={() => go(-1)} className="grid h-9 w-9 place-items-center rounded-full border border-rule bg-surface text-ink-2 hover:text-ink" aria-label="Previous pair">
               <Icon icon={ArrowLeft01Icon} size={16} />
             </button>
-            <button type="button" onClick={() => setPlaying((v) => !v)} className="grid h-9 w-9 place-items-center rounded-full border border-rule bg-surface text-ink-2 hover:text-ink" aria-label={playing ? 'Pause' : 'Play'}>
-              <Icon icon={playing ? PauseIcon : PlayIcon} size={15} />
+            <button
+              type="button"
+              onClick={() => {
+                setPlaying((v) => !v);
+                setHold(false);
+              }}
+              className="relative grid h-11 w-11 place-items-center rounded-full border border-rule bg-surface text-ink-2 transition-colors hover:text-ink"
+              aria-label={playing ? 'Pause' : 'Play'}
+            >
+              {!reduce && (
+                <svg viewBox="0 0 44 44" className="pointer-events-none absolute inset-[-1px] h-[calc(100%+2px)] w-[calc(100%+2px)] -rotate-90" aria-hidden>
+                  <motion.circle cx={22} cy={22} r={20.5} fill="none" stroke={t.accent} strokeWidth={2} strokeLinecap="round" style={{ pathLength: phase, opacity: playing ? 1 : 0.35 }} />
+                </svg>
+              )}
+              <Icon icon={playing ? PauseIcon : PlayIcon} size={16} className={playing ? '' : 'translate-x-[1px]'} />
             </button>
             <button type="button" onClick={() => go(1)} className="grid h-9 w-9 place-items-center rounded-full border border-rule bg-surface text-ink-2 hover:text-ink" aria-label="Next pair">
               <Icon icon={ArrowRight01Icon} size={16} />
@@ -232,13 +260,15 @@ export default function PairCarousel() {
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={`b-${idx}`}
+            onMouseEnter={() => setHold(true)}
+            onMouseLeave={() => setHold(false)}
             className="lg:justify-self-start"
             initial={{ opacity: 0, x: 36, rotate: 3, scale: 0.97 }}
             animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 24, scale: 0.98 }}
+            exit={{ opacity: 0, x: 24, scale: 0.98, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1], delay: 0.06 }}
           >
             {card(B, 'b')}

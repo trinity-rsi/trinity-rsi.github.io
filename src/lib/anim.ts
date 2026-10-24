@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * A tiny motion-graphics clock: returns p in [0, 1) that loops every `duration` seconds
@@ -8,12 +8,13 @@ import { useEffect, useRef, useState } from 'react';
 export function useLoopClock(duration: number, running: boolean, initial = 0) {
   const [p, setP] = useState(initial);
   const pRef = useRef(initial);
+  const startRef = useRef(0);
   useEffect(() => {
     if (!running) return;
     let raf = 0;
-    const start = performance.now() - pRef.current * duration * 1000;
+    startRef.current = performance.now() - pRef.current * duration * 1000;
     const tick = (now: number) => {
-      const v = (((now - start) / 1000) % duration) / duration;
+      const v = (((now - startRef.current) / 1000) % duration) / duration;
       pRef.current = v;
       setP(v);
       raf = requestAnimationFrame(tick);
@@ -21,10 +22,15 @@ export function useLoopClock(duration: number, running: boolean, initial = 0) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [running, duration]);
-  const set = (v: number) => {
-    pRef.current = v;
-    setP(v);
-  };
+  // stable across renders (it is used in effect dependencies), and a running clock continues from v
+  const set = useCallback(
+    (v: number) => {
+      pRef.current = v;
+      startRef.current = performance.now() - v * duration * 1000;
+      setP(v);
+    },
+    [duration]
+  );
   return [p, set] as const;
 }
 
