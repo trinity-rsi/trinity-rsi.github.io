@@ -1,11 +1,11 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import VariableProximity from '@/components/reactbits/VariableProximity/VariableProximity';
 import StarBorder from '@/components/reactbits/StarBorder/StarBorder';
 import Magnet from '@/components/reactbits/Magnet/Magnet';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
-import DotGrid from '@/components/reactbits/DotGrid/DotGrid';
 import SideRays from '@/components/reactbits/SideRays/SideRays';
 import TrinityRow, { TrinityChain } from '@/components/viz/TrinityRow';
+import MagicRings from '@/components/reactbits/MagicRings/MagicRings';
 import LazyMount from '@/components/ui/LazyMount';
 import Icon from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Section';
@@ -61,14 +61,51 @@ function Stat({ to, decimals = 0, unit, label, delay }: { to: number; decimals?:
   );
 }
 
+/** layout position of el in the page, ignoring transforms (the hero's entrance animations) */
+function pageOffset(el: HTMLElement) {
+  let x = 0;
+  let y = 0;
+  for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) {
+    x += n.offsetLeft;
+    y += n.offsetTop;
+  }
+  return { x, y };
+}
+
+/** centre of `target` inside `root`, kept up to date as the layout changes */
+function useCentreIn(root: React.RefObject<HTMLElement | null>, target: React.RefObject<HTMLElement | null>) {
+  const [centre, setCentre] = useState<[number, number] | undefined>();
+  useEffect(() => {
+    const r = root.current;
+    const el = target.current;
+    if (!r || !el) return;
+    const update = () => {
+      const a = pageOffset(el);
+      const b = pageOffset(r);
+      const x = Math.round(a.x - b.x + el.offsetWidth / 2);
+      const y = Math.round(a.y - b.y + el.offsetHeight / 2);
+      setCentre((c) => (c && c[0] === x && c[1] === y ? c : [x, y]));
+    };
+    const ro = new ResizeObserver(update);
+    ro.observe(r);
+    ro.observe(el);
+    update();
+    return () => ro.disconnect();
+  }, [root, target]);
+  return centre;
+}
+
 export default function Hero() {
   const { t, theme } = useTokens();
   const reduce = useReducedMotion();
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const ringCentre = useCentreIn(headerRef, cardRef);
 
   return (
-    <header id="top" className="relative isolate overflow-hidden pt-20 sm:pt-[clamp(4.5rem,9vh,6rem)]">
-      {/* light: interactive dot field · dark: shafts of light from the top-right (React Bits SideRays) */}
+    <header ref={headerRef} id="top" className="relative isolate overflow-hidden pt-20 sm:pt-[clamp(4.5rem,9vh,6rem)]">
+      {/* light: rings of light around the Position card, an eclipse in daylight (React Bits MagicRings) · dark: shafts of sunlight from the top-right (React Bits SideRays) */}
       <LazyMount key={theme} className="absolute inset-0 -z-10" margin="0px">
         {theme === 'dark' ? (
           <SideRays
@@ -90,9 +127,23 @@ export default function Hero() {
             opacity={0.95}
           />
         ) : (
-          <div className="absolute inset-0 [mask-image:radial-gradient(120%_90%_at_70%_40%,black,transparent_78%)]">
-            <DotGrid dotSize={3} gap={22} baseColor="#d6dae4" activeColor={t.accent} proximity={130} glow={0.2} shockRadius={260} shockStrength={4} paused={reduce} />
-          </div>
+          <MagicRings
+            theme="light"
+            origin={ringCentre}
+            color={t.accent}
+            colorTwo="#e3a02a"
+            ringCount={6}
+            motion="pulse"
+            speed={0.8}
+            lineThickness={2}
+            glow={1}
+            baseRadius={0.35}
+            radiusStep={0.1}
+            taper={1.5}
+            parallax={0.05}
+            hoverScale={1.1}
+            maxDevicePixelRatio={1.5}
+          />
         )}
       </LazyMount>
       <div
@@ -186,7 +237,7 @@ export default function Hero() {
 
           {/* the paper's position statement */}
           <div className="rise-in relative z-10" style={{ animationDelay: '0.5s' }}>
-            <div className="relative overflow-hidden rounded-[26px] border border-rule bg-surface/85 p-6 shadow-[0_30px_70px_-46px_rgba(20,24,40,0.55)] backdrop-blur-md sm:p-[clamp(1.25rem,3vh,1.75rem)]">
+            <div ref={cardRef} className="relative overflow-hidden rounded-[26px] border border-rule bg-surface/85 p-6 shadow-[0_30px_70px_-46px_rgba(20,24,40,0.55)] backdrop-blur-md sm:p-[clamp(1.25rem,3vh,1.75rem)]">
               <span className="absolute inset-y-0 left-0 w-[3px] bg-accent" aria-hidden />
               <p className="flex items-center gap-2 text-[12.5px] font-[760] uppercase tracking-[0.14em] text-accent">
                 <span className="slogan-star" aria-hidden>
