@@ -5,7 +5,7 @@ import RotatingText from '@/components/reactbits/RotatingText/RotatingText';
 import LazyMount from '@/components/ui/LazyMount';
 import Icon from '@/components/ui/Icon';
 import { Container, Section } from '@/components/ui/Section';
-import PairCarousel from '@/components/viz/PairCarousel';
+import PairBoard from '@/components/viz/PairBoard';
 import { BENCHES, domainById } from '@/data/tree';
 import { e1Frame } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
@@ -102,7 +102,7 @@ export default function ExamplesSection() {
       </div>
 
       <Container wide className="relative py-16 sm:py-20">
-        <PairCarousel />
+        <PairBoard />
       </Container>
     </Section>
   );

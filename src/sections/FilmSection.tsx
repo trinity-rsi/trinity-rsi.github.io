@@ -3,17 +3,27 @@ import { AnimatePresence, motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { Container, Section } from '@/components/ui/Section';
 import SplitText from '@/components/reactbits/SplitText/SplitText';
-import { CHAPTERS, FILM, FILM_EVENT, chapterAt, chapterEnd, chapterThumb, fmtTime, type FilmLang } from '@/data/film';
+import { CHAPTERS, FILM, FILM_EVENT, chapterAt, chapterEnd, chapterThumb, cueAt, fmtTime, type FilmLang } from '@/data/film';
 import { scrollToId, useReducedMotion } from '@/lib/hooks';
-import { ArrowDown01Icon, Download04Icon, FullScreenIcon, Minimize01Icon, PauseIcon, PlayIcon, RepeatIcon, VolumeHighIcon, VolumeMute02Icon } from '@hugeicons/core-free-icons';
+import { ArrowDown01Icon, ClosedCaptionIcon, Download04Icon, FullScreenIcon, Minimize01Icon, PauseIcon, PlayIcon, RepeatIcon, VolumeHighIcon, VolumeMute02Icon } from '@hugeicons/core-free-icons';
 
 /**
- * The 86-second film, in English or Chinese, with chapters that follow the order of this page.
+ * The narrated film, in English or Chinese, with chapters that follow the order of this page and
+ * subtitles in a strip of their own under the picture, so they never cover it.
  * The video is streamed from the site (public/film); nothing is fetched until it is played.
  */
 const LANG_KEY = 'trinity-film-lang';
+const CC_KEY = 'trinity-film-cc';
 const LANGS: FilmLang[] = ['en', 'zh'];
-const SIZE_MB = { en: 21, zh: 21 } as Record<FilmLang, number>;
+const SINGLE = import.meta.env.MODE === 'single';
+
+function initialCC() {
+  try {
+    return localStorage.getItem(CC_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
 
 function initialLang(): FilmLang {
   try {
@@ -73,6 +83,7 @@ export default function FilmSection() {
   const [hover, setHover] = useState<{ t: number; x: number } | null>(null);
   const [scrub, setScrub] = useState(false);
   const [flash, setFlash] = useState<{ k: number; play: boolean } | null>(null);
+  const [cc, setCcState] = useState(initialCC);
   const idle = useRef(0);
   const resume = useRef<{ t: number; play: boolean } | null>(null);
   const D = FILM.duration;
@@ -220,6 +231,32 @@ export default function FilmSection() {
     else if (box?.webkitRequestFullscreen) box.webkitRequestFullscreen();
     else v?.webkitEnterFullscreen?.();
   };
+  const setCc = (on: boolean) => {
+    setCcState(on);
+    try {
+      localStorage.setItem(CC_KEY, on ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  };
+  // the WebVTT track stays hidden (the strip below draws the subtitles); iOS shows it in its own full screen
+  useEffect(() => {
+    const v = videoRef.current as (HTMLVideoElement & { webkitDisplayingFullscreen?: boolean }) | null;
+    if (!v) return;
+    const sync = () => {
+      const tr = v.textTracks?.[0];
+      if (tr) tr.mode = cc && v.webkitDisplayingFullscreen ? 'showing' : 'hidden';
+    };
+    sync();
+    v.addEventListener('webkitbeginfullscreen', sync);
+    v.addEventListener('webkitendfullscreen', sync);
+    v.textTracks?.addEventListener?.('addtrack', sync);
+    return () => {
+      v.removeEventListener('webkitbeginfullscreen', sync);
+      v.removeEventListener('webkitendfullscreen', sync);
+      v.textTracks?.removeEventListener?.('addtrack', sync);
+    };
+  }, [cc, lang]);
   const toggleMute = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -238,6 +275,7 @@ export default function FilmSection() {
       l: () => seek(time + 10),
       m: toggleMute,
       f: toggleFull,
+      c: () => setCc(!cc),
       home: () => seek(0),
       end: () => seek(D),
     };
@@ -272,6 +310,7 @@ export default function FilmSection() {
   };
 
   const cur = chapterAt(time);
+  const cue = started ? cueAt(lang, time) : null;
   const showControls = started && !ended && (active || !playing || scrub || hover !== null);
   const hoverCh = hover ? chapterAt(hover.t) : 0;
 
@@ -282,10 +321,10 @@ export default function FilmSection() {
           <div className="max-w-[760px]">
             <p className="text-[14px] font-[700] text-accent">The film · {fmtTime(D)}</p>
             <h2 className="display-lg mt-1.5 text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.02] text-ink">
-              <SplitText text="The Trinity in 86 seconds" tag="span" splitType="words, chars" effect="rise" delay={16} duration={0.7} textAlign="left" mask className="!block" />
+              <SplitText text="The Trinity in under two minutes" tag="span" splitType="words, chars" effect="rise" delay={16} duration={0.7} textAlign="left" mask className="!block" />
             </h2>
             <p className="mt-3 max-w-[62ch] font-serif text-[1.05rem] leading-[1.55] text-ink-2">
-              The paper’s argument as a short film, in the order of this page: the position, the problem, the three stages, the Router and the results. With sound, in English and Chinese.
+              The paper’s argument as a short film, in the order of this page: the position, the problem, the three stages, the Router and the results. Narrated, with subtitles, in English and Chinese.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -298,7 +337,7 @@ export default function FilmSection() {
               className="inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-3.5 text-[13px] font-[650] text-ink-2 transition-colors hover:border-rule-2 hover:text-ink"
             >
               <Icon icon={Download04Icon} size={16} />
-              MP4 · {SIZE_MB[lang]} MB
+              MP4 · {FILM.sizeMB[lang]} MB
             </a>
           </div>
         </div>
@@ -315,24 +354,27 @@ export default function FilmSection() {
             ref={boxRef}
             tabIndex={0}
             role="region"
-            aria-label={`Film player, ${FILM.langName[lang]}. Space plays or pauses, arrows seek, F toggles full screen.`}
+            aria-label={`Film player, ${FILM.langName[lang]}. Space plays or pauses, arrows seek, C toggles subtitles, F toggles full screen.`}
             onKeyDown={onKey}
             onPointerMove={() => started && wake()}
-            className={`group/player relative overflow-hidden bg-[#f3f4f7] outline-none ring-accent/50 focus-visible:ring-4 ${full ? '' : 'rounded-[26px] border border-rule shadow-[0_50px_100px_-60px_rgba(20,24,40,0.75)]'}`}
+            className={`group/player relative overflow-hidden bg-[#f3f4f7] outline-none ring-accent/50 focus-visible:ring-4 ${full ? 'flex flex-col' : 'rounded-[26px] border border-rule shadow-[0_50px_100px_-60px_rgba(20,24,40,0.75)]'}`}
             style={{ cursor: started && playing && !showControls ? 'none' : undefined }}
           >
-            <div className={full ? 'relative h-full w-full' : 'relative aspect-video'}>
+            <div className={full ? 'relative min-h-0 w-full flex-1' : 'relative aspect-video'}>
               <video
                 ref={videoRef}
                 src={FILM.src[lang]}
                 poster={FILM.poster[lang]}
                 preload="none"
                 playsInline
+                crossOrigin={SINGLE ? 'anonymous' : undefined}
                 className="absolute inset-0 h-full w-full bg-[#f3f4f7] object-contain"
                 onClick={() => toggle()}
                 onDoubleClick={toggleFull}
                 aria-label={`The Trinity, promotional film (${FILM.langName[lang]})`}
-              />
+              >
+                <track key={lang} kind="subtitles" srcLang={lang} label={FILM.langName[lang]} src={FILM.captions[lang]} />
+              </video>
 
               {/* before the first play, and after the end: the poster with one clear action */}
               <AnimatePresence>
@@ -490,6 +532,16 @@ export default function FilmSection() {
                     </span>
                     <span className="flex-1" />
                     <LangSwitch lang={lang} onChange={changeLang} tone="video" />
+                    <button
+                      type="button"
+                      onClick={() => setCc(!cc)}
+                      aria-pressed={cc}
+                      className={`relative grid h-9 w-9 place-items-center rounded-full transition-colors hover:bg-white/15 ${cc ? 'text-white' : 'text-white/55'}`}
+                      aria-label={cc ? 'Hide subtitles' : 'Show subtitles'}
+                    >
+                      <Icon icon={ClosedCaptionIcon} size={20} stroke={2} />
+                      <span className={`absolute bottom-[5px] left-1/2 h-[2px] -translate-x-1/2 rounded-full bg-accent transition-all duration-300 ${cc ? 'w-4 opacity-100' : 'w-0 opacity-0'}`} aria-hidden />
+                    </button>
                     <span className="group/vol hidden items-center sm:flex">
                       <button type="button" onClick={toggleMute} className="grid h-9 w-9 place-items-center rounded-full transition-colors hover:bg-white/15" aria-label={muted ? 'Unmute' : 'Mute'}>
                         <Icon icon={muted || volume === 0 ? VolumeMute02Icon : VolumeHighIcon} size={19} stroke={2} />
@@ -517,6 +569,45 @@ export default function FilmSection() {
                 </div>
               </div>
             </div>
+
+            {/* ---------------- subtitles, under the picture ---------------- */}
+            <AnimatePresence initial={false}>
+              {cc && (
+                <motion.div
+                  key="cc"
+                  className="shrink-0 overflow-hidden border-t border-rule bg-surface"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                  aria-live="off"
+                >
+                  <div className={`relative flex items-center justify-center px-5 text-center sm:px-10 ${full ? 'min-h-[86px]' : 'min-h-[64px] sm:min-h-[70px]'}`}>
+                    <AnimatePresence mode="wait" initial={false}>
+                      {cue ? (
+                        <motion.p
+                          key={`${lang}-${cue[0]}`}
+                          className={`max-w-[64ch] py-3 font-[620] leading-snug tracking-[-0.005em] text-ink [text-wrap:balance] ${lang === 'zh' ? 'text-[clamp(15px,1.45vw,19px)]' : 'text-[clamp(14.5px,1.35vw,18px)]'} ${full ? '!text-[clamp(18px,2vw,26px)]' : ''}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.18, ease: 'easeOut' }}
+                        >
+                          {cue[2]}
+                        </motion.p>
+                      ) : (
+                        !started && (
+                          <motion.p key="hint" className="flex items-center gap-2 py-3 text-[13px] font-[600] text-ink-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                            <Icon icon={ClosedCaptionIcon} size={16} stroke={2} />
+                            {lang === 'zh' ? '中文配音，字幕已开启' : 'Narrated in English · subtitles on'}
+                          </motion.p>
+                        )
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* ---------------- chapters ---------------- */}

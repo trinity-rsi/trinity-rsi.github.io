@@ -1,22 +1,14 @@
-import { useCallback, useRef } from 'react';
-import MagicBento, { type MagicBentoItem } from '@/components/reactbits/MagicBento/MagicBento';
 import StrokeText from '@/components/reactbits/StrokeText/StrokeText';
 import SplitText from '@/components/reactbits/SplitText/SplitText';
 import { Container, Section } from '@/components/ui/Section';
 import Tex from '@/components/ui/Tex';
-import Icon from '@/components/ui/Icon';
 import Reveal from '@/components/ui/Reveal';
 import PaperFigure from '@/components/ui/PaperFigure';
-import HarnessLoop from '@/components/viz/HarnessLoop';
+import HarnessBricks from '@/components/viz/HarnessBricks';
 import HarnessTreeViz from '@/components/viz/HarnessTreeViz';
 import CreatorLibrary from '@/components/viz/CreatorLibrary';
-import { PROTOCOLS, type ProtocolId } from '@/data/tree';
 import { PAPER_FIGS } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
-import { useMediaQuery } from '@/lib/hooks';
-import { BrainIcon, Database01Icon, EyeIcon, RepeatIcon, Route01Icon, ToolboxIcon } from '@hugeicons/core-free-icons';
-
-const PICON: Record<ProtocolId, typeof EyeIcon> = { per: EyeIcon, mem: Database01Icon, inf: BrainIcon, plan: Route01Icon, orch: ToolboxIcon, loop: RepeatIcon };
 
 function SubHead({ k, title, children, aside }: { k: string; title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
@@ -34,70 +26,7 @@ function SubHead({ k, title, children, aside }: { k: string; title: string; chil
 }
 
 export default function HarnessSection() {
-  const { t, theme } = useTokens();
-  const bentoRef = useRef<HTMLDivElement>(null);
-  const onActive = useCallback((id: string) => {
-    if (bentoRef.current) bentoRef.current.dataset.active = id;
-  }, []);
-  const wide = useMediaQuery('(min-width: 1100px)');
-  const mid = useMediaQuery('(min-width: 700px)');
-
-  const items: MagicBentoItem[] = [
-    {
-      id: 'harness-loop',
-      colSpan: 2,
-      rowSpan: 2,
-      content: (
-        <div className="flex h-full flex-col">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-[19px] font-[720] leading-tight text-ink">One step of an agent</p>
-            <p className="text-[12px] font-[600] text-ink-3">hover a protocol to pause</p>
-          </div>
-          <div className="relative mt-2 min-h-[300px] flex-1">
-            <HarnessLoop onActive={onActive} />
-          </div>
-        </div>
-      ),
-    },
-    ...PROTOCOLS.map<MagicBentoItem>((p) => ({
-      id: p.id,
-      content: (
-        <div className="proto-card flex h-full flex-col justify-between" data-proto={p.id}>
-          <div className="flex items-center justify-between">
-            <span className="proto-name text-[15px] font-[720] text-ink transition-colors duration-300">{p.name}</span>
-            <span className="proto-icon grid h-8 w-8 place-items-center rounded-xl bg-surface-2 text-ink-3 transition-colors duration-300">
-              <Icon icon={PICON[p.id]} size={17} />
-            </span>
-          </div>
-          <div className="my-2 overflow-x-auto text-[14.5px] text-ink">
-            <Tex>{p.eq}</Tex>
-          </div>
-          <p className="text-[13px] leading-[1.45] text-ink-2">{p.role}</p>
-        </div>
-      ),
-    })),
-    {
-      id: 'modules-skills',
-      colSpan: 2,
-      content: (
-        <div className="grid h-full grid-cols-2 gap-5">
-          <div>
-            <p className="text-[15px] font-[720] text-ink">Modules</p>
-            <p className="mt-1.5 text-[13px] leading-[1.5] text-ink-2">
-              Pure functions of public records, bound to one of the six protocols. They live at tree nodes and pass to descendants through selective inheritance.
-            </p>
-          </div>
-          <div>
-            <p className="text-[15px] font-[720] text-ink">Fixed backbone</p>
-            <p className="mt-1.5 text-[13px] leading-[1.5] text-ink-2">
-              Evolution updates module configurations only; the model weights <Tex>{'\\theta'}</Tex> never change. Evaluation-time skills are prepared separately and are not stored in the tree.
-            </p>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
+  const { t } = useTokens();
   return (
     <Section id="stage-3" className="pt-32">
       <Container wide>
@@ -120,24 +49,7 @@ export default function HarnessSection() {
           <SubHead k="a" title="What evolves: the Harness">
             A Harness configuration coordinates a frozen model through six control-flow protocols. They are independent of task categories and tree nodes, so every evolved module has a clear place to go.
           </SubHead>
-          <div ref={bentoRef} data-active="per">
-            <MagicBento
-              items={items}
-              columns={wide ? 4 : mid ? 2 : 1}
-              rowHeight={wide ? 208 : 230}
-              gap={12}
-              radius={20}
-              theme={theme}
-              glowColor={t.accent}
-              enableSpotlight
-              enableBorderGlow
-              enableStars={false}
-              enableTilt={false}
-              clickEffect
-              textAutoHide={false}
-              style={{ '--mb-surface': t.surface } as React.CSSProperties}
-            />
-          </div>
+          <HarnessBricks />
         </div>
 
         <div className="mt-24">

@@ -1,158 +1,239 @@
-import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, animate, motion } from 'motion/react';
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { Cancel01Icon, CheckmarkCircle02Icon, Robot01Icon } from '@hugeicons/core-free-icons';
 import { Container, Section } from '@/components/ui/Section';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Reveal from '@/components/ui/Reveal';
+import Icon from '@/components/ui/Icon';
+import PaperFigure from '@/components/ui/PaperFigure';
+import { Brick, BrickDefs, Plate } from '@/components/viz/Bricks';
 import { benchById } from '@/data/tree';
-import { embodied, scene } from '@/data/media';
+import { embodied, scene, type PaperFig } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
-import { useNearViewport, useReducedMotion } from '@/lib/hooks';
+import { useReducedMotion } from '@/lib/hooks';
 
 /**
- * Appendix E.3: the two embodied benchmarks, each run in a simulation rebuilt from its real scene
- * (Figure 67) and on the real robot; Base vs evolved Harness (Figures 68–71). Scores: Table 7.
+ * Appendix E.3: the two embodied benchmarks, the way the film shows them. The real robot comes
+ * first (hover or switch to see the simulation rebuilt from its scene, Figure 67); the scores are
+ * brick towers, ten points a brick, each brick coloured by the iteration that earned it (Table 7);
+ * the frame-by-frame record of Base and evolved Harness (Figures 68–71) opens on request.
  */
 const TASKS = [
   {
     id: 'soon' as const,
-    title: 'SOON · Unitree G1',
+    bench: 'soon',
+    name: 'SOON',
+    robot: 'Unitree G1',
     goal: 'Walk from the side room into the office and touch the desk next to the white fan, judging distance from head-camera images alone.',
-    h0: 'H₀ spends actions looking around and, once the desk looks close, stops and reaches too early.',
-    h4: 'H(4) turns towards the desk after the doorway, does not take “looks close” as proof of reach, and advances in small steps until the hand touches the desk.',
+    h0: 'stops and reaches as soon as the desk looks close.',
+    h4: 'turns towards the desk after the doorway and advances in small steps until the hand touches it.',
     figs: { base: 68 as const, evolved: 69 as const },
   },
   {
     id: 'capx' as const,
-    title: 'CaP-X · AlohaMini2',
-    goal: 'Three upside-down paper cups on a white table; report the colour of the cube and the cup it is under, having lifted that cup.',
-    h0: 'H₀ knocks cup 1 over, tries cup 3, then answers that there is no cube without ever examining cup 2.',
-    h4: 'H(4) checks the cups one by one, retries a missed grasp, and answers only after it has seen the cube.',
+    bench: 'cap-x',
+    name: 'CaP-X',
+    robot: 'AlohaMini2',
+    goal: 'Three upside-down paper cups on a white table: report the colour of the cube and the cup it is under, having lifted that cup.',
+    h0: 'knocks cup 1 over, tries cup 3, and answers “no cube” without examining cup 2.',
+    h4: 'checks the cups one by one, retries a missed grasp, and answers only after it has seen the cube.',
     figs: { base: 70 as const, evolved: 71 as const },
   },
 ];
 
-/** drag (or watch) the divider: simulation on the left, the real scene on the right */
-function Compare({ task }: { task: 'soon' | 'capx' }) {
+const FIG_SIZE: Record<number, [number, number]> = { 68: [1600, 741], 69: [1600, 741], 70: [1400, 984], 71: [1400, 984] };
+const figOf = (n: 68 | 69 | 70 | 71, task: string, evolved: boolean): PaperFig => ({
+  n,
+  src: embodied(n),
+  w: FIG_SIZE[n][0],
+  h: FIG_SIZE[n][1],
+  caption: `Figure ${n}: ${task}, ${evolved ? 'evolved Harness H(4)' : 'Base Harness H₀'}, in simulation and on the real robot (frame by frame). Faces of people in the real scenes are pixelated.`,
+});
+
+/* tower geometry (one brick = ten points) */
+const TW = { w: 250, h: 236, col: 66, brickH: 15, gap: 3, base: 186 };
+const towerX = (k: number) => 34 + k * 112;
+
+function Towers({ sim, real, delay }: { sim: number[]; real: number[]; delay: number }) {
+  const { t, theme } = useTokens();
   const reduce = useReducedMotion();
-  const [ref, near] = useNearViewport<HTMLDivElement>('-20% 0px');
-  const [x, setX] = useState(0.5);
-  const box = useRef<HTMLDivElement>(null);
-  const touched = useRef(false);
-  useEffect(() => {
-    if (!near || reduce || touched.current) return;
-    const ctl = animate(0.5, [0.5, 0.82, 0.18, 0.5], { duration: 5.5, ease: 'easeInOut', onUpdate: (v) => !touched.current && setX(v) });
-    return () => ctl.stop();
-  }, [near, reduce]);
-  const move = (clientX: number) => {
-    const r = box.current!.getBoundingClientRect();
-    setX(Math.max(0.02, Math.min(0.98, (clientX - r.left) / r.width)));
-  };
+  const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
+  const red = t.iters.slice(1, 5);
+  const grey = theme === 'dark' ? '#4a5268' : '#b8bcc8';
+  const cols = [
+    { vals: sim, shades: teal, label: 'Simulation', sub: 'train', ink: t.explorer },
+    { vals: real, shades: red, label: 'Real robot', sub: 'unseen', ink: t.accent },
+  ];
   return (
-    <div ref={ref}>
-      <div
-        ref={box}
-        className="relative aspect-[900/593] cursor-ew-resize select-none overflow-hidden rounded-2xl bg-paper-2"
-        onPointerDown={(e) => {
-          touched.current = true;
-          (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-          move(e.clientX);
-        }}
-        onPointerMove={(e) => e.buttons && move(e.clientX)}
-      >
-        <img src={scene(task, 'real')} alt="Real scene" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-        <div className="absolute inset-0" style={{ clipPath: `inset(0 ${(1 - x) * 100}% 0 0)` }}>
-          <img src={scene(task, 'sim')} alt="Simulated scene" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-        </div>
-        <div className="absolute inset-y-0 w-[2px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.15)]" style={{ left: `${x * 100}%` }}>
-          <span className="absolute left-1/2 top-1/2 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[13px] font-[800] text-[#12141c] shadow-lg">⇆</span>
-        </div>
-        <span className="absolute left-2 top-2 rounded-md bg-black/65 px-2 py-0.5 text-[11.5px] font-[700] text-white">Simulation</span>
-        <span className="absolute right-2 top-2 rounded-md bg-black/65 px-2 py-0.5 text-[11.5px] font-[700] text-white">Real</span>
-      </div>
-    </div>
+    <svg viewBox={`0 0 ${TW.w} ${TW.h}`} className="block h-auto w-full max-w-[250px]" role="img" aria-label={`Simulation ${sim[0]} → ${sim[4]}, real robot ${real[0]} → ${real[4]} over four iterations`}>
+      <BrickDefs id="tw" />
+      {cols.map((c, k) => {
+        // one brick per ten points, coloured by the iteration that earned it
+        const bricks: { it: number }[] = [];
+        for (let i = 0; i < Math.round(c.vals[0] / 10); i++) bricks.push({ it: 0 });
+        for (let it = 1; it <= 4; it++) for (let i = Math.round(c.vals[it - 1] / 10); i < Math.round(c.vals[it] / 10); i++) bricks.push({ it });
+        const x = towerX(k);
+        const top = TW.base - bricks.length * (TW.brickH + TW.gap);
+        return (
+          <g key={c.label}>
+            {bricks.map((b, i) => (
+              <motion.g
+                key={i}
+                initial={reduce ? false : { y: -90, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+                transition={{ y: { type: 'spring', stiffness: 520, damping: 22, delay: delay + k * 0.25 + i * 0.09 }, opacity: { duration: 0.15, delay: delay + k * 0.25 + i * 0.09 } }}
+              >
+                <Brick x={x} y={TW.base - (i + 1) * (TW.brickH + TW.gap) + TW.gap} w={TW.col} h={TW.brickH} color={b.it === 0 ? grey : c.shades[b.it - 1]} studs={3} defs="tw" shadow={false} />
+              </motion.g>
+            ))}
+            <motion.text
+              x={x + TW.col / 2}
+              y={top - 16}
+              textAnchor="middle"
+              initial={reduce ? false : { opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: delay + k * 0.25 + bricks.length * 0.09 + 0.2 }}
+            >
+              <tspan fill={t.ink3} style={{ fontSize: 13, fontWeight: 700 }}>
+                {c.vals[0]} →{' '}
+              </tspan>
+              <tspan fill={c.ink} style={{ fontSize: 24, fontWeight: 820 }}>
+                {c.vals[4]}
+              </tspan>
+            </motion.text>
+            <Plate x={x - 10} y={TW.base + 2} w={TW.col + 20} h={9} />
+            <text x={x + TW.col / 2} y={TW.base + 29} textAnchor="middle" fill={t.ink} style={{ fontSize: 12.5, fontWeight: 740 }}>
+              {c.label}
+            </text>
+            <text x={x + TW.col / 2} y={TW.base + 44} textAnchor="middle" fill={t.ink3} style={{ fontSize: 11, fontWeight: 600 }}>
+              {c.sub}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
-function Spark({ vals, color, label }: { vals: number[]; color: string; label: string }) {
-  const { t } = useTokens();
-  const W = 150;
-  const H = 46;
-  const x = (i: number) => 6 + (i / 4) * (W - 12);
-  const y = (v: number) => H - 6 - (v / 100) * (H - 14);
+function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
+  const { t, theme } = useTokens();
+  const reduce = useReducedMotion();
+  const b = benchById[task.bench];
+  const [view, setView] = useState<'real' | 'sim'>('real');
+  const [peek, setPeek] = useState(false);
+  const shown = peek ? (view === 'real' ? 'sim' : 'real') : view;
+  const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
   return (
-    <div className="flex items-center gap-3">
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-[46px] w-[150px]" aria-label={`${label}: ${vals.join(', ')}`}>
-        <line x1={6} x2={W - 6} y1={y(0)} y2={y(0)} stroke={t.rule} />
-        <motion.path d={vals.map((v, i) => `${i ? 'L' : 'M'} ${x(i)} ${y(v)}`).join(' ')} fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.4 }} />
-        {vals.map((v, i) => (
-          <circle key={i} cx={x(i)} cy={y(v)} r={2.6} fill={i ? color : t.ink3} />
-        ))}
-      </svg>
-      <div className="text-[12.5px] leading-tight">
-        <p className="font-[700] text-ink">{label}</p>
-        <p className="tabular text-ink-3">
-          {vals[0]} → <span className="font-[760]" style={{ color }}>{vals[4]}</span>
-        </p>
+    <Reveal delay={i * 0.08} className="overflow-hidden rounded-[26px] border border-rule bg-surface shadow-[0_40px_90px_-60px_rgba(20,24,40,0.7)]">
+      {/* the robot first */}
+      <div
+        className="group relative aspect-[900/593] select-none overflow-hidden bg-paper-2"
+        onMouseEnter={() => setPeek(true)}
+        onMouseLeave={() => setPeek(false)}
+      >
+        <img
+          src={scene(task.id, 'real')}
+          alt={`${task.name} on the ${task.robot}: the real scene`}
+          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1.8s] ease-out ${reduce ? '' : 'group-hover:scale-[1.035]'}`}
+          draggable={false}
+        />
+        <motion.img
+          src={scene(task.id, 'sim')}
+          alt={`${task.name}: the simulation rebuilt from the real scene`}
+          className="absolute inset-0 h-full w-full object-cover"
+          animate={{ opacity: shown === 'sim' ? 1 : 0 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          draggable={false}
+        />
+        <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" aria-hidden />
+        <span className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-[12px] bg-[rgba(12,14,22,0.72)] px-3 py-1.5 text-white backdrop-blur-md">
+          <Icon icon={Robot01Icon} size={15} stroke={2} />
+          <span className="text-[13.5px] font-[760]">
+            {task.name} <span className="text-white/60">·</span> {task.robot}
+          </span>
+        </span>
+        {/* real ⇄ simulation */}
+        <div className="absolute right-3 top-3 inline-flex rounded-full bg-[rgba(12,14,22,0.55)] p-1 backdrop-blur-md" role="radiogroup" aria-label="Real scene or simulation">
+          {(['real', 'sim'] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={view === k}
+              onClick={() => {
+                setView(k);
+                setPeek(false);
+              }}
+              className={`relative rounded-full px-2.5 py-1 text-[11.5px] font-[700] transition-colors ${shown === k ? 'text-[#12141c]' : 'text-white/80 hover:text-white'}`}
+            >
+              {shown === k && <motion.span layoutId={`rw-${task.id}`} className="absolute inset-0 rounded-full bg-white" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />}
+              <span className="relative">{k === 'real' ? 'Real robot' : 'Simulation'}</span>
+            </button>
+          ))}
+        </div>
+        {/* the result, on the picture, as in the film */}
+        <span
+          className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-[780] text-white shadow-lg transition-colors duration-300"
+          style={{ background: shown === 'real' ? '#14a23a' : teal[3] }}
+        >
+          {shown === 'real' ? 'real robot' : 'simulation'} {shown === 'real' ? b.robot!.it[0] : b.scores.it[0]} → {shown === 'real' ? b.robot!.it[4] : b.scores.it[4]}
+        </span>
+        <span className="absolute bottom-3.5 right-3 hidden text-[11.5px] font-[600] text-white/80 sm:block">hover to see the simulation</span>
       </div>
-    </div>
+
+      {/* scores as bricks, and what changed */}
+      <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-center">
+        <div className="mx-auto w-full max-w-[250px]">
+          <Towers sim={b.scores.it as unknown as number[]} real={b.robot!.it as unknown as number[]} delay={0.15 + i * 0.1} />
+          <div className="mt-1 flex items-center justify-center gap-1.5 text-[10.5px] font-[650] text-ink-3">
+            <span className="h-2.5 w-3.5 rounded-[3px]" style={{ background: theme === 'dark' ? '#4a5268' : '#b8bcc8' }} /> H₀
+            {[1, 2, 3, 4].map((k) => (
+              <span key={k} className="inline-flex items-center gap-1 pl-1">
+                <span className="h-2.5 w-3.5 rounded-[3px]" style={{ background: `linear-gradient(90deg, ${teal[k - 1]} 50%, ${t.iters[k]} 50%)` }} />
+                it {k}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-[14px] leading-[1.55] text-ink-2">{task.goal}</p>
+          <ul className="mt-3 space-y-2">
+            <li className="flex items-start gap-2.5 rounded-[12px] bg-paper-2/70 px-3 py-2 text-[13px] leading-snug text-ink-2">
+              <Icon icon={Cancel01Icon} size={16} stroke={2.2} color={t.bad} className="mt-0.5 shrink-0" />
+              <span>
+                <b className="font-[750] text-ink">Base Harness H₀</b> {task.h0}
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5 rounded-[12px] px-3 py-2 text-[13px] leading-snug text-ink-2" style={{ background: `${t.good}14` }}>
+              <Icon icon={CheckmarkCircle02Icon} size={16} stroke={2.2} color={t.good} className="mt-0.5 shrink-0" />
+              <span>
+                <b className="font-[750] text-ink">Evolved Harness H(4)</b> {task.h4}
+              </span>
+            </li>
+          </ul>
+          <div className="mt-3.5 flex flex-wrap gap-2">
+            <PaperFigure fig={figOf(task.figs.base, task.name, false)} label={`Frames · H₀ (Fig. ${task.figs.base})`} />
+            <PaperFigure fig={figOf(task.figs.evolved, task.name, true)} label={`Frames · H(4) (Fig. ${task.figs.evolved})`} />
+          </div>
+        </div>
+      </div>
+    </Reveal>
   );
 }
 
 export default function RealWorldSection() {
-  const { t } = useTokens();
-  const [mode, setMode] = useState<Record<string, 'base' | 'evolved'>>({ soon: 'evolved', capx: 'evolved' });
   return (
     <Section id="real-world" className="overflow-hidden pt-28 pb-10">
       <Container wide>
         <SectionHeader kicker="Real → Sim → Real · Appendix E.3" title="From simulated worlds to two real robots">
           Each embodied benchmark runs in a simulation rebuilt from its real scene, with a model of the same robot. The simulation trains; the real robot is unseen.
         </SectionHeader>
-
         <div className="mt-14 grid gap-6 lg:grid-cols-2">
-          {TASKS.map((task, ti) => {
-            const b = benchById[task.id === 'capx' ? 'cap-x' : 'soon'];
-            const m = mode[task.id];
-            return (
-              <Reveal key={task.id} delay={ti * 0.08} className="figure-frame flex flex-col gap-4 p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-[19px] font-[780] text-ink">{task.title}</p>
-                  <p className="text-[12.5px] text-ink-3">node {b.node === 'da' ? 'd → a' : b.node}</p>
-                </div>
-                <Compare task={task.id} />
-                <p className="text-[14px] leading-[1.55] text-ink-2">{task.goal}</p>
-                <div className="flex flex-wrap gap-5">
-                  <Spark vals={b.scores.it} color={t.explorer} label="Simulation (train)" />
-                  <Spark vals={b.robot!.it} color={t.accent} label="Real robot (unseen)" />
-                </div>
-                <div>
-                  <div className="inline-flex rounded-full bg-paper-2 p-1">
-                    {(['base', 'evolved'] as const).map((k) => (
-                      <button key={k} type="button" onClick={() => setMode((s) => ({ ...s, [task.id]: k }))} className={`rounded-full px-3 py-1 text-[12.5px] font-[700] transition-colors ${m === k ? 'bg-surface text-ink shadow-sm' : 'text-ink-3'}`}>
-                        {k === 'base' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="relative mt-3 overflow-hidden rounded-xl border border-rule bg-white">
-                    <AnimatePresence mode="wait">
-                      <motion.img
-                        key={`${task.id}-${m}`}
-                        src={embodied(task.figs[m])}
-                        alt={`${task.title}: ${m === 'base' ? 'Base Harness' : 'evolved Harness'}, simulation and real robot`}
-                        className="block h-auto w-full"
-                        initial={{ opacity: 0, x: m === 'evolved' ? 24 : -24 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.35 }}
-                      />
-                    </AnimatePresence>
-                  </div>
-                  <p className="mt-2 text-[13.5px] leading-[1.55]" style={{ color: m === 'base' ? t.bad : t.good }}>
-                    {m === 'base' ? task.h0 : task.h4}
-                  </p>
-                </div>
-              </Reveal>
-            );
-          })}
+          {TASKS.map((task, i) => (
+            <RobotCard key={task.id} task={task} i={i} />
+          ))}
         </div>
       </Container>
     </Section>

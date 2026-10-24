@@ -53,7 +53,7 @@ export default function ProblemSection() {
               mode="enter"
               stagger={0.02}
             >
-              Self-improvement is still trained task by task
+              RSI is still trained task by task
             </ScrollFloat>
           </div>
           <p className="font-serif text-[1.1rem] leading-[1.62] text-ink-2">

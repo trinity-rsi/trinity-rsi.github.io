@@ -1,0 +1,73 @@
+WEBVTT
+
+00:00:00.300 --> 00:00:04.034
+Today, RSI still trains agents task by task.
+
+00:00:04.500 --> 00:00:06.977
+We argue it should be capability-driven.
+
+00:00:07.247 --> 00:00:12.389
+Every agent runs on a Harness: six protocols around one frozen model.
+
+00:00:12.810 --> 00:00:15.597
+One Harness per task transfers poorly
+
+00:00:15.597 --> 00:00:18.993
+one global Harness can't reconcile conflicting demands.
+
+00:00:19.263 --> 00:00:22.588
+Yet tasks that look different often need the same capabilities.
+
+00:00:23.351 --> 00:00:28.519
+ARC-AGI-3 and Micromouse both rely on perception and state tracking.
+
+00:00:28.789 --> 00:00:31.943
+Group tasks by what they share, and learning transfers.
+
+00:00:34.325 --> 00:00:35.943
+This is The Trinity.
+
+00:00:37.425 --> 00:00:42.568
+Three roles, one frozen model: Creator builds worlds, Explorer acts in them
+
+00:00:42.568 --> 00:00:45.070
+and Evolver improves the Harness.
+
+00:00:45.090 --> 00:00:48.901
+Stage one: forty-four benchmarks form a task tree.
+
+00:00:49.190 --> 00:00:53.458
+Explorer runs the base Harness on every task and logs each run.
+
+00:00:54.642 --> 00:01:00.578
+Stage two: the runs reveal six capabilities, and tasks with the same needs share a node.
+
+00:01:00.848 --> 00:01:06.788
+Creator builds simplified, verifiable worlds for each node, where Explorer can practise.
+
+00:01:07.058 --> 00:01:12.355
+Stage three: as Explorer practises, reusable modules grow along the tree.
+
+00:01:12.625 --> 00:01:17.543
+Children inherit their parent's modules, and keep an update only if it strictly helps.
+
+00:01:18.225 --> 00:01:21.687
+The model never changes. Only the Harness grows.
+
+00:01:22.525 --> 00:01:23.907
+For a new task
+
+00:01:23.907 --> 00:01:28.611
+the Router recalls verified experience and picks one Harness before acting.
+
+00:01:28.881 --> 00:01:30.939
+The result is written back to memory.
+
+00:01:32.881 --> 00:01:37.946
+Up 34.1 points on training benchmarks, 22 on unseen ones
+
+00:01:37.946 --> 00:01:40.498
+and it carries over to two real robots.
+
+00:01:41.968 --> 00:01:45.681
+The Trinity. Grow capabilities, brick by brick.

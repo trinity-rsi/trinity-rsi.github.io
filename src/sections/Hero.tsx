@@ -4,7 +4,7 @@ import StarBorder from '@/components/reactbits/StarBorder/StarBorder';
 import Magnet from '@/components/reactbits/Magnet/Magnet';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
 import SideRays from '@/components/reactbits/SideRays/SideRays';
-import TrinityRow, { TrinityChain } from '@/components/viz/TrinityRow';
+import TrinityTriad, { TriadChain } from '@/components/viz/TrinityTriad';
 import LetterGlitch from '@/components/reactbits/LetterGlitch/LetterGlitch';
 import LazyMount from '@/components/ui/LazyMount';
 import Icon from '@/components/ui/Icon';
@@ -32,7 +32,7 @@ function LinkButton({ href, icon, children, onClick }: { href: string; icon?: Re
       target={href ? '_blank' : undefined}
       rel="noreferrer"
       aria-disabled={disabled || undefined}
-      className="group relative inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-3 text-[14px] font-[620] text-ink transition-colors hover:border-rule-2 hover:bg-surface-2 aria-disabled:cursor-default aria-disabled:border-dashed aria-disabled:text-ink-2"
+      className="group relative inline-flex h-10 items-center gap-1.5 rounded-full border border-rule bg-surface px-2.5 text-[13.5px] font-[620] text-ink transition-colors xl:px-3 hover:border-rule-2 hover:bg-surface-2 aria-disabled:cursor-default aria-disabled:border-dashed aria-disabled:text-ink-2"
     >
       {icon}
       {children}
@@ -124,22 +124,23 @@ export default function Hero() {
           <span className="text-[14px] font-[560] text-ink-3">Technical report, {PAPER.date}</span>
         </div>
 
-        <div className="mt-[clamp(0.75rem,2.2vh,1.25rem)] grid items-center gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
-          <div className="relative z-10">
-            <h1 ref={titleRef} className="text-[clamp(3.6rem,min(8.2vw,13.5vh),8.2rem)] leading-[0.84] tracking-[-0.045em] text-ink" style={{ fontWeight: 800, fontStretch: '118%' }}>
-              <span className="rise-in block" style={{ animationDelay: '0.12s' }}>
-                <VariableProximity label="The" fromFontVariationSettings="'wght' 760, 'wdth' 112" toFontVariationSettings="'wght' 900, 'wdth' 125" containerRef={titleRef} radius={170} falloff="gaussian" style={{ fontFamily: 'inherit' }} />
-              </span>
-              <span className="rise-in block" style={{ animationDelay: '0.22s' }}>
-                <VariableProximity label="Trinity" fromFontVariationSettings="'wght' 760, 'wdth' 112" toFontVariationSettings="'wght' 900, 'wdth' 125" containerRef={titleRef} radius={170} falloff="gaussian" toColor={t.accent} style={{ fontFamily: 'inherit' }} />
+        <div className="mt-[clamp(0.5rem,1.8vh,1.1rem)] grid items-center gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:gap-x-8">
+          <div className="relative z-10 [container-type:inline-size]">
+            {/* one line, sized to its column */}
+            <h1 ref={titleRef} className="whitespace-nowrap leading-[0.92] tracking-[-0.045em] text-ink" style={{ fontWeight: 800, fontStretch: '118%', fontSize: 'min(18.1cqw, 7.6rem)' }}>
+              <span className="rise-in inline-block" style={{ animationDelay: '0.12s' }}>
+                <VariableProximity label="The" fromFontVariationSettings="'wght' 760, 'wdth' 112" toFontVariationSettings="'wght' 900, 'wdth' 125" containerRef={titleRef} radius={150} falloff="gaussian" style={{ fontFamily: 'inherit' }} />
+              </span>{' '}
+              <span className="rise-in inline-block" style={{ animationDelay: '0.22s' }}>
+                <VariableProximity label="Trinity" fromFontVariationSettings="'wght' 760, 'wdth' 112" toFontVariationSettings="'wght' 900, 'wdth' 125" containerRef={titleRef} radius={150} falloff="gaussian" toColor={t.accent} style={{ fontFamily: 'inherit' }} />
               </span>
             </h1>
 
-            <p className="rise-in mt-[clamp(0.75rem,2.2vh,1.25rem)] max-w-[30ch] text-[clamp(1.3rem,min(2.1vw,3.4vh),1.85rem)] font-[660] leading-[1.14] tracking-[-0.015em] text-ink" style={{ animationDelay: '0.32s', fontStretch: '104%' }}>
+            <p className="rise-in mt-[clamp(0.75rem,2vh,1.2rem)] max-w-[26ch] text-[clamp(1.25rem,min(1.95vw,3.2vh),1.75rem)] font-[660] leading-[1.16] tracking-[-0.015em] text-ink" style={{ animationDelay: '0.32s', fontStretch: '104%' }}>
               Capability-driven recursive self-improvement for multimodal agents
             </p>
 
-            <div className="rise-in mt-[clamp(0.9rem,2.6vh,1.5rem)] flex flex-wrap items-center gap-2" style={{ animationDelay: '0.52s' }}>
+            <div className="rise-in mt-[clamp(0.9rem,2.6vh,1.5rem)] flex flex-wrap items-center gap-1.5" style={{ animationDelay: '0.52s' }}>
               <Magnet padding={50} magnetStrength={4}>
                 <StarBorder
                   as="a"
@@ -158,7 +159,7 @@ export default function Hero() {
                   sparkle
                   backgroundColor={t.ink}
                   textColor={t.paper}
-                  className="inline-flex h-10 items-center gap-2 px-4 text-[14px] font-[680]"
+                  className="inline-flex h-10 items-center gap-1.5 px-3 text-[13.5px] font-[680] xl:px-3.5"
                 >
                   <Icon icon={Pdf02Icon} size={17} />
                   {LINKS.paper ? 'Read the paper' : 'Read the abstract'}
@@ -167,14 +168,14 @@ export default function Hero() {
               <button
                 type="button"
                 onClick={playFilm}
-                className="group inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface pl-1.5 pr-3.5 text-[14px] font-[650] text-ink transition-colors hover:border-rule-2 hover:bg-surface-2"
+                className="group inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface pl-1.5 pr-2.5 text-[13.5px] font-[650] xl:pr-3 text-ink transition-colors hover:border-rule-2 hover:bg-surface-2"
               >
                 <span className="relative grid h-7 w-7 place-items-center rounded-full bg-accent text-white transition-transform duration-300 group-hover:scale-110">
                   {!reduce && <span className="film-ring absolute inset-0 rounded-full" aria-hidden />}
                   <Icon icon={PlayIcon} size={13} stroke={2.6} className="translate-x-[1px]" />
                 </span>
                 Watch the film
-                <span className="tabular text-[12.5px] font-[600] text-ink-3">{fmtTime(FILM.duration)}</span>
+                <span className="tabular -ml-0.5 text-[12px] font-[600] text-ink-3">{fmtTime(FILM.duration)}</span>
               </button>
               {LINKS.code || LINKS.huggingface ? (
                 <>
@@ -196,21 +197,33 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* the paper's position statement */}
-          <div className="rise-in relative z-10" style={{ animationDelay: '0.5s' }}>
-            <div className="relative overflow-hidden rounded-[26px] border border-rule bg-surface/85 p-6 shadow-[0_30px_70px_-46px_rgba(20,24,40,0.55)] backdrop-blur-md sm:p-[clamp(1.25rem,3vh,1.75rem)]">
-              <span className="absolute inset-y-0 left-0 w-[3px] bg-accent" aria-hidden />
-              <p className="flex items-center gap-2 text-[12.5px] font-[760] uppercase tracking-[0.14em] text-accent">
-                <span className="slogan-star" aria-hidden>
-                  ✦
-                </span>
-                Position
-              </p>
-              <p className="mt-3 text-[clamp(1.45rem,2.2vw,1.95rem)] font-[760] leading-[1.12] tracking-[-0.02em] text-ink [font-stretch:108%]">
-                From task-driven to <span className="text-accent">capability-driven</span> self-improvement.
-              </p>
-              <p className="mt-3 font-serif text-[15px] leading-[1.55] text-ink-2">{PAPER.position}</p>
-              <div className="mt-[clamp(0.9rem,2.4vh,1.25rem)] grid grid-cols-3 gap-4 border-t border-rule pt-4">
+          {/* the three roles, as in the film */}
+          <div className="rise-in relative z-10 hidden sm:block" style={{ animationDelay: '0.3s' }}>
+            <TrinityTriad />
+          </div>
+        </div>
+        <div className="relative z-10 mt-7 sm:hidden">
+          <TriadChain />
+        </div>
+
+        {/* the paper's position statement, across the page */}
+        <div className="rise-in relative z-10 mt-[clamp(1rem,3.2vh,2rem)]" style={{ animationDelay: '0.5s' }}>
+          <div className="relative overflow-hidden rounded-[26px] border border-rule bg-surface/85 shadow-[0_30px_70px_-46px_rgba(20,24,40,0.55)] backdrop-blur-md">
+            <span className="absolute inset-y-0 left-0 w-[3px] bg-accent" aria-hidden />
+            <div className="grid gap-x-10 gap-y-5 p-6 sm:px-[clamp(1.5rem,3vw,2.25rem)] sm:py-[clamp(1.1rem,2.8vh,1.6rem)] lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-center">
+              <div>
+                <p className="flex items-center gap-2 text-[12.5px] font-[760] uppercase tracking-[0.14em] text-accent">
+                  <span className="slogan-star" aria-hidden>
+                    ✦
+                  </span>
+                  Position
+                </p>
+                <p className="mt-2.5 text-[clamp(1.4rem,2vw,1.85rem)] font-[760] leading-[1.12] tracking-[-0.02em] text-ink [font-stretch:108%]">
+                  From task-driven to <span className="text-accent">capability-driven</span> RSI.
+                </p>
+                <p className="mt-2.5 max-w-[78ch] font-serif text-[15px] leading-[1.55] text-ink-2">{PAPER.position}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 border-t border-rule pt-4 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                 <Stat to={HEADLINE.trainGain} decimals={1} unit="+" label={`points on ${HEADLINE.trainCount} training benchmarks`} delay={0.8} />
                 <Stat to={HEADLINE.unseenGain} decimals={1} unit="+" label={`points on ${HEADLINE.unseenCount} unseen benchmarks`} delay={0.9} />
                 <Stat to={HEADLINE.realWorld} label="real-world embodied settings" delay={1} />
@@ -219,15 +232,8 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="relative z-10 mx-auto mt-2 hidden w-full sm:block" style={{ maxWidth: 'clamp(760px, (100vh - 605px) * 3.95, 1180px)' }}>
-          <TrinityRow />
-        </div>
-        <div className="relative z-10 mt-7 sm:hidden">
-          <TrinityChain />
-        </div>
-
-        {/* in the flow, under the row, so it never sits on the diagram */}
-        <div className="mt-2 hidden justify-center lg:flex [@media(max-height:860px)]:!hidden">
+        {/* in the flow, under the statement, so it never sits on anything */}
+        <div className="mt-5 hidden justify-center lg:flex [@media(max-height:900px)]:!hidden">
           <button
             type="button"
             onClick={() => scrollToId('film')}

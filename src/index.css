@@ -291,48 +291,6 @@
   }
 }
 
-/* Harness anatomy: the loop animation highlights the component card it is visiting */
-.proto-card {
-  position: relative;
-}
-.proto-card::before {
-  content: '';
-  position: absolute;
-  inset: -12px;
-  border-radius: 16px;
-  box-shadow:
-    inset 0 0 0 1.5px var(--accent),
-    0 0 28px -6px color-mix(in oklch, var(--accent) 55%, transparent);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-[data-active='per'] .proto-card[data-proto='per']::before,
-[data-active='mem'] .proto-card[data-proto='mem']::before,
-[data-active='inf'] .proto-card[data-proto='inf']::before,
-[data-active='plan'] .proto-card[data-proto='plan']::before,
-[data-active='orch'] .proto-card[data-proto='orch']::before,
-[data-active='loop'] .proto-card[data-proto='loop']::before {
-  opacity: 1;
-}
-[data-active='per'] .proto-card[data-proto='per'] .proto-name,
-[data-active='mem'] .proto-card[data-proto='mem'] .proto-name,
-[data-active='inf'] .proto-card[data-proto='inf'] .proto-name,
-[data-active='plan'] .proto-card[data-proto='plan'] .proto-name,
-[data-active='orch'] .proto-card[data-proto='orch'] .proto-name,
-[data-active='loop'] .proto-card[data-proto='loop'] .proto-name {
-  color: var(--accent);
-}
-[data-active='per'] .proto-card[data-proto='per'] .proto-icon,
-[data-active='mem'] .proto-card[data-proto='mem'] .proto-icon,
-[data-active='inf'] .proto-card[data-proto='inf'] .proto-icon,
-[data-active='plan'] .proto-card[data-proto='plan'] .proto-icon,
-[data-active='orch'] .proto-card[data-proto='orch'] .proto-icon,
-[data-active='loop'] .proto-card[data-proto='loop'] .proto-icon {
-  background: var(--accent);
-  color: #fff;
-}
-
 /* one-time pulse around the theme switch while the dark-mode hint is up */
 @keyframes theme-hint-ring {
   0% {
@@ -437,7 +395,7 @@
   stroke-dashoffset: 1500;
   animation: row-draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
-/* the hero row's arrows (TrinityRow): draw in, then a packet runs each one */
+/* the hero row's arrows (TrinityTriad): draw in, then a packet runs each one */
 @keyframes row-line {
   from {
     stroke-dashoffset: 1;

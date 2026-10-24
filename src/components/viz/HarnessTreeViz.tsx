@@ -6,15 +6,16 @@ import { MEANS } from '@/data/results';
 import { nodeLevel } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
-import { useLegoPalette } from './Lego';
-import { NextIcon, PauseIcon, PlayIcon, RepeatIcon } from '@hugeicons/core-free-icons';
+import { Brick, BrickDefs, Plate } from './Bricks';
+import { LockIcon, NextIcon, PauseIcon, PlayIcon, RepeatIcon } from '@hugeicons/core-free-icons';
 
 /**
  * Explorer's Harness tree evolving over iterations 1–4 (Section 3.5, Figure 10, Appendix E.2).
  * Each iteration is one top-down pass over the fixed tree. At every node Creator's level is played,
  * the failing run turns into one module event (a new module or a revision, exactly as recorded in
  * Appendix E.2), and the next run solves the level. Children show their parent's modules as
- * inherited (outlined) bricks. Scores are Table 7.
+ * inherited (outlined) bricks. Scores are Table 7. Drawn as in the film (promo/src/tree.tsx):
+ * the same plates, bricks and layout, with Creator's level for every node along the top.
  */
 type Nid = Exclude<NodeId, 'root'>;
 const ORDER: Nid[] = ['c', 'd', 'a', 'b', 'e', 'cd', 'ca', 'da', 'db', 'ef', 'cda'];
@@ -23,28 +24,31 @@ const BANNER_T = 0.9; // iteration banner
 const ITER_T = BANNER_T + ORDER.length * NODE_T;
 const TOTAL = 4 * ITER_T;
 
-const VW = 1320;
-const VH = 640;
-const MW = 52;
-const MH = 22;
-const MGX = 5;
-const SH = 5;
-const ROWH = MH + SH + 5;
+const VB = { x: 30, y: 214, w: 1840, h: 848 }; // the film's 1920 × 1080 frame, cropped to the tree
+const PW = 252; // plate
+const MW = 76; // module brick
+const MH = 30;
+const SH = 7; // stud height
+const GX = 6;
+const CELL = 48; // row pitch
+const PER = 3; // bricks per row
 const ANCHOR: Record<Nid | 'root', { x: number; y: number }> = {
-  root: { x: 660, y: 598 },
-  c: { x: 150, y: 482 },
-  d: { x: 450, y: 482 },
-  a: { x: 760, y: 482 },
-  b: { x: 1010, y: 482 },
-  e: { x: 1220, y: 482 },
-  cd: { x: 150, y: 300 },
-  ca: { x: 420, y: 300 },
-  da: { x: 690, y: 300 },
-  db: { x: 950, y: 300 },
-  ef: { x: 1220, y: 300 },
-  cda: { x: 150, y: 130 },
+  root: { x: 960, y: 1032 },
+  c: { x: 305, y: 890 },
+  d: { x: 875, y: 890 },
+  a: { x: 1190, y: 890 },
+  b: { x: 1460, y: 890 },
+  e: { x: 1730, y: 890 },
+  cd: { x: 170, y: 640 },
+  ca: { x: 440, y: 640 },
+  da: { x: 740, y: 640 },
+  db: { x: 1010, y: 640 },
+  ef: { x: 1730, y: 640 },
+  cda: { x: 170, y: 400 },
 };
-const COLS = 3;
+/* Creator's level for each node, in a strip along the top (left to right as on the tree) */
+const TH = { w: 124, h: 88, y: 272, x0: 426, step: 130 };
+const THUMBS: Nid[] = (Object.keys(ANCHOR) as (Nid | 'root')[]).filter((n): n is Nid => n !== 'root').sort((a, b) => ANCHOR[a].x - ANCHOR[b].x || ANCHOR[b].y - ANCHOR[a].y);
 
 /** a node's registry at iteration 4: inherited modules first (root side), then its own */
 const finalModules = (n: Nid) => nodeLineage(n).flatMap((x) => x.local);
@@ -135,7 +139,6 @@ function MiniMeans({ it }: { it: number }) {
 
 export default function HarnessTreeViz() {
   const { t, theme } = useTokens();
-  const LP = useLegoPalette();
   const reduce = useReducedMotion();
   const [ref, near] = useNearViewport<HTMLDivElement>('-10% 0px');
   const [time, setTime] = useState(0);
@@ -217,20 +220,39 @@ export default function HarnessTreeViz() {
     return out;
   }, [cur, visiting]);
 
+  // the film's stacking: rows fill bottom-up, three bricks a row, every slot fixed from the start
   const brickXY = (n: Nid, m: string) => {
     const a = ANCHOR[n];
     const all = finalModules(n);
-    const count = all.length;
     const i = all.indexOf(m);
-    const rows = Math.ceil(Math.max(1, count) / COLS);
-    const r = Math.floor(i / COLS);
-    const c = i % COLS;
-    const inRow = Math.min(COLS, count - r * COLS);
-    const rowW = inRow * MW + (inRow - 1) * MGX;
-    return { x: a.x - rowW / 2 + c * (MW + MGX), y: a.y - (rows - r) * ROWH + SH + 1 };
+    const row = Math.floor(i / PER);
+    const inRow = Math.min(PER, all.length - row * PER);
+    const rowW = inRow * MW + (inRow - 1) * GX;
+    return { x: a.x - rowW / 2 + (i % PER) * (MW + GX), y: a.y - MH - 1 - row * CELL };
   };
-  const plateW = (n: Nid) => Math.max(2, Math.min(COLS, finalModules(n).length)) * (MW + MGX) + MGX + 10;
-  const plateTop = (n: Nid) => ANCHOR[n].y - Math.ceil(Math.max(1, finalModules(n).length) / COLS) * ROWH - 8;
+  const stackTop = (n: Nid) => {
+    const k = finalModules(n).length;
+    return k <= 0 ? ANCHOR[n].y - 4 : ANCHOR[n].y - MH - 1 - (Math.ceil(k / PER) - 1) * CELL - SH - 4;
+  };
+  const labelLines = (n: Nid) => {
+    const name = nodeById[n].name;
+    const room = PW - 18 - nodeById[n].path.length * 26;
+    if (name.length * 8.2 <= room) return [name];
+    const words = name.split(' ');
+    let best = [name];
+    let score = Infinity;
+    for (let i = 1; i < words.length; i++) {
+      const a = words.slice(0, i).join(' ');
+      const b = words.slice(i).join(' ');
+      const sc = Math.max(a.length * 8.2 - room, b.length * 8.2 - (PW - 8));
+      if (sc < score) {
+        score = sc;
+        best = [a, b];
+      }
+    }
+    return best;
+  };
+  const labelBottom = (n: Nid) => ANCHOR[n].y + (labelLines(n).length > 1 ? 66 : 46);
 
   const completed = cur.done ? 4 : eventDone('cda', cur.it, cur) ? cur.it : cur.it - 1;
   const ev = visiting ? nodeById[visiting].events[cur.it - 1] : null;
@@ -243,9 +265,9 @@ export default function HarnessTreeViz() {
   return (
     <div ref={ref} className="space-y-4">
       <figure className="figure-frame overflow-hidden p-4">
-        {/* controls */}
+        {/* controls, and the film's counter: the model stays frozen, the means go up */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => {
@@ -270,111 +292,179 @@ export default function HarnessTreeViz() {
             >
               <Icon icon={NextIcon} size={14} /> Step
             </button>
+            <div className="flex w-full items-center gap-1.5 sm:ml-1 sm:w-auto">
+              {[1, 2, 3, 4].map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    setPlaying(false);
+                    seek(i * ITER_T - 0.001);
+                  }}
+                  className={`h-8 flex-1 rounded-full px-3 text-[12.5px] font-[700] transition-colors sm:flex-none ${i === cur.it && !cur.done ? 'bg-accent text-white' : i <= iterShown ? 'bg-accent-wash text-accent-ink' : 'bg-paper-2 text-ink-3'}`}
+                >
+                  <span className="hidden sm:inline">Iteration </span>
+                  <span className="sm:hidden">It. </span>
+                  {i}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4].map((i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => {
-                  setPlaying(false);
-                  seek(i * ITER_T - 0.001);
-                }}
-                className={`h-8 rounded-full px-3 text-[12.5px] font-[700] transition-colors ${i === cur.it && !cur.done ? 'bg-accent text-white' : i <= iterShown ? 'bg-accent-wash text-accent-ink' : 'bg-paper-2 text-ink-3'}`}
-              >
-                Iteration {i}
-              </button>
-            ))}
+          <div className="flex items-center gap-3 rounded-[16px] border border-rule bg-surface px-3 py-2 shadow-[0_14px_30px_-24px_rgba(20,24,40,0.5)]">
+            <span className="relative grid h-10 w-10 place-items-center rounded-full bg-[radial-gradient(circle_at_50%_35%,#2a3150,#12141c)] text-[#f3f4f7] shadow-sm">
+              <span className="font-serif text-[18px] italic leading-none">
+                f<sub className="text-[11px]">θ</sub>
+              </span>
+              <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-surface text-ink-3 shadow">
+                <Icon icon={LockIcon} size={10} stroke={2.4} />
+              </span>
+            </span>
+            <span>
+              <span className="block text-[11px] font-[700] text-ink-3">Iteration</span>
+              <span className="tabular block text-[20px] font-[800] leading-none text-ink">
+                {cur.done ? 4 : cur.it}
+                <span className="text-[13px] font-[700] text-ink-3"> / 4</span>
+              </span>
+            </span>
+            <span className="h-9 w-px bg-rule" aria-hidden />
+            <span className="tabular text-right">
+              <span className="block text-[11px] font-[700] text-ink-3">Train</span>
+              <span className="block text-[17px] font-[800] leading-none text-accent">{MEANS.train[completed]}</span>
+            </span>
+            <span className="tabular text-right">
+              <span className="block text-[11px] font-[700] text-ink-3">Unseen</span>
+              <span className="block text-[17px] font-[800] leading-none text-explorer">{MEANS.unseen[completed]}</span>
+            </span>
           </div>
         </div>
 
-        <svg viewBox={`0 0 ${VW} ${VH}`} className="block h-auto w-full" role="img" aria-label="Explorer's Harness tree: eleven node Harnesses gain or revise one module per iteration">
+        {/* on a phone the tree keeps a readable size and scrolls sideways */}
+        <p className="px-1 pb-2 text-[12px] font-[600] text-ink-3 md:hidden">Swipe to see the whole tree →</p>
+        <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0">
+        <svg viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} className="block h-auto w-full min-w-[1040px] md:min-w-0" role="img" aria-label="Explorer's Harness tree: eleven node Harnesses gain or revise one module per iteration">
+          <BrickDefs id="ht" />
           <defs>
             <filter id="ht-glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="8" />
+              <feGaussianBlur stdDeviation="10" />
             </filter>
+            {THUMBS.map((n, i) => (
+              <clipPath key={n} id={`ht-th-${n}`}>
+                <rect x={TH.x0 + i * TH.step} y={TH.y} width={TH.w} height={TH.h} rx={10} />
+              </clipPath>
+            ))}
           </defs>
-          {/* edges */}
+
+          {/* Creator's level for every node, along the top; the node being visited lights up */}
+          {THUMBS.map((n, i) => {
+            const x = TH.x0 + i * TH.step;
+            const lvl = visiting === n ? cur.it : Math.max(1, [1, 2, 3, 4].filter((k) => eventDone(n, k, cur)).pop() ?? 1);
+            const on = visiting === n || focus === n;
+            return (
+              <g key={n} onMouseEnter={() => setPick(n)} onMouseLeave={() => setPick(null)} onClick={() => setPick(n)} style={{ cursor: 'pointer' }}>
+                <rect x={x - 2} y={TH.y - 2} width={TH.w + 4} height={TH.h + 4} rx={12} fill={on ? t.accent : t.rule} />
+                <image href={nodeLevel(n, lvl)} x={x} y={TH.y} width={TH.w} height={TH.h} preserveAspectRatio="xMidYMid slice" clipPath={`url(#ht-th-${n})`} opacity={on ? 1 : 0.82} />
+                <g transform={`translate(${x + 6} ${TH.y + TH.h - 24})`}>
+                  {nodeById[n].path.map((c, k) => (
+                    <g key={c} transform={`translate(${k * 19} 0)`}>
+                      <rect width={17} height={17} rx={4.5} fill={t.caps[c]} />
+                      <text x={8.5} y={12.5} textAnchor="middle" fill="#fff" style={{ fontSize: 11, fontWeight: 800 }}>
+                        {c}
+                      </text>
+                    </g>
+                  ))}
+                </g>
+              </g>
+            );
+          })}
+
+          {/* edges: up from a node's stack to under its child's label */}
           {CAP_NODES.map((n) => {
             const id = n.id as Nid;
             const p = n.parent === 'root' ? 'root' : (n.parent as Nid);
             const A = ANCHOR[p];
             const B = ANCHOR[id];
-            const y1 = p === 'root' ? A.y - 14 : plateTop(p) - 4;
-            const y2 = B.y + 44;
+            const y1 = p === 'root' ? A.y - 18 : stackTop(p) - 2;
+            const y2 = labelBottom(id) + 4;
             const lit = focus === id || nodeLineage(focus).some((x) => x.id === id);
+            const d = `M ${A.x} ${y1} C ${A.x} ${(y1 + y2) / 2}, ${B.x} ${(y1 + y2) / 2}, ${B.x} ${y2}`;
             return (
-              <path
-                key={id}
-                d={`M ${A.x} ${y1} C ${A.x} ${(y1 + y2) / 2}, ${B.x} ${(y1 + y2) / 2}, ${B.x} ${y2}`}
-                fill="none"
-                stroke={lit ? t.accent : t.rule2}
-                strokeOpacity={lit ? 0.6 : 0.55}
-                strokeWidth={lit ? 2 : 1.3}
-              />
+              <g key={id}>
+                <path d={d} fill="none" stroke={t.rule2} strokeWidth={3} strokeLinecap="round" />
+                {lit && <path d={d} fill="none" stroke={t.accent} strokeWidth={4.5} strokeLinecap="round" opacity={0.55} />}
+              </g>
             );
           })}
 
-          {/* plates */}
+          {/* plates and labels */}
           {CAP_NODES.map((n) => {
             const id = n.id as Nid;
             const a = ANCHOR[id];
-            const w = plateW(id);
             const vis = visiting === id;
             const sel = focus === id;
+            const lines = labelLines(id);
+            const x0 = a.x - PW / 2;
             return (
               <g key={id} onMouseEnter={() => setPick(id)} onMouseLeave={() => setPick(null)} onClick={() => setPick(id)} style={{ cursor: 'pointer' }}>
-                {vis && <ellipse cx={a.x} cy={a.y - 20} rx={w * 0.62} ry={52} fill={t.accent} opacity={0.16} filter="url(#ht-glow)" />}
-                <rect x={a.x - w / 2 - 8} y={a.y - 92} width={w + 16} height={150} rx={14} fill="transparent" />
-                <rect x={a.x - w / 2} y={a.y} width={w} height={8} rx={3} fill={LP.plate} stroke={sel ? t.accent : 'none'} strokeWidth={1.4} />
-                {Array.from({ length: Math.floor(w / 13) }, (_, i) => (
-                  <rect key={i} x={a.x - w / 2 + 5 + i * 13} y={a.y - 2.5} width={7} height={3} rx={1} fill={LP.plate} />
-                ))}
-                <rect x={a.x - w / 2} y={a.y + 6.5} width={w} height={1.6} rx={0.8} fill={LP.plateEdge} />
-                <text x={a.x} y={a.y + 24} textAnchor="middle" fill={sel ? t.accent : t.ink} style={{ fontSize: 12.5, fontWeight: 780 }}>
-                  {n.path.join(' → ')}
-                </text>
-                <text x={a.x} y={a.y + 39} textAnchor="middle" fill={t.ink3} style={{ fontSize: 10.8, fontWeight: 560 }}>
-                  {n.name}
-                </text>
-                {/* the visit: level → fail → evolve → success */}
-                {vis && status && (
-                  <g transform={`translate(${a.x - (status === 'evolve' ? 46 : 29)} ${plateTop(id) - 26})`}>
-                    <rect width={status === 'evolve' ? 92 : 58} height={22} rx={11} fill={status === 'fail' ? t.bad : status === 'ok' ? t.good : status === 'evolve' ? t.ink : t.creator} />
-                    <text x={(status === 'evolve' ? 92 : 58) / 2} y={15} textAnchor="middle" fill={status === 'evolve' ? t.paper : '#fff'} style={{ fontSize: 11, fontWeight: 760 }}>
-                      {status === 'level' ? 'level' : status === 'fail' ? '✗ fail' : status === 'ok' ? '✓ solved' : ev ? (ev.kind === 'new' ? `+ ${ev.module}` : `${ev.module} rev.`) : ''}
+                {vis && <ellipse cx={a.x} cy={a.y - 40} rx={PW * 0.62} ry={70} fill={t.accent} opacity={0.14} filter="url(#ht-glow)" />}
+                <rect x={x0 - 10} y={stackTop(id) - 10} width={PW + 20} height={labelBottom(id) - stackTop(id) + 16} rx={16} fill="transparent" />
+                {sel && <rect x={x0 - 8} y={a.y + 14} width={PW + 16} height={lines.length > 1 ? 60 : 40} rx={12} fill={t.accent} opacity={0.1} />}
+                <Plate x={x0} y={a.y} w={PW} h={10} />
+                {n.path.map((c, i) => (
+                  <g key={c} transform={`translate(${x0 + 3 + i * 26} ${a.y + 22})`}>
+                    <rect width={22} height={22} rx={6} fill={t.caps[c]} />
+                    <rect width={22} height={9} rx={6} fill="#fff" opacity={0.18} />
+                    <text x={11} y={16} textAnchor="middle" fill="#fff" style={{ fontSize: 13.5, fontWeight: 800 }}>
+                      {c}
                     </text>
+                  </g>
+                ))}
+                <text x={x0 + 3 + n.path.length * 26 + 4} y={a.y + 39} fill={sel ? t.accent : t.ink} style={{ fontSize: 15.5, fontWeight: 720 }}>
+                  {lines[0]}
+                </text>
+                {lines[1] && (
+                  <text x={x0 + 3} y={a.y + 60} fill={sel ? t.accent : t.ink} style={{ fontSize: 15.5, fontWeight: 720 }}>
+                    {lines[1]}
+                  </text>
+                )}
+                {/* the visit: level → fail → evolve → solved */}
+                {vis && status && (
+                  <g transform={`translate(${a.x} ${stackTop(id) - 22})`}>
+                    {(() => {
+                      const label = status === 'level' ? 'level' : status === 'fail' ? '✗ fail' : status === 'ok' ? '✓ solved' : ev ? (ev.kind === 'new' ? `+ ${ev.module}` : `${ev.module} rev.`) : '';
+                      const w = Math.max(64, label.length * 9.5 + 26);
+                      const bg = status === 'fail' ? t.bad : status === 'ok' ? t.good : status === 'evolve' ? t.ink : t.creator;
+                      return (
+                        <>
+                          <rect x={-w / 2} y={-15} width={w} height={30} rx={15} fill={bg} />
+                          <text y={5.5} textAnchor="middle" fill={status === 'evolve' ? t.paper : '#fff'} style={{ fontSize: 15, fontWeight: 760 }}>
+                            {label}
+                          </text>
+                        </>
+                      );
+                    })()}
                   </g>
                 )}
               </g>
             );
           })}
 
-          {/* module bricks */}
+          {/* module bricks: owned ones solid, inherited ones outlined */}
           {CAP_NODES.map((n) => {
             const id = n.id as Nid;
-            const list = plates[id];
-            return list.map((m) => {
+            return plates[id].map((m) => {
               const { x, y } = brickXY(id, m.id);
               const mod = moduleById[m.id];
               const c = t.caps[mod.cap];
-              const drop = m.fresh > 0 && m.fresh < 1 && nodeById[id].events[cur.it - 1]?.kind === 'new' ? (1 - m.fresh) * -70 : 0;
-              const glint = m.fresh > 0 && m.fresh < 1 && nodeById[id].events[cur.it - 1]?.kind === 'revised' ? Math.sin(m.fresh * Math.PI) : 0;
+              const isNew = nodeById[id].events[cur.it - 1]?.kind === 'new';
+              const drop = m.fresh > 0 && m.fresh < 1 && isNew ? -(1 - m.fresh) * (1 - m.fresh) * 110 : 0;
+              const glint = m.fresh > 0 && m.fresh < 1 && !isNew ? Math.sin(m.fresh * Math.PI) : 0;
               return (
-                <g key={`${id}-${m.id}`} transform={`translate(${x} ${y + drop})`} opacity={m.fresh > 0 && m.fresh < 0.05 ? 0 : 1}>
-                  {[0, 1, 2].map((s) => (
-                    <rect key={s} x={6 + s * 15} y={-SH + 0.5} width={10} height={SH + 0.5} rx={1.5} fill={m.inherited ? 'transparent' : c} stroke={m.inherited ? c : 'none'} strokeWidth={1} />
-                  ))}
-                  <rect width={MW} height={MH} rx={3.5} fill={m.inherited ? (theme === 'dark' ? t.surface2 : t.surface) : c} stroke={c} strokeWidth={m.inherited ? 1.4 : 0} />
-                  {!m.inherited && <rect width={MW} height={MH * 0.4} rx={3.5} fill="#fff" opacity={0.2} />}
-                  {glint > 0 && <rect x={-3} y={-3} width={MW + 6} height={MH + 6} rx={5} fill="none" stroke={t.ink} strokeOpacity={glint} strokeWidth={2} />}
-                  <text x={MW / 2} y={MH / 2 + 4} textAnchor="middle" fill={m.inherited ? c : '#fff'} style={{ fontSize: 10.5, fontWeight: 780 }}>
-                    {m.id}
-                  </text>
+                <g key={`${id}-${m.id}`} transform={`translate(0 ${drop})`} opacity={m.fresh > 0 && m.fresh < 0.05 ? 0 : 1}>
+                  <Brick x={x} y={y} w={MW} h={MH} color={c} label={m.id} labelSize={15} studs={3} outline={m.inherited} glow={glint} glowColor={c} defs="ht" shadow={!m.inherited} />
                   {m.rev > 0 && !m.inherited && (
-                    <g transform={`translate(${MW - 4} ${-4})`}>
-                      <circle r={6.5} fill={t.ink} />
-                      <text y={3.3} textAnchor="middle" fill={t.paper} style={{ fontSize: 8.5, fontWeight: 800 }}>
+                    <g transform={`translate(${x + MW - 4} ${y - 4})`}>
+                      <circle r={10} fill={t.ink} stroke={t.surface} strokeWidth={2} />
+                      <text y={4} textAnchor="middle" fill={t.paper} style={{ fontSize: 11, fontWeight: 800 }}>
                         v{m.rev + 1}
                       </text>
                     </g>
@@ -386,8 +476,8 @@ export default function HarnessTreeViz() {
 
           {/* the root */}
           <g transform={`translate(${ANCHOR.root.x} ${ANCHOR.root.y})`}>
-            <rect x={-118} y={-14} width={236} height={28} rx={14} fill={t.ink} />
-            <text y={4.5} textAnchor="middle" fill={t.paper} style={{ fontSize: 12.5, fontWeight: 720 }}>
+            <rect x={-172} y={-19} width={344} height={38} rx={19} fill={t.ink} filter="url(#ht-sh)" />
+            <text y={6} textAnchor="middle" fill={t.paper} style={{ fontSize: 16.5, fontWeight: 720 }}>
               Base Harness H₀ · no learned module
             </text>
           </g>
@@ -396,14 +486,15 @@ export default function HarnessTreeViz() {
           <AnimatePresence>
             {cur.k === -1 && !cur.done && (
               <motion.g key={`banner-${cur.it}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <rect x={VW / 2 - 160} y={112} width={320} height={56} rx={28} fill={t.accent} opacity={0.95} />
-                <text x={VW / 2} y={148} textAnchor="middle" fill="#fff" style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>
+                <rect x={960 - 220} y={430} width={440} height={74} rx={37} fill={t.accent} opacity={0.95} filter="url(#ht-sh)" />
+                <text x={960} y={478} textAnchor="middle" fill="#fff" style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.01em' }}>
                   Iteration {cur.it} · top-down pass
                 </text>
               </motion.g>
             )}
           </AnimatePresence>
         </svg>
+        </div>
 
         {/* timeline */}
         <div className="mt-2 px-1">
