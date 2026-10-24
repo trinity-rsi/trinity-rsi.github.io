@@ -5,7 +5,6 @@ import Magnet from '@/components/reactbits/Magnet/Magnet';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
 import SideRays from '@/components/reactbits/SideRays/SideRays';
 import TrinityRow, { TrinityChain } from '@/components/viz/TrinityRow';
-import LetterGlitch from '@/components/reactbits/LetterGlitch/LetterGlitch';
 import LazyMount from '@/components/ui/LazyMount';
 import Icon from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Section';
@@ -68,9 +67,9 @@ export default function Hero() {
 
   return (
     <header id="top" className="relative isolate overflow-hidden pt-20 sm:pt-[clamp(4.5rem,9vh,6rem)]">
-      {/* light: pixel letters glitching on paper (React Bits LetterGlitch) · dark: shafts of sunlight from the top-right (React Bits SideRays) */}
-      <LazyMount key={theme} className="absolute inset-0 -z-10" margin="0px">
-        {theme === 'dark' ? (
+      {/* light: plain paper · dark: shafts of sunlight from the top-right (React Bits SideRays) */}
+      {theme === 'dark' && (
+        <LazyMount className="absolute inset-0 -z-10" margin="0px">
           <SideRays
             rayColor1="#ff6f86"
             rayColor2="#ffc46b"
@@ -89,24 +88,8 @@ export default function Hero() {
             intro
             opacity={0.95}
           />
-        ) : (
-          <LetterGlitch
-            lightMode
-            fontFamily="'Press Start 2P', monospace"
-            fontSize={16}
-            spacing={0.6}
-            density={0}
-            baseColor={t.ink3}
-            baseOpacity={0.16}
-            glitchColors={['#a0a6b6', '#e2687c']}
-            glitchAmount={0.5}
-            speed={0.3}
-            flow={0.5}
-            cursorRadius={140}
-            clickEffect="tear"
-          />
-        )}
-      </LazyMount>
+        </LazyMount>
+      )}
       <div
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
