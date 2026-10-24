@@ -118,6 +118,15 @@
   unicode-range: U+0030;
 }
 
+/* Press Start 2P (SIL Open Font License), Latin subset: the pixel letters behind the light-theme hero */
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./assets/fonts/press-start-2p-latin.woff2') format('woff2');
+}
+
 @theme inline {
   --font-sans: 'Hubot Zero', 'Hubot Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Hubot Zero', 'Hubot Sans Variable', ui-sans-serif, system-ui, sans-serif;
