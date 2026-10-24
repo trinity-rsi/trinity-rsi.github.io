@@ -1,0 +1,631 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------
+   Design tokens
+   Light = "porcelain lab": cool paper, blue-black ink, cardinal accent.
+   Dark  = "night lab": navy-ink planes, luminous cardinal.
+   Role colors (Creator / Explorer / Evolver) and the 5 domain colors
+   were validated for CVD separation + contrast in both modes.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+  --paper: #f3f4f7;
+  --paper-2: #e9ebf0;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --ink: #12141c;
+  --ink-2: #444a5b;
+  --ink-3: #737a8e;
+  --rule: #dadde6;
+  --rule-2: #c3c8d4;
+
+  --evolver: #c8102e;
+  --explorer: #0e8f86;
+  --creator: #c27a00;
+  --accent: var(--evolver);
+  --accent-ink: #a50d26;
+  --accent-wash: #fbe9ec;
+
+  /* task domains */
+  --d-rule: #2a78d6;
+  --d-constraint: #eb6834;
+  --d-percep: #1baf7a;
+  --d-multi: #eda100;
+  --d-long: #e87ba4;
+
+  /* iteration ramp: it0 = unevolved H0 (neutral), it1..it6 one-hue ordinal ramp */
+  --it0: #b8bcc8;
+  --it1: #de8683;
+  --it2: #cd706e;
+  --it3: #bc5a59;
+  --it4: #ab4345;
+  --it5: #9a2b31;
+  --it6: #88091d;
+
+  --good: #0a8f0a;
+  --bad: #d03b3b;
+
+  /* the six capabilities of the capability tree (Appendix B / Figure 10) */
+  --cap-a: #129aab;
+  --cap-b: #7444cf;
+  --cap-c: #1f63d8;
+  --cap-d: #d8342c;
+  --cap-e: #46902f;
+  --cap-f: #dc8a07;
+
+  --shadow-color: 222 30% 30%;
+  --grid-line: rgba(18, 20, 28, 0.06);
+}
+
+.dark {
+  color-scheme: dark;
+  --paper: #080b14;
+  --paper-2: #0c101b;
+  --surface: #10141f;
+  --surface-2: #151a28;
+  --ink: #eceef5;
+  --ink-2: #a8aec1;
+  --ink-3: #6d748b;
+  --rule: #212737;
+  --rule-2: #2e3548;
+
+  --evolver: #e5405c;
+  --explorer: #169c8e;
+  --creator: #c68610;
+  --accent: var(--evolver);
+  --accent-ink: #ff6f86;
+  --accent-wash: #2a1018;
+
+  --d-rule: #3987e5;
+  --d-constraint: #d95926;
+  --d-percep: #199e70;
+  --d-multi: #c98500;
+  --d-long: #d55181;
+
+  --it0: #3b4154;
+  --it1: #964c4d;
+  --it2: #aa5e5f;
+  --it3: #bf7071;
+  --it4: #d48383;
+  --it5: #e99696;
+  --it6: #feaaa9;
+
+  --good: #2fbf4a;
+  --bad: #ef5a5a;
+
+  --cap-a: #2cc3d4;
+  --cap-b: #9a6ef0;
+  --cap-c: #4a86ee;
+  --cap-d: #f0605a;
+  --cap-e: #66b452;
+  --cap-f: #f5b23f;
+
+  --shadow-color: 230 60% 2%;
+  --grid-line: rgba(236, 238, 245, 0.05);
+}
+
+/* Hubot Sans draws its zero with a bar through it, which reads as a theta next to f_θ and in
+   numbers such as +22.0. This copy of the Latin subset has the bar removed; it is used for "0" only. */
+@font-face {
+  font-family: 'Hubot Zero';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  src: url('./assets/fonts/hubot-zero.woff2') format('woff2-variations');
+  unicode-range: U+0030;
+}
+
+@theme inline {
+  --font-sans: 'Hubot Zero', 'Hubot Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Hubot Zero', 'Hubot Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-rule-2: var(--rule-2);
+  --color-evolver: var(--evolver);
+  --color-explorer: var(--explorer);
+  --color-creator: var(--creator);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-wash: var(--accent-wash);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: auto;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    background: var(--paper);
+    transition: background-color 0.5s ease, color 0.5s ease;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--accent) 28%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  a {
+    color: inherit;
+  }
+  img {
+    max-width: 100%;
+  }
+  /* grid items may shrink below their content (tables and figures scroll inside them) */
+  .grid > * {
+    min-width: 0;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Typography
+   ------------------------------------------------------------------ */
+@layer components {
+  .prose-serif {
+    font-family: var(--font-serif);
+    font-size: 1.1875rem; /* 19px */
+    line-height: 1.68;
+    font-variation-settings: 'opsz' 18;
+    color: var(--ink-2);
+    max-width: 66ch;
+    hyphens: auto;
+  }
+  .prose-serif strong {
+    color: var(--ink);
+    font-weight: 620;
+  }
+  .prose-serif em {
+    font-style: italic;
+  }
+  .display-xl {
+    font-family: var(--font-display);
+    font-stretch: 125%;
+    font-weight: 820;
+    letter-spacing: -0.035em;
+    line-height: 0.86;
+  }
+  .display-lg {
+    font-family: var(--font-display);
+    font-stretch: 118%;
+    font-weight: 760;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+  }
+  .display-md {
+    font-family: var(--font-display);
+    font-stretch: 110%;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .kicker {
+    font-family: var(--font-display);
+    font-stretch: 100%;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+    color: var(--ink-3);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .hairline {
+    border-color: var(--rule);
+  }
+
+  /* figure frame used by the four core visualizations */
+  .figure-frame {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 22px;
+    box-shadow:
+      0 1px 0 hsl(var(--shadow-color) / 0.04),
+      0 24px 60px -32px hsl(var(--shadow-color) / 0.35);
+  }
+  .dark .figure-frame {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+      0 30px 80px -40px rgba(0, 0, 0, 0.9);
+  }
+
+  /* placeholder number: shown with a hatched wash so it reads as "to be updated" */
+  .ph {
+    position: relative;
+    border-radius: 4px;
+    padding: 0 0.18em;
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--ink-3) 22%, transparent) 0 2px,
+      transparent 2px 6px
+    );
+    box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--ink-3) 55%, transparent);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 0.18rem 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 560;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+}
+
+/* Harness anatomy: the loop animation highlights the component card it is visiting */
+.proto-card {
+  position: relative;
+}
+.proto-card::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 16px;
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 0 28px -6px color-mix(in oklch, var(--accent) 55%, transparent);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+[data-active='per'] .proto-card[data-proto='per']::before,
+[data-active='mem'] .proto-card[data-proto='mem']::before,
+[data-active='inf'] .proto-card[data-proto='inf']::before,
+[data-active='plan'] .proto-card[data-proto='plan']::before,
+[data-active='orch'] .proto-card[data-proto='orch']::before,
+[data-active='loop'] .proto-card[data-proto='loop']::before {
+  opacity: 1;
+}
+[data-active='per'] .proto-card[data-proto='per'] .proto-name,
+[data-active='mem'] .proto-card[data-proto='mem'] .proto-name,
+[data-active='inf'] .proto-card[data-proto='inf'] .proto-name,
+[data-active='plan'] .proto-card[data-proto='plan'] .proto-name,
+[data-active='orch'] .proto-card[data-proto='orch'] .proto-name,
+[data-active='loop'] .proto-card[data-proto='loop'] .proto-name {
+  color: var(--accent);
+}
+[data-active='per'] .proto-card[data-proto='per'] .proto-icon,
+[data-active='mem'] .proto-card[data-proto='mem'] .proto-icon,
+[data-active='inf'] .proto-card[data-proto='inf'] .proto-icon,
+[data-active='plan'] .proto-card[data-proto='plan'] .proto-icon,
+[data-active='orch'] .proto-card[data-proto='orch'] .proto-icon,
+[data-active='loop'] .proto-card[data-proto='loop'] .proto-icon {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* one-time pulse around the theme switch while the dark-mode hint is up */
+@keyframes theme-hint-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 10px color-mix(in oklch, var(--accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.theme-hint-ring {
+  animation: theme-hint-ring 1.6s ease-out infinite;
+}
+.theme-hint {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.97);
+  transform-origin: calc(100% - 58px) 0;
+  transition:
+    opacity 0.28s ease,
+    transform 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    visibility 0s linear 0.45s;
+  pointer-events: none;
+}
+.theme-hint[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.28s ease,
+    transform 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    visibility 0s;
+  pointer-events: auto;
+}
+
+/* the ✦ in the Real → Sim → Real slogan tag twinkles gently */
+@keyframes slogan-star {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.72) rotate(45deg);
+    opacity: 0.65;
+  }
+}
+.slogan-star {
+  display: inline-block;
+  animation: slogan-star 2.8s ease-in-out infinite;
+}
+
+/* KaTeX tuning */
+.katex {
+  font-size: 1.06em;
+}
+.katex-display {
+  margin: 0.4em 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Small keyframe library
+   ------------------------------------------------------------------ */
+@keyframes tri-draw {
+  from {
+    stroke-dashoffset: 600;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.tri-draw {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: tri-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+/* the long arcs of the one-row Trinity diagram */
+@keyframes row-draw {
+  from {
+    stroke-dashoffset: 1500;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.row-draw {
+  stroke-dasharray: 1500;
+  stroke-dashoffset: 1500;
+  animation: row-draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+/* the hero row's arrows (TrinityRow): draw in, then a packet runs each one */
+@keyframes row-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.row-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: row-line 0.85s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes row-head {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.row-head {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  animation: row-head 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.3) forwards;
+}
+@keyframes row-label {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.row-label {
+  opacity: 0;
+  animation: row-label 0.7s ease forwards;
+}
+@keyframes row-packet {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(var(--packet-dx));
+    opacity: 0;
+  }
+}
+.row-packet {
+  opacity: 0;
+  animation: row-packet 2.6s cubic-bezier(0.45, 0, 0.3, 1) infinite both;
+}
+@keyframes row-glint {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(var(--glint-dx));
+  }
+}
+.row-glint {
+  animation: row-glint 6.5s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .row-line,
+  .row-head,
+  .row-label {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+    transform: none;
+  }
+}
+/* the film player (FilmSection) */
+@keyframes film-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(200, 16, 46, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(200, 16, 46, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(200, 16, 46, 0);
+  }
+}
+.film-ring {
+  animation: film-ring 2.2s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+}
+@keyframes film-eq {
+  0%,
+  100% {
+    height: 3px;
+  }
+  50% {
+    height: 10px;
+  }
+}
+.film-eq {
+  height: 3px;
+  animation: film-eq 0.9s ease-in-out infinite;
+}
+.film-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+}
+.film-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fff;
+}
+.film-volume::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-ring,
+  .film-eq {
+    animation: none;
+  }
+}
+@keyframes tri-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tri-pop {
+  animation: tri-pop 0.9s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+@keyframes tri-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.tri-bob {
+  animation: tri-bob 4.2s ease-in-out infinite;
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+.rise-in {
+  animation: rise-in 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes scroll-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+.scroll-cue {
+  animation: scroll-cue 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
