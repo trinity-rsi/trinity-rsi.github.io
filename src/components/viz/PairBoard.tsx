@@ -1,287 +1,340 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { benchById, capById, domainById, familyById, nodeById, pathLabel, type Bench, type NodeId } from '@/data/tree';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, animate, motion, useMotionValue, type AnimationPlaybackControls } from 'motion/react';
+import Icon from '@/components/ui/Icon';
+import { PauseIcon, PlayIcon } from '@hugeicons/core-free-icons';
+import { CAPS, benchById, capById, domainById, familyById, nodeById, type Bench, type CapId } from '@/data/tree';
 import { e1Frame } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
-import { useReducedMotion } from '@/lib/hooks';
+import { useMediaQuery, useNearViewport, useReducedMotion } from '@/lib/hooks';
 
 /**
- * Different-looking tasks that need the same capabilities, all eight pairs at once, as in the
- * film. Every pair sits on one node of the paper's capability tree (Figure 9) and comes from
- * different task domains; frames are the benchmarks' own start frames (Appendix E.1). The pair on
- * top is open: what each task requires, row against row; a tile below opens another pair.
- * The first pair is the paper's own example.
+ * Tasks that look different but need some of the same capabilities. A task requires the
+ * capabilities on the branch of its capability-tree node (Figures 8 and 9), so every task here
+ * lists all six capabilities with the ones it requires lit, and only the capabilities both tasks
+ * require are linked. Frames are the benchmarks' start frames (Appendix E.1). The first pair is
+ * the paper's own example; the others come from different domains and different nodes.
  */
 type Pair = { a: string; b: string; note?: string };
 export const PAIRS: Pair[] = [
   {
     a: 'arc-agi-3',
     b: 'micromouse',
-    note: 'ARC-AGI-3 requires recognizing grid states and their changes; Micromouse requires continuously updating environmental information during maze exploration. Both rely on accurate perception and state tracking.',
+    note: 'ARC-AGI-3 requires recognizing grid states and their changes; Micromouse requires continuously updating environmental information during maze exploration. Both rely on accurate perception and state tracking, and on the capability tree both sit at node d → a.',
   },
-  { a: 'memory-maze', b: 'textquests' },
-  { a: 'among-us', b: 'euro-ncap-aeb' },
-  { a: 'chess-tactics', b: 'minihack-maze-corridor' },
-  { a: 'boxinggym', b: 'pallet-rack-inspection' },
-  { a: 'codenames', b: 'entity-deduction-arena' },
-  { a: 'saboteur', b: 'wca-cube-solving' },
-  { a: 'puzz-link-penpa', b: 'nethack' },
+  { a: 'nethack', b: 'soon' },
+  { a: 'puzz-link-penpa', b: 'memory-maze' },
+  { a: 'textquests', b: 'cap-x' },
+  { a: 'wca-cube-solving', b: 'hu-nlhe' },
+  { a: 'master-keying', b: 'the-long-dark' },
+  { a: 'saboteur', b: 'wilt' },
+  { a: 'mastermind', b: 'codenames' },
 ];
 
-const short = (b: Bench) => b.short ?? b.name;
+const CYCLE = 6.5; // seconds per pair while auto-playing
+const SHORT: Record<CapId, string> = { a: 'Perception', b: 'Hypothesis', c: 'Constraints', d: 'Goal & value', e: 'Video evidence', f: 'Video comprehension' };
+const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+const name = (b: Bench) => b.short ?? b.name;
+const capsOf = (b: Bench) => nodeById[b.node].path as CapId[];
+const list = (cs: CapId[]) => {
+  const n = cs.map((c) => capById[c].name.toLowerCase());
+  return n.length === 1 ? n[0] : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`;
+};
 
 function caption(p: Pair) {
   if (p.note) return p.note;
   const A = benchById[p.a];
   const B = benchById[p.b];
-  const n = nodeById[A.node];
-  const caps = n.path.map((c) => capById[c].name.toLowerCase());
-  const need = caps.length === 1 ? caps[0] : `${caps.slice(0, -1).join(', ')} and ${caps[caps.length - 1]}`;
-  return `${A.name} comes from ${domainById[A.domain].name.toLowerCase()}, ${B.name} from ${domainById[B.domain].name.toLowerCase()}. Both require ${need}, so they share node ${pathLabel(A.node).replace(/ /g, ' ')} of the capability tree.`;
+  const sa = capsOf(A);
+  const sb = capsOf(B);
+  const shared = sa.filter((c) => sb.includes(c));
+  const onlyA = sa.filter((c) => !sb.includes(c));
+  const onlyB = sb.filter((c) => !sa.includes(c));
+  const parts = [`${A.name} comes from ${domainById[A.domain].name.toLowerCase()}, ${B.name} from ${domainById[B.domain].name.toLowerCase()}. Both require ${list(shared)}.`];
+  if (onlyA.length) parts.push(`Only ${name(A)} also needs ${list(onlyA)}${onlyB.length ? `; only ${name(B)}, ${list(onlyB)}` : ''}.`);
+  else if (onlyB.length) parts.push(`Only ${name(B)} also needs ${list(onlyB)}.`);
+  return parts.join(' ');
 }
 
-/** the letters of a node's capability path, as small coloured keys */
-function PathKeys({ node, size = 20 }: { node: NodeId; size?: number }) {
+const splitLabel = (b: Bench) => (b.split === 'unseen' ? 'Unseen' : b.split === 'both' ? 'Sim. train · robot unseen' : 'Training');
+
+/** a capability's letter key; filled when required, an outline otherwise */
+function Key({ c, on, size = 24 }: { c: CapId; on: boolean; size?: number }) {
   const { t } = useTokens();
   return (
-    <span className="inline-flex shrink-0 items-center gap-[3px]">
-      {nodeById[node].path.map((c) => (
-        <span
-          key={c}
-          className="grid place-items-center rounded-[6px] font-[800] leading-none text-white"
-          style={{ background: t.caps[c], width: size, height: size, fontSize: size * 0.55 }}
-        >
-          {c}
-        </span>
-      ))}
-    </span>
+    <motion.span
+      className="grid shrink-0 place-items-center rounded-[7px] font-[800] leading-none"
+      style={{ width: size, height: size, fontSize: size * 0.56, borderWidth: 1.5, borderStyle: 'solid' }}
+      animate={{ backgroundColor: on ? t.caps[c] : `${t.caps[c]}00`, borderColor: on ? t.caps[c] : t.rule2, color: on ? '#ffffff' : t.ink3 }}
+      transition={{ duration: 0.3 }}
+    >
+      {c}
+    </motion.span>
   );
 }
 
-/** one task of the open pair: its frame, then what it requires */
-function TaskCard({ b, node, rowRefs }: { b: Bench; node: NodeId; rowRefs: React.MutableRefObject<(HTMLLIElement | null)[]> }) {
-  const { t } = useTokens();
-  const d = domainById[b.domain];
+function Frame({ b, narrow }: { b: Bench; narrow: boolean }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[22px] border border-rule bg-surface shadow-[0_26px_60px_-44px_rgba(20,24,40,0.6)]">
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-paper-2">
-        <img src={e1Frame(b.id, 'start')} alt={`${b.name}: start frame`} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-surface/90 px-2.5 py-1 text-[11.5px] font-[680] text-ink-2 shadow-sm backdrop-blur">
-          <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
-          {d.name}
-        </span>
-        <span className="absolute right-3 top-3 rounded-full bg-[rgba(12,14,22,0.62)] px-2.5 py-1 text-[11px] font-[680] text-white backdrop-blur">
-          {b.split === 'unseen' ? 'Unseen' : 'Training'}
-        </span>
-      </div>
-      <div className="flex flex-1 flex-col p-5">
-        <p className="text-[21px] font-[760] leading-tight tracking-[-0.02em] text-ink" style={{ fontStretch: '110%' }}>
-          {b.name}
-          {b.rebuilt && <span className="ml-0.5 align-super text-[13px] text-ink-3">*</span>}
-        </p>
-        <p className="mt-1 line-clamp-1 text-[13px] leading-snug text-ink-3">{familyById[b.family].name}</p>
-        <p className="mt-4 text-[12px] font-[700] uppercase tracking-[0.1em] text-ink-3">{short(b)} requires</p>
-        <ol className="mt-2 space-y-2">
-          {nodeById[node].path.map((c, i) => (
-            <li
-              key={c}
-              ref={(el) => {
-                rowRefs.current[i] = el;
-              }}
-              className="flex h-11 items-center gap-3 rounded-[12px] px-2.5"
-              style={{ background: `${t.caps[c]}14` }}
-            >
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-[8px] text-[14px] font-[800] text-white shadow-sm" style={{ background: t.caps[c] }}>
-                {c}
-              </span>
-              <span className="text-[14.5px] font-[700] leading-tight text-ink">{capById[c].name}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+    <div className="relative aspect-[16/9] overflow-hidden rounded-[14px] bg-paper-2">
+      <AnimatePresence initial={false}>
+        <motion.img
+          key={b.id}
+          src={e1Frame(b.id, 'start')}
+          alt={`${b.name}: start frame`}
+          className="absolute inset-0 h-full w-full object-cover"
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.35, delay: 0.1 } }}
+          transition={{ duration: 0.5, ease: EASE }}
+          draggable={false}
+        />
+      </AnimatePresence>
+      <span className="absolute left-2 top-2 inline-flex max-w-[calc(100%-1rem)] items-center gap-1.5 truncate rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-[680] text-ink-2 shadow-sm backdrop-blur">
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: domainById[b.domain].color }} />
+        <span className="truncate">{narrow ? domainById[b.domain].short : domainById[b.domain].name}</span>
+      </span>
     </div>
   );
 }
 
+function Title({ b }: { b: Bench }) {
+  return (
+    <div className="relative h-[60px] pt-2.5">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div key={b.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4, transition: { duration: 0.18 } }} transition={{ duration: 0.3, ease: EASE }}>
+          <p className="truncate text-[clamp(15px,1.5vw,19px)] font-[760] leading-tight tracking-[-0.015em] text-ink" style={{ fontStretch: '108%' }}>
+            {b.name}
+            {b.rebuilt && <span className="ml-0.5 align-super text-[12px] text-ink-3">*</span>}
+          </p>
+          <p className="mt-0.5 truncate text-[12px] text-ink-3">
+            {familyById[b.family].name} · {splitLabel(b)}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Row({ c, on, k, narrow, reduce }: { c: CapId; on: boolean; k: number; narrow: boolean; reduce: boolean }) {
+  const { t } = useTokens();
+  return (
+    <motion.div
+      className="flex h-[38px] items-center gap-2.5 rounded-[11px] px-2"
+      animate={{ backgroundColor: on ? `${t.caps[c]}1c` : `${t.caps[c]}00`, opacity: on ? 1 : 0.42 }}
+      transition={{ duration: 0.35, delay: reduce ? 0 : k * 0.045 }}
+    >
+      <Key c={c} on={on} />
+      <span className={`truncate leading-tight ${narrow ? 'text-[12.5px]' : 'text-[13.5px]'} ${on ? 'font-[700] text-ink' : 'font-[560] text-ink-3'}`}>{narrow ? SHORT[c] : capById[c].name}</span>
+    </motion.div>
+  );
+}
+
 export default function PairBoard() {
-  const { t, theme } = useTokens();
+  const { t } = useTokens();
   const reduce = useReducedMotion();
+  const narrow = !useMediaQuery('(min-width: 640px)');
+  const [ref, near] = useNearViewport<HTMLDivElement>('0px');
   const [idx, setIdx] = useState(0);
+  const [auto, setAuto] = useState(true);
+  const [hold, setHold] = useState(false);
+  const phase = useMotionValue(0);
+  const clock = useRef<AnimationPlaybackControls | null>(null);
+
   const pair = PAIRS[idx];
   const A = benchById[pair.a];
   const B = benchById[pair.b];
-  const node = A.node;
-  const n = nodeById[node];
+  const sa = capsOf(A);
+  const sb = capsOf(B);
+  const shared = CAPS.map((c) => c.id as CapId).filter((c) => sa.includes(c) && sb.includes(c));
 
-  // the "=" links between the two cards: measured, so they meet each row exactly
-  const wrap = useRef<HTMLDivElement>(null);
-  const rowsA = useRef<(HTMLLIElement | null)[]>([]);
-  const rowsB = useRef<(HTMLLIElement | null)[]>([]);
-  const [links, setLinks] = useState<{ x1: number; x2: number; y: number }[]>([]);
-  useLayoutEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const measure = () => {
-      const box = el.getBoundingClientRect();
-      const out: { x1: number; x2: number; y: number }[] = [];
-      n.path.forEach((_, i) => {
-        const a = rowsA.current[i]?.getBoundingClientRect();
-        const b = rowsB.current[i]?.getBoundingClientRect();
-        if (!a || !b || a.right >= b.left) return;
-        out.push({ x1: a.right - box.left, x2: b.left - box.left, y: (a.top + a.bottom) / 2 - box.top });
-      });
-      setLinks(out);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    const late = window.setTimeout(measure, 420); // after the cards have settled in
-    return () => {
-      ro.disconnect();
-      window.clearTimeout(late);
-    };
-  }, [idx, n.path]);
+  // auto-play: the clock lives in a motion value, so the list's progress bar never re-renders the board
+  const running = auto && near && !hold && !reduce;
+  const runningRef = useRef(running);
+  runningRef.current = running;
+  useEffect(() => {
+    phase.set(0);
+    clock.current?.stop();
+    const c = animate(phase, 1, { duration: CYCLE, ease: 'linear', onComplete: () => setIdx((i) => (i + 1) % PAIRS.length) });
+    if (!runningRef.current) c.pause();
+    clock.current = c;
+    return () => c.stop();
+  }, [idx, phase]);
+  useEffect(() => {
+    const c = clock.current;
+    if (!c) return;
+    if (running) c.play();
+    else c.pause();
+  }, [running]);
 
-  const text = useMemo(() => caption(pair), [pair]);
+  // decode the next pair's frames ahead of time
+  useEffect(() => {
+    const next = PAIRS[(idx + 1) % PAIRS.length];
+    [next.a, next.b].forEach((id) => {
+      const im = new Image();
+      im.src = e1Frame(id, 'start');
+      im.decode?.().catch(() => undefined);
+    });
+  }, [idx]);
+
+  const pick = (i: number) => {
+    setAuto(false);
+    setIdx(i);
+  };
 
   return (
-    <div>
-      {/* ---------------- the open pair ---------------- */}
-      <div ref={wrap} className="relative mx-auto max-w-[1040px]">
-        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(64px,120px)_minmax(0,1fr)] md:gap-0">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={`a-${idx}`}
-              initial={{ opacity: 0, x: -28, scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -18, transition: { duration: 0.22 } }}
-              transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-            >
-              <TaskCard b={A} node={node} rowRefs={rowsA} />
-            </motion.div>
-          </AnimatePresence>
-          <div className="hidden md:block" aria-hidden />
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={`b-${idx}`}
-              initial={{ opacity: 0, x: 28, scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 18, transition: { duration: 0.22 } }}
-              transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1], delay: 0.05 }}
-            >
-              <TaskCard b={B} node={node} rowRefs={rowsB} />
-            </motion.div>
-          </AnimatePresence>
+    <div ref={ref} className="grid items-start gap-5 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-7 xl:grid-cols-[320px_minmax(0,1fr)]">
+      {/* ---------------- the eight pairs ---------------- */}
+      <div className="min-w-0">
+        <div className="mb-2 flex items-center justify-between px-1">
+          <p className="text-[12.5px] font-[750] uppercase tracking-[0.12em] text-ink-3">Eight pairs</p>
+          <button
+            type="button"
+            onClick={() => setAuto((v) => !v)}
+            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-rule bg-surface px-2.5 text-[11.5px] font-[680] text-ink-2 transition-colors hover:text-ink"
+            aria-pressed={auto}
+          >
+            <Icon icon={auto ? PauseIcon : PlayIcon} size={12} stroke={2.2} />
+            {auto ? 'Auto-play' : 'Play all'}
+          </button>
         </div>
-        {/* row against row: the same capability on both sides */}
-        <svg className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block" aria-hidden>
-          {links.map((l, i) => {
-            const c = t.caps[n.path[i]];
-            const mid = (l.x1 + l.x2) / 2;
+        <ol className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-2 lg:mx-0 lg:flex-col lg:gap-1.5 lg:overflow-visible lg:px-0 lg:pb-0">
+          {PAIRS.map((p, i) => {
+            const a = benchById[p.a];
+            const b = benchById[p.b];
+            const sh = capsOf(a).filter((c) => capsOf(b).includes(c));
+            const on = i === idx;
             return (
-              <g key={`${idx}-${i}`}>
-                <motion.line
-                  x1={l.x1 + 4}
-                  x2={l.x2 - 4}
-                  y1={l.y}
-                  y2={l.y}
-                  stroke={c}
-                  strokeWidth={2}
-                  strokeDasharray="5 6"
-                  strokeLinecap="round"
-                  initial={reduce ? false : { pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 0.9 }}
-                  transition={{ duration: 0.6, delay: 0.35 + i * 0.12, ease: [0.4, 0, 0.2, 1] }}
-                />
-                <motion.g initial={reduce ? false : { scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 520, damping: 22, delay: 0.7 + i * 0.12 }} style={{ originX: `${mid}px`, originY: `${l.y}px` }}>
-                  <circle cx={mid} cy={l.y} r={14} fill={theme === 'dark' ? t.surface : '#ffffff'} stroke={c} strokeWidth={2} />
-                  <text x={mid} y={l.y + 5.5} textAnchor="middle" fill={c} style={{ fontSize: 17, fontWeight: 800 }}>
-                    =
-                  </text>
-                </motion.g>
-              </g>
+              <li key={p.a} className="w-[236px] shrink-0 snap-start lg:w-auto">
+                <button
+                  type="button"
+                  onClick={() => pick(i)}
+                  aria-pressed={on}
+                  className={`group relative w-full overflow-hidden rounded-[14px] border p-2 text-left transition-[background-color,border-color,box-shadow] duration-300 ${
+                    on ? 'border-accent/40 bg-surface shadow-[0_16px_34px_-24px_rgba(20,24,40,0.55)]' : 'border-transparent bg-surface/45 hover:bg-surface'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="relative h-10 w-[74px] shrink-0">
+                      {[a, b].map((x, k) => (
+                        <img
+                          key={x.id}
+                          src={e1Frame(x.id, 'start')}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className={`absolute top-0 h-10 w-[46px] rounded-[8px] object-cover ring-2 ring-surface transition-transform duration-300 ${k ? 'right-0' : 'left-0'} ${on ? (k ? 'translate-x-[3px] rotate-[3deg]' : '-translate-x-[3px] -rotate-[3deg]') : ''}`}
+                          draggable={false}
+                        />
+                      ))}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block truncate text-[13px] font-[720] leading-tight ${on ? 'text-ink' : 'text-ink-2'}`}>
+                        {name(a)} <span className="text-accent">×</span> {name(b)}
+                      </span>
+                      <span className="mt-1 flex items-center gap-1">
+                        {sh.map((c) => (
+                          <span key={c} className="grid h-[17px] w-[17px] place-items-center rounded-[5px] text-[10px] font-[800] text-white" style={{ background: t.caps[c] }}>
+                            {c}
+                          </span>
+                        ))}
+                        <span className="ml-0.5 text-[11px] font-[600] text-ink-3">shared</span>
+                      </span>
+                    </span>
+                  </span>
+                  {on && auto && !reduce && <motion.span className="absolute inset-x-0 bottom-0 h-[2px] origin-left bg-accent" style={{ scaleX: phase }} aria-hidden />}
+                </button>
+              </li>
             );
           })}
-        </svg>
+        </ol>
+      </div>
 
-        {/* the node they share */}
-        <div className="mt-5 flex justify-center">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={idx}
-              className="inline-flex items-center gap-3 rounded-full border border-rule bg-surface px-4 py-2 shadow-[0_18px_40px_-30px_rgba(20,24,40,0.6)]"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.3 }}
-            >
-              <span className="text-[11.5px] font-[750] tracking-[0.04em] text-ink-3"><span className="uppercase tracking-[0.12em]">Shared node</span> {pathLabel(node)}</span>
-              <PathKeys node={node} size={20} />
-              <span className="text-[15px] font-[740] text-ink">{n.name}</span>
+      {/* ---------------- the open pair ---------------- */}
+      <div
+        className="min-w-0 rounded-[24px] border border-rule bg-surface p-3.5 shadow-[0_34px_80px_-56px_rgba(20,24,40,0.7)] sm:p-5"
+        onMouseEnter={() => setHold(true)}
+        onMouseLeave={() => setHold(false)}
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_36px_minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)]">
+          <Frame b={A} narrow={narrow} />
+          <div className="grid place-items-center">
+            <span className="grid h-8 w-8 place-items-center rounded-full border border-rule bg-surface-2 text-[15px] font-[800] text-accent sm:h-10 sm:w-10 sm:text-[18px]">×</span>
+          </div>
+          <Frame b={B} narrow={narrow} />
+
+          <Title b={A} />
+          <div />
+          <Title b={B} />
+
+          <p className="mb-1.5 px-1 text-[11px] font-[750] uppercase tracking-[0.11em] text-ink-3">
+            requires {sa.length} of 6
+          </p>
+          <p className="mb-1.5 text-center text-[10.5px] font-[750] uppercase tracking-[0.11em] text-ink-3">{narrow ? '' : 'shared'}</p>
+          <p className="mb-1.5 px-1 text-[11px] font-[750] uppercase tracking-[0.11em] text-ink-3">
+            requires {sb.length} of 6
+          </p>
+
+          {CAPS.map((cap, k) => {
+            const c = cap.id as CapId;
+            const both = shared.includes(c);
+            const order = shared.indexOf(c);
+            return [
+              <Row key={`a-${c}`} c={c} on={sa.includes(c)} k={k} narrow={narrow} reduce={!!reduce} />,
+              <div key={`m-${c}`} className="relative z-10 h-[38px]">
+                <AnimatePresence>
+                  {both && (
+                    <motion.span key={`${idx}-${c}`} className="absolute inset-0" initial={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.15 } }}>
+                      <motion.span
+                        className="absolute -left-2 -right-2 top-1/2 -mt-px h-[2px] origin-left rounded-full"
+                        style={{ background: t.caps[c] }}
+                        initial={reduce ? false : { scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ duration: 0.45, delay: 0.32 + order * 0.14, ease: EASE }}
+                      />
+                      <span className="absolute inset-0 grid place-items-center">
+                        <motion.span
+                          className="grid h-6 w-6 place-items-center rounded-full border-2 bg-surface text-[14px] font-[850] leading-none sm:h-7 sm:w-7 sm:text-[16px]"
+                          style={{ borderColor: t.caps[c], color: t.caps[c] }}
+                          initial={reduce ? false : { scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 520, damping: 19, delay: 0.62 + order * 0.14 }}
+                        >
+                          =
+                        </motion.span>
+                      </span>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>,
+              <Row key={`b-${c}`} c={c} on={sb.includes(c)} k={k} narrow={narrow} reduce={!!reduce} />,
+            ];
+          })}
+        </div>
+
+        {/* what they share, in words */}
+        <div className="relative mt-4 border-t border-rule pt-4">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div key={idx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.18 } }} transition={{ duration: 0.35, ease: EASE }}>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="mr-1 text-[11px] font-[750] uppercase tracking-[0.11em] text-ink-3">Shared</span>
+                {shared.map((c) => (
+                  <span key={c} className="inline-flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2.5 text-[12.5px] font-[700] text-ink" style={{ background: `${t.caps[c]}1c` }}>
+                    <span className="grid h-5 w-5 place-items-center rounded-full text-[11px] font-[800] text-white" style={{ background: t.caps[c] }}>
+                      {c}
+                    </span>
+                    {capById[c].name}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-2.5 font-serif text-[1rem] leading-[1.6] text-ink-2">{caption(pair)}</p>
             </motion.div>
           </AnimatePresence>
         </div>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.p
-            key={idx}
-            className="mx-auto mt-4 max-w-[66ch] text-center font-serif text-[1.06rem] leading-[1.6] text-ink-2"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35 }}
-          >
-            {text}
-          </motion.p>
-        </AnimatePresence>
       </div>
 
-      {/* ---------------- every pair at once ---------------- */}
-      <div className="mt-12 grid grid-cols-1 gap-3 min-[520px]:grid-cols-2 lg:grid-cols-4">
-        {PAIRS.map((p, i) => {
-          const a = benchById[p.a];
-          const b = benchById[p.b];
-          const on = i === idx;
-          return (
-            <motion.button
-              key={p.a}
-              type="button"
-              onClick={() => setIdx(i)}
-              aria-pressed={on}
-              className={`group relative rounded-[18px] border bg-surface p-2.5 text-left transition-[border-color,box-shadow] duration-300 ${
-                on ? 'border-accent/45 shadow-[0_22px_44px_-28px_rgba(200,16,46,0.55)] ring-2 ring-accent/25' : 'border-rule hover:border-rule-2 hover:shadow-[0_22px_44px_-32px_rgba(20,24,40,0.55)]'
-              }`}
-              initial={reduce ? false : { opacity: 0, y: -26, rotate: i % 2 ? 1.2 : -1.2 }}
-              whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-              viewport={{ once: true, margin: '0px 0px -6% 0px' }}
-              transition={{ type: 'spring', stiffness: 460, damping: 24, mass: 0.9, delay: (i % 4) * 0.07 + Math.floor(i / 4) * 0.16 }}
-              whileHover={reduce ? undefined : { y: -3 }}
-            >
-              <span className="grid grid-cols-2 gap-1.5">
-                {[a, b].map((x) => (
-                  <span key={x.id} className="relative block aspect-[16/10] overflow-hidden rounded-[10px] bg-paper-2">
-                    <img src={e1Frame(x.id, 'start')} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" draggable={false} />
-                  </span>
-                ))}
-              </span>
-              <span className="mt-1.5 grid grid-cols-2 gap-1.5 px-0.5">
-                {[a, b].map((x) => (
-                  <span key={x.id} className="truncate text-[12.5px] font-[700] text-ink">
-                    {short(x)}
-                  </span>
-                ))}
-              </span>
-              <span className="mt-2 flex items-center gap-2 rounded-[11px] px-2 py-1.5" style={{ background: on ? t.accentWash : t.surface2 }}>
-                <PathKeys node={a.node} size={18} />
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-[700] leading-none text-ink-3">node {pathLabel(a.node)}</span>
-                  <span className="mt-0.5 block truncate text-[12.5px] font-[700] leading-tight text-ink">{nodeById[a.node].name}</span>
-                </span>
-              </span>
-            </motion.button>
-          );
-        })}
-      </div>
-      <p className="mt-4 text-center text-[12.5px] text-ink-3">Pairs from the capability tree (Figure 9) · frames from Appendix E.1 · * rebuilt environment · pick a pair to open it</p>
+      <p className="text-center text-[12px] text-ink-3 lg:col-span-2">
+        A task requires the capabilities on its capability-tree branch (Figures 8 and 9) · frames from Appendix E.1 · * rebuilt environment
+      </p>
     </div>
   );
 }

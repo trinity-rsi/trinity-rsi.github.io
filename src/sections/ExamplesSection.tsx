@@ -30,7 +30,7 @@ function BenchTile({ id }: { id: string }) {
   );
 }
 
-/** Various tasks → shared capabilities: the task space, then pairs that meet on one capability node. */
+/** Various tasks → shared capabilities: the task space, then pairs of tasks and the capabilities they share. */
 export default function ExamplesSection() {
   const { t, theme } = useTokens();
   const wide = useMediaQuery('(min-width: 768px)');

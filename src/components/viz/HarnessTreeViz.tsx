@@ -46,6 +46,9 @@ const ANCHOR: Record<Nid | 'root', { x: number; y: number }> = {
   ef: { x: 1730, y: 640 },
   cda: { x: 170, y: 400 },
 };
+/* the node in focus, in the empty stretch between Hypothesis Tracking and Video Events (wide screens) */
+const CARD = { x: 1150, y: 372, w: 446, h: 430 }; // ends above the bottom row's status tags
+const pct = (v: number, o: number, s: number) => `${((v - o) / s) * 100}%`;
 /* Creator's level for each node, in a strip along the top (left to right as on the tree) */
 const TH = { w: 124, h: 88, y: 272, x0: 426, step: 130 };
 const THUMBS: Nid[] = (Object.keys(ANCHOR) as (Nid | 'root')[]).filter((n): n is Nid => n !== 'root').sort((a, b) => ANCHOR[a].x - ANCHOR[b].x || ANCHOR[b].y - ANCHOR[a].y);
@@ -134,6 +137,45 @@ function MiniMeans({ it }: { it: number }) {
         </text>
       ))}
     </svg>
+  );
+}
+
+/** a node's benchmarks, H₀ against the score as of now (Table 7); SOON and CaP-X show simulation and robot */
+function BenchBars({ focus, cur, compact = false }: { focus: Nid; cur: ReturnType<typeof at>; compact?: boolean }) {
+  const { t } = useTokens();
+  return (
+    <ul className={compact ? 'space-y-[2px]' : 'space-y-1.5'}>
+      {benchesOfNode(focus).flatMap((b) => {
+        const rows =
+          b.split === 'both'
+            ? [
+                { k: `${b.id}-s`, label: `${b.short ?? b.name} (sim.)`, sc: b.scores.it },
+                { k: `${b.id}-r`, label: `${b.short ?? b.name} (robot)`, sc: b.robot!.it },
+              ]
+            : [{ k: b.id, label: b.short ?? b.name, sc: b.scores.it }];
+        return rows.map((r) => {
+          const sc = scoreAt(focus, r.sc as unknown as number[], cur);
+          return (
+            <li key={r.k} className={`grid items-center gap-2 ${compact ? 'grid-cols-[minmax(0,1fr)_72px_30px] text-[11.5px] leading-[1.25]' : 'grid-cols-[minmax(0,1fr)_110px_34px] text-[12px]'}`}>
+              <span className="truncate text-ink-2">
+                {r.label}
+                {b.split === 'unseen' || r.k.endsWith('-r') ? <span className="ml-1 text-[10px] text-ink-3">unseen</span> : null}
+              </span>
+              <span className={`relative rounded-full bg-paper-2 ${compact ? 'h-1.5' : 'h-2'}`}>
+                <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${r.sc[0]}%`, background: t.iters[0] }} />
+                <motion.span
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  animate={{ width: `${sc.v}%` }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                  style={{ background: t.iters[Math.max(1, sc.lvl)] ?? t.accent, opacity: sc.lvl ? 1 : 0 }}
+                />
+              </span>
+              <span className="tabular text-right font-[700] text-ink">{sc.v}</span>
+            </li>
+          );
+        });
+      })}
+    </ul>
   );
 }
 
@@ -341,6 +383,7 @@ export default function HarnessTreeViz() {
         {/* on a phone the tree keeps a readable size and scrolls sideways */}
         <p className="px-1 pb-2 text-[12px] font-[600] text-ink-3 md:hidden">Swipe to see the whole tree →</p>
         <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0">
+        <div className="relative">
         <svg viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} className="block h-auto w-full min-w-[1040px] md:min-w-0" role="img" aria-label="Explorer's Harness tree: eleven node Harnesses gain or revise one module per iteration">
           <BrickDefs id="ht" />
           <defs>
@@ -486,14 +529,63 @@ export default function HarnessTreeViz() {
           <AnimatePresence>
             {cur.k === -1 && !cur.done && (
               <motion.g key={`banner-${cur.it}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <rect x={960 - 220} y={430} width={440} height={74} rx={37} fill={t.accent} opacity={0.95} filter="url(#ht-sh)" />
-                <text x={960} y={478} textAnchor="middle" fill="#fff" style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.01em' }}>
+                <rect x={925 - 220} y={430} width={440} height={74} rx={37} fill={t.accent} opacity={0.95} filter="url(#ht-sh)" />
+                <text x={925} y={478} textAnchor="middle" fill="#fff" style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.01em' }}>
                   Iteration {cur.it} · top-down pass
                 </text>
               </motion.g>
             )}
           </AnimatePresence>
         </svg>
+
+        {/* the node in focus, inside the figure, so the tree and its detail are seen together */}
+        <div className="absolute hidden xl:block" style={{ left: pct(CARD.x, VB.x, VB.w), top: pct(CARD.y, VB.y, VB.h), width: `${(CARD.w / VB.w) * 100}%`, height: `${(CARD.h / VB.h) * 100}%` }}>
+          <div className="flex h-full flex-col overflow-hidden rounded-[18px] border border-rule bg-surface/95 px-3.5 py-3 shadow-[0_26px_54px_-38px_rgba(20,24,40,0.6)] backdrop-blur">
+            <p className="text-[10.5px] font-[760] uppercase tracking-[0.11em] text-ink-3">{pick ? 'Selected node' : visiting ? `Iteration ${cur.it} · visiting` : 'Node'}</p>
+            <p className="mt-1 flex items-start gap-2 text-[14.5px] font-[780] leading-[1.22] text-ink">
+              <span className="flex shrink-0 gap-[3px] pt-[1px]">
+                {fn.path.map((c) => (
+                  <span key={c} className="grid h-[18px] w-[18px] place-items-center rounded-[5px] text-[11px] font-[800] text-white" style={{ background: t.caps[c] }}>
+                    {c}
+                  </span>
+                ))}
+              </span>
+              <span className="line-clamp-2">{fn.name}</span>
+            </p>
+            {(() => {
+              const i = Math.max(1, focusIt);
+              const e = fn.events[i - 1];
+              const done = eventDone(focus, i, cur);
+              const m = e ? moduleById[e.module] : null;
+              return (
+                m && (
+                  <div className="mt-2 border-t border-rule pt-2">
+                    <p className="flex items-start gap-2 text-[11.5px] leading-[1.35] text-ink-2" style={{ opacity: done ? 1 : 0.55 }}>
+                      <span className="tabular mt-px shrink-0 text-[10.5px] font-[760] leading-[18px] text-ink-3">it {i}</span>
+                      <span className="mt-px grid h-[18px] shrink-0 place-items-center rounded-[5px] px-1.5 text-[10.5px] font-[800] text-white" style={{ background: t.caps[m.cap] }}>
+                        {m.id}
+                      </span>
+                      <span className="line-clamp-2">
+                        <span className="font-[700] text-ink">{e.kind === 'new' ? 'new module' : 'revised'}</span> · {m.name}
+                      </span>
+                    </p>
+                  </div>
+                )
+              );
+            })()}
+            <div className="mt-2 min-h-0 flex-1 border-t border-rule pt-2">
+              {benches.length > 0 ? (
+                <>
+                  <p className="mb-1 text-[10.5px] font-[700] text-ink-3">Benchmarks here · H₀ → now</p>
+                  <BenchBars focus={focus} cur={cur} compact />
+                </>
+              ) : (
+                <p className="text-[12px] leading-snug text-ink-3">No benchmark ends at this node; Video-Index and Video-MME-v2 sit one level below, at e → f.</p>
+              )}
+            </div>
+          </div>
+        </div>
+        </div>
         </div>
 
         {/* timeline */}
@@ -529,7 +621,7 @@ export default function HarnessTreeViz() {
       </figure>
 
       {/* the node in focus */}
-      <aside className="grid gap-5 rounded-[22px] border border-rule bg-surface p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1fr)]">
+      <aside className="grid gap-5 rounded-[22px] border border-rule bg-surface p-4 md:grid-cols-2 xl:hidden">
         <div className="flex flex-col gap-3">
           <div>
             <p className="text-[12px] font-[700] uppercase tracking-[0.1em] text-ink-3">{pick ? 'Selected node' : visiting ? `Iteration ${cur.it} · visiting` : 'Node'}</p>
@@ -581,31 +673,11 @@ export default function HarnessTreeViz() {
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-3 md:col-span-2 xl:col-span-1">
+        <div className="flex flex-col gap-3 md:col-span-2">
           {benches.length > 0 && (
             <div>
               <p className="mb-2 text-[12px] font-[700] text-ink-3">Benchmarks at this node · H₀ → current</p>
-              <ul className="space-y-1.5">
-                {benches.flatMap((b) => {
-                  const rows = b.split === 'both' ? [{ k: `${b.id}-s`, label: `${b.short ?? b.name} (sim.)`, sc: b.scores.it }, { k: `${b.id}-r`, label: `${b.short ?? b.name} (robot)`, sc: b.robot!.it }] : [{ k: b.id, label: b.short ?? b.name, sc: b.scores.it }];
-                  return rows.map((r) => {
-                    const sc = scoreAt(focus, r.sc as unknown as number[], cur);
-                    return (
-                      <li key={r.k} className="grid grid-cols-[minmax(0,1fr)_110px_34px] items-center gap-2 text-[12px]">
-                        <span className="truncate text-ink-2">
-                          {r.label}
-                          {b.split === 'unseen' || r.k.endsWith('-r') ? <span className="ml-1 text-[10px] text-ink-3">unseen</span> : null}
-                        </span>
-                        <span className="relative h-2 rounded-full bg-paper-2">
-                          <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${r.sc[0]}%`, background: t.iters[0] }} />
-                          <motion.span className="absolute inset-y-0 left-0 rounded-full" animate={{ width: `${sc.v}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20 }} style={{ background: t.iters[Math.max(1, sc.lvl)] ?? t.accent, opacity: sc.lvl ? 1 : 0 }} />
-                        </span>
-                        <span className="tabular text-right font-[700] text-ink">{sc.v}</span>
-                      </li>
-                    );
-                  });
-                })}
-              </ul>
+              <BenchBars focus={focus} cur={cur} />
             </div>
           )}
           {benches.length === 0 && <p className="text-[12.5px] text-ink-3">No benchmark ends at this node; Video-Index and Video-MME-v2 sit one level below, at e → f.</p>}

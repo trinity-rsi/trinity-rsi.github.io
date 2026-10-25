@@ -1,12 +1,10 @@
 import SpotlightCard from '@/components/reactbits/SpotlightCard/SpotlightCard';
 import ElectricBorder from '@/components/reactbits/ElectricBorder/ElectricBorder';
-import ScrollFloat from '@/components/reactbits/ScrollFloat/ScrollFloat';
-import Icon from '@/components/ui/Icon';
-import Reveal from '@/components/ui/Reveal';
+import SplitText from '@/components/reactbits/SplitText/SplitText';
 import { Container, Section } from '@/components/ui/Section';
 import { CapabilityTree, GlobalHarness, PerTaskHarness } from '@/components/viz/Strategies';
+import ProblemWalls, { type Wall } from '@/components/viz/ProblemWalls';
 import { useTokens } from '@/theme/tokens';
-import { CodeIcon, Globe02Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
 
 /** The problem (Introduction): why today's RSI is task-driven, and what to evolve around instead. */
 const STRATEGIES = [
@@ -31,10 +29,25 @@ const STRATEGIES = [
   },
 ];
 
-const BOTTLENECKS = [
-  { icon: Globe02Icon, title: 'Verifiable worlds are costly', text: 'Constructing large-scale, heterogeneous and verifiable environments by hand does not scale.' },
-  { icon: Wrench01Icon, title: 'Manual Harness iteration lags', text: 'Agent capability is increasingly constrained by the Harness, and hand-tuning cannot keep pace with task diversity.' },
-  { icon: CodeIcon, title: 'Harness RSI stays task-driven', text: 'Current Harness RSI focuses on text-modality tasks such as coding and math, and evolves task by task.' },
+const WALLS: Wall[] = [
+  {
+    kind: 'Bottleneck',
+    at: 'World',
+    title: 'Verifiable worlds are costly',
+    text: 'Constructing large-scale, heterogeneous and verifiable environments by hand is costly, which calls for generating worlds automatically.',
+  },
+  {
+    kind: 'Bottleneck',
+    at: 'Human',
+    title: 'Manual Harness iteration lags',
+    text: 'Agent capability is increasingly constrained by the Harness, and iterating it by hand cannot keep pace with growing task complexity and diversity.',
+  },
+  {
+    kind: 'Challenge',
+    at: 'Agent',
+    title: 'Harness RSI stays task-driven',
+    text: 'Current Harness RSI focuses on text-modality tasks such as coding and math and evolves task by task, which can overfit the Harness and generalize poorly across heterogeneous tasks.',
+  },
 ];
 
 export default function ProblemSection() {
@@ -42,36 +55,22 @@ export default function ProblemSection() {
   return (
     <Section id="problem" className="pt-24 sm:pt-28">
       <Container wide>
-        <div className="grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-end">
-          <div>
-            <p className="kicker">The problem</p>
-            <ScrollFloat
-              containerClassName="!my-2"
-              textClassName="!text-[clamp(2.2rem,4.6vw,4rem)] !leading-[1.02] !font-[780] tracking-[-0.03em] text-ink [font-stretch:114%]"
-              animationDuration={1}
-              ease="back.inOut(2)"
-              mode="enter"
-              stagger={0.02}
-            >
-              RSI is still trained task by task
-            </ScrollFloat>
-          </div>
-          <p className="font-serif text-[1.1rem] leading-[1.62] text-ink-2">
-            We view multimodal intelligence as an evolving loop: worlds provide tasks, humans guide learning, and agents interact with the world to produce verifiable outcomes. As tasks grow more complex and diverse, the loop hits three walls.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {BOTTLENECKS.map((b, i) => (
-            <Reveal key={b.title} delay={i * 0.08} className="group relative overflow-hidden rounded-[20px] border border-rule bg-surface p-5">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper-2 text-ink-2 transition-colors duration-300 group-hover:bg-accent group-hover:text-white">
-                <Icon icon={b.icon} size={19} />
-              </span>
-              <p className="mt-4 text-[17px] font-[720] leading-tight text-ink">{b.title}</p>
-              <p className="mt-2 text-[14.5px] leading-[1.55] text-ink-2">{b.text}</p>
-            </Reveal>
-          ))}
-        </div>
+        <ProblemWalls
+          walls={WALLS}
+          head={
+            <>
+              <p className="kicker">The problem</p>
+              <h2 className="display-lg mt-2 text-[clamp(2.3rem,4.6vw,4rem)] leading-[1.02] text-ink">
+                <SplitText text="RSI is still trained task by task" tag="span" splitType="words, chars" effect="rise" delay={16} duration={0.7} textAlign="left" mask className="!block" />
+              </h2>
+            </>
+          }
+          lead={
+            <p className="max-w-[60ch] font-serif text-[1.1rem] leading-[1.62] text-ink-2">
+              We view multimodal intelligence as an evolving loop: worlds provide tasks, humans guide learning, and agents interact with the world to produce verifiable outcomes. As tasks and environments grow more complex, the loop faces two bottlenecks, and letting it improve on its own across heterogeneous tasks raises a challenge.
+            </p>
+          }
+        />
 
         <div className="mt-24">
           <div className="grid gap-x-12 gap-y-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-end">
