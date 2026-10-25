@@ -226,7 +226,7 @@ export default function Hero() {
               <div className="grid grid-cols-3 gap-4 border-t border-rule pt-4 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                 <Stat to={HEADLINE.trainGain} decimals={1} unit="+" label={`points on ${HEADLINE.trainCount} training benchmarks`} delay={0.8} />
                 <Stat to={HEADLINE.unseenGain} decimals={1} unit="+" label={`points on ${HEADLINE.unseenCount} unseen benchmarks`} delay={0.9} />
-                <Stat to={HEADLINE.realWorld} label="real-world embodied settings" delay={1} />
+                <Stat to={HEADLINE.realWorld} label="real-world embodied tasks" delay={1} />
               </div>
             </div>
           </div>

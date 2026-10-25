@@ -8,7 +8,7 @@ import { useTokens } from '@/theme/tokens';
 
 /**
  * Appendix E.1, the visual record: for every benchmark, the final frame of a failed H0 run and of
- * a completed H4 run on the same configuration. Scores: Table 7 (simulation scores for SOON and CaP-X).
+ * a completed H4 run on the same configuration. Scores: Table 8 (simulation scores for SOON and CaP-X).
  */
 type Filter = 'all' | 'train' | 'unseen' | DomainId;
 
@@ -75,7 +75,7 @@ export default function VisualRecordSection() {
     <Section id="visual-record" tone="alt" className="py-28">
       <Container wide>
         <SectionHeader kicker="Visual record · Appendix E.1" title="H₀ and H₄ on the same configuration">
-          For every benchmark: the final frame of a failed run with the Base Harness H₀ and of a completed run with the iteration-4 Harness, from the same start. Rows come from recorded runs, demonstrations or scripted runs, as detailed in the paper; the scored results are those of Table 7.
+          For every benchmark: the final frame of a failed run with the Base Harness H₀ and of a completed run with the iteration-4 Harness, from the same start. Rows come from recorded runs, demonstrations or scripted runs, as detailed in the paper; the scored results are those of Table 8.
         </SectionHeader>
         <div className="mt-10 flex flex-wrap gap-2">
           {chips.map((c) => (

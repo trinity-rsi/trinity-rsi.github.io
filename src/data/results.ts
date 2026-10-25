@@ -1,42 +1,61 @@
 /**
- * Results, as reported in the paper (2026-10-23 version). Every number below is copied from a
- * table or computed from Table 7 (Appendix D); nothing is a placeholder.
+ * Results, as reported in the paper (2026-10-25 version). Every number below is copied from a
+ * table or computed from Table 8 (Appendix D); nothing is a placeholder.
  */
 import { NATIVE_TRAIN, TRAIN_SETTINGS, UNSEEN_SETTINGS, type ProtocolId, type CapId } from './tree';
 
 export const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
 const round1 = (x: number) => Math.round(x * 10) / 10;
+const round2 = (x: number) => Math.round(x * 100) / 100;
 
 /** iteration 0 is the Base Harness H0 */
 export const ITERS = [0, 1, 2, 3, 4] as const;
 
-/** Figure 4 / Table 7: benchmark-equal means. Unseen means cover the 16 non-robot benchmarks. */
+/**
+ * Benchmark-equal means, Base to iteration 4 (Table 8). Figure 5 plots Train over all 28 settings and
+ * Unseen over the 16 non-robot benchmarks, the ones Codex and DeepSeek also ran; the headline counts
+ * all 18 unseen settings, the two real robots included.
+ */
 export const MEANS = {
-  train: [39.1, 63.8, 67.7, 70.8, 73.2],
-  unseen: [42.1, 57.7, 59.6, 60.8, 64.1],
+  train: [39.06, 63.8, 67.75, 70.85, 73.16],
+  unseen: [42.13, 57.72, 59.57, 60.75, 64.06],
+  unseen18: [37.45, 53.53, 55.17, 59.56, 63.61],
   /** the 17 training benchmarks that run on their original environments */
   native: ITERS.map((i) => round1(mean(NATIVE_TRAIN.map((x) => x.scores.it[i])))),
   codex: 47.5,
   deepseek: 46.2,
 };
 
+/** the abstract and Figure 1: 73.16 − 39.06 on 28 training settings, 63.61 − 37.45 on 18 unseen ones */
 export const HEADLINE = {
   trainGain: 34.1,
-  unseenGain: 22.0,
+  unseenGain: 26.2,
   trainCount: 28,
-  unseenCount: 16,
+  unseenCount: 18,
   realWorld: 2,
 };
 
 /** sanity check against the paper's means (runs once in development) */
 if (import.meta.env.DEV) {
-  const tr = ITERS.map((i) => round1(mean(TRAIN_SETTINGS.map((x) => x.scores.it[i]))));
-  const un = ITERS.map((i) => round1(mean(UNSEEN_SETTINGS.filter((x) => !x.embodied).map((x) => x.scores.it[i]))));
-  if (tr.join() !== MEANS.train.join() || un.join() !== MEANS.unseen.join()) console.warn('Table 7 means differ from Figure 4', tr, un);
+  const tr = ITERS.map((i) => round2(mean(TRAIN_SETTINGS.map((x) => x.scores.it[i]))));
+  const un = ITERS.map((i) => round2(mean(UNSEEN_SETTINGS.filter((x) => !x.embodied).map((x) => x.scores.it[i]))));
+  const un18 = ITERS.map((i) => round2(mean(UNSEEN_SETTINGS.map((x) => x.scores.it[i]))));
+  if (tr.join() !== MEANS.train.join() || un.join() !== MEANS.unseen.join() || un18.join() !== MEANS.unseen18.join()) console.warn('Table 8 means differ', tr, un, un18);
 }
 
 /* ------------------------------------------------------------------ */
-/* Table 2: Harness organisation and training curricula               */
+/* Table 2: evolved modules vs prepared skills (iteration 1)           */
+/* ------------------------------------------------------------------ */
+export type AblRow = { name: string; module: boolean; skill: boolean; train: number; unseen: number; ours?: boolean; base?: boolean };
+export const TABLE2: AblRow[] = [
+  { name: 'Base (H₀)', module: false, skill: false, train: 39.06, unseen: 37.45, base: true },
+  { name: 'Module Only', module: true, skill: false, train: 56.95, unseen: 47.26 },
+  { name: 'Skill Only', module: false, skill: true, train: 58.86, unseen: 48.67 },
+  { name: 'Ours (H(1))', module: true, skill: true, train: 63.8, unseen: 53.53, ours: true },
+];
+
+/* ------------------------------------------------------------------ */
+/* Table 3: Harness organisation and training curricula (module only)  */
 /* ------------------------------------------------------------------ */
 export type OrgRow = {
   name: string;
@@ -52,46 +71,49 @@ export type OrgRow = {
   base?: boolean;
   ours?: boolean;
 };
-export const TABLE2: OrgRow[] = [
-  { name: 'Base (H₀)', curriculum: '–', nH: '–', nEnv: '–', train: 41.67, unseen: 37.71, training: null, infTrain: 582.54, infUnseen: 613.07, base: true },
-  { name: 'Global', curriculum: 'Real', nH: '1', nEnv: '28', train: 65.24, unseen: 46.92, training: 582.54, infTrain: 548.81, infUnseen: 584.68 },
-  { name: 'Task-Domain', group: 'A', curriculum: 'Real', nH: '15', nEnv: '15', train: 64.37, unseen: 48.12, training: 278.25, infTrain: 540.36, infUnseen: 577.33 },
-  { name: 'Capability-Domain', group: 'A', curriculum: 'Real', nH: '6', nEnv: '6', train: 64.45, unseen: 48.43, training: 136.94, infTrain: 562.32, infUnseen: 596.58 },
-  { name: 'Capability Tree', group: 'B', curriculum: 'Real', nH: '11', nEnv: '11', train: 66.21, unseen: 50.31, training: 211.56, infTrain: 526.53, infUnseen: 563.9 },
-  { name: 'Capability Tree', group: 'B', curriculum: 'Sim', nH: '11', nEnv: '11', train: 67.17, unseen: 52.38, training: 405.7, infTrain: 514.42, infUnseen: 549.07, ours: true },
+export const TABLE3: OrgRow[] = [
+  { name: 'Base (H₀)', curriculum: '–', nH: '–', nEnv: '–', train: 39.06, unseen: 37.45, training: null, infTrain: 582.54, infUnseen: 613.07, base: true },
+  { name: 'Global', curriculum: 'Real', nH: '1', nEnv: '28', train: 53.04, unseen: 42.92, training: 582.54, infTrain: 531.81, infUnseen: 567.68 },
+  { name: 'Task-Domain', group: 'A', curriculum: 'Real', nH: '15', nEnv: '15', train: 51.17, unseen: 40.82, training: 278.25, infTrain: 540.36, infUnseen: 577.33 },
+  { name: 'Capability-Domain', group: 'A', curriculum: 'Real', nH: '6', nEnv: '6', train: 49.25, unseen: 39.43, training: 136.94, infTrain: 562.32, infUnseen: 596.58 },
+  // Table 3 prints 10 Harnesses and environments for both trees; the text says the trees have 11 non-root nodes
+  { name: 'Capability Tree', group: 'B', curriculum: 'Real', nH: '10', nEnv: '10', train: 53.44, unseen: 42.31, training: 211.56, infTrain: 526.53, infUnseen: 563.9 },
+  { name: 'Capability Tree', group: 'B', curriculum: 'Sim', nH: '10', nEnv: '10', train: 56.95, unseen: 47.26, training: 405.7, infTrain: 514.42, infUnseen: 549.07, ours: true },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Table 3: capability-aware Harness routing (on H(4))                 */
+/* Table 4: capability-aware Harness routing (on H(4))                 */
 /* ------------------------------------------------------------------ */
 export type RouteRow = { name: string; cap: boolean | null; mem: boolean | null; train: number; trainTok: number; unseen: number; unseenTok: number; ours?: boolean; oracle?: boolean; random?: boolean };
-export const TABLE3: RouteRow[] = [
-  { name: 'Random', cap: null, mem: null, train: 52.74, trainTok: 567.04, unseen: 41.23, unseenTok: 594.25, random: true },
-  { name: 'Agent Self-Routing', cap: false, mem: false, train: 65.79, trainTok: 535.53, unseen: 47.36, unseenTok: 582.29 },
-  { name: 'Agent Self-Routing', cap: true, mem: false, train: 70.34, trainTok: 510.54, unseen: 53.24, unseenTok: 556.24 },
-  { name: 'Agent Self-Routing', cap: true, mem: true, train: 71.27, trainTok: 497.89, unseen: 55.96, unseenTok: 541.28, ours: true },
-  { name: 'Oracle', cap: null, mem: null, train: 73.4, trainTok: 486.53, unseen: 58.03, unseenTok: 528.34, oracle: true },
+export const TABLE4: RouteRow[] = [
+  { name: 'Random', cap: null, mem: null, train: 52.74, trainTok: 567.08, unseen: 46.23, unseenTok: 594.25, random: true },
+  { name: 'Agent Self-Routing', cap: false, mem: false, train: 65.79, trainTok: 535.53, unseen: 52.36, unseenTok: 582.29 },
+  { name: 'Agent Self-Routing', cap: true, mem: false, train: 70.34, trainTok: 510.55, unseen: 58.27, unseenTok: 556.21 },
+  { name: 'Agent Self-Routing', cap: true, mem: true, train: 71.27, trainTok: 497.89, unseen: 60.96, unseenTok: 541.28, ours: true },
+  { name: 'Oracle', cap: null, mem: null, train: 73.16, trainTok: 486.53, unseen: 63.61, unseenTok: 528.34, oracle: true },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Table 4: module interventions (Train 10 %, no skills)               */
+/* Table 5: module interventions (Train 10 %, skills prepared)         */
 /* ------------------------------------------------------------------ */
-export const TABLE4 = {
-  base: { train: 41.67, tokens: 582.54 },
-  ours: { train: 73.4 },
-  removeRelevant: { train: 70.66, delta: -2.73 },
+export type InterventionRow = { name: string; train: number; delta: number | null; tokens: number; baseline?: boolean; ours?: boolean };
+export const TABLE5: InterventionRow[] = [
+  { name: 'Base (H₀)', train: 39.06, delta: null, tokens: 582.54, baseline: true },
+  { name: '+ irrelevant module', train: 40.08, delta: 1.02, tokens: 583.37 },
+  { name: '+ relevant module', train: 58.45, delta: 19.39, tokens: 551.85 },
+  { name: 'Ours (H(4))', train: 73.16, delta: null, tokens: 496.7, baseline: true, ours: true },
+  { name: '− relevant module', train: 70.42, delta: -2.74, tokens: 517.26 },
+];
+
+/* ------------------------------------------------------------------ */
+/* Table 6: embodied success rates (%) with prepared skills            */
+/* ------------------------------------------------------------------ */
+export const TABLE6 = {
+  soonSim: [0, 20, 20, 80, 80],
+  capxSim: [10, 20, 30, 40, 60],
+  soonReal: [0, 20, 20, 60, 60],
+  capxReal: [0, 20, 20, 40, 60],
 };
-
-/* ------------------------------------------------------------------ */
-/* Table 5: evolved modules vs prepared skills (iteration 1)           */
-/* ------------------------------------------------------------------ */
-export type AblRow = { name: string; module: boolean; skill: boolean; train: number; unseen: number; ours?: boolean; base?: boolean };
-export const TABLE5: AblRow[] = [
-  { name: 'Base (H₀)', module: false, skill: false, train: 41.67, unseen: 37.71, base: true },
-  { name: 'Module Only', module: true, skill: false, train: 60.95, unseen: 45.56 },
-  { name: 'Skill Only', module: false, skill: true, train: 62.86, unseen: 48.67 },
-  { name: 'Ours (H(1))', module: true, skill: true, train: 67.17, unseen: 52.38, ours: true },
-];
 
 /* ------------------------------------------------------------------ */
 /* Figure 6: capability–protocol correlations at iteration 4           */
@@ -113,28 +135,33 @@ export const FIG6: Record<CapId, number[]> = {
 export const FINDINGS = [
   {
     n: 1,
-    title: 'Structured capability organization supports transfer.',
-    text: 'The simulated capability tree achieves the highest reported performance on Train (67.17%) and Unseen (52.38%).',
+    title: 'Capability-driven organization outperforms task-driven specialization.',
+    text: 'A capability-centric perspective gives rise to a capability tree, where capability-driven Real2Sim2Real achieves stronger capability transfer and lower inference costs with fewer training environments, demonstrating that less is more.',
   },
   {
     n: 2,
-    title: 'Recursive evolution accumulates transferable capabilities.',
-    text: 'Across successive iterations on the fixed capability tree, the Harness family improves on training benchmarks despite task-level fluctuations, with transfer to unseen benchmarks excluded from module and Router training.',
+    title: 'Capability-driven RSI sustains iterative improvement.',
+    text: 'Continued gains on a fixed capability tree suggest that simulated environments offer further opportunities for capability refinement, with improvements extending to unseen tasks.',
   },
   {
     n: 3,
-    title: 'Capability evidence guides Harness deployment.',
-    text: 'Candidate capability descriptions and verified execution experience connect task demands to compatible module configurations.',
+    title: 'Capability priors guide agent routing.',
+    text: 'An agent acting as a Router can use capability priors to select suitable Harnesses. The results suggest that the capability tree provides a semantic basis for matching inferred task requirements to Harness configurations.',
   },
   {
     n: 4,
-    title: 'Capabilities exhibit distinct module associations.',
-    text: 'Different capabilities align with different protocols, notably Inference, Loop, and Perception. These structural correlations motivate module interventions but do not establish their performance effects.',
+    title: 'Capability–module priors inform Harness design.',
+    text: 'Capability–protocol associations suggest specialization patterns, while controlled interventions show larger gains from relevant module additions and performance losses after their removal. Together, these results support using task capability requirements to guide module selection and composition.',
+  },
+  {
+    n: 5,
+    title: 'Capability-Driven RSI supports embodied transfer.',
+    text: 'The evaluated Harness–skill configurations improve on both simulated and physical tasks, linking node-level module evolution with task-specific skill preparation.',
   },
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Creator's shared library (Appendix C.2, Figure 11)                  */
+/* Creator's shared library, its Base Harness (Appendix C.2, Figure 12) */
 /* ------------------------------------------------------------------ */
 export type LibFamily = 'visual' | 'evidence' | 'difficulty' | 'budget' | 'impl' | 'schema';
 export const LIB_FAMILIES: { id: LibFamily; name: string; color: string }[] = [

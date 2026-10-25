@@ -5,9 +5,9 @@ import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 
 /**
- * Figure 5: benchmark-level Harness evolution, one radial chart per split. Every benchmark gets a
+ * Figure 4: benchmark-level Harness evolution, one radial chart per split. Every benchmark gets a
  * wedge with five bars (Base, iterations 1–4) that grow outwards in turn when the chart scrolls in.
- * Values: Table 7 (rows keep their reported measures).
+ * Values: Table 8 (rows keep their reported measures).
  */
 const R0 = 56; // inner radius
 const R1 = 176; // radius at 100

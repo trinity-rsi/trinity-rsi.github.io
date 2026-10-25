@@ -89,11 +89,11 @@ function Converge() {
 }
 
 const PIPE = [
-  { k: '1', title: 'Generation input', items: ['Templates', 'Capability', 'Constraints', 'Scale', 'Difficulty', 'Notes'], text: 'Node requirements, descendants and representative training tasks’ public specifications. No target layouts, private proofs or solution traces.' },
-  { k: '2', title: 'Verifier pool', items: ['Fixed: interface, runtime', 'Task-conditioned: goals, solvability'], text: 'Creator implements the specification with its shared Harness and Evolver’s verifier pool; verifier code stays private.' },
-  { k: '3', title: 'Generation world', items: ['Browser world', '3D scene', 'Public rules'], text: 'A simplified level that preserves the required decision. Training relies on task mechanisms, not visual aesthetics.' },
-  { k: '4', title: 'Host verification', items: ['Node binding', 'Execution', 'Transitions', 'Rendering', 'Completion'], text: 'Failed checks return feedback through public contracts, and Creator revises the world.' },
-  { k: '5', title: 'Difficulty screening', items: ['Too hard', 'Admit', 'Too easy'], text: 'A frozen screening Harness admits only worlds whose completion counts fall inside a prespecified intermediate band.' },
+  { k: '1', title: 'Generation input', items: ['Templates', 'Capability', 'Constraints', 'Scale', 'Difficulty', 'Notes'], text: 'Evolver designs simplified levels from node requirements, descendants and representative tasks’ public specifications. No target layouts, private proofs or solution traces.' },
+  { k: '2', title: 'Verifier pool', items: ['Fixed: interface, runtime', 'Task-conditioned: goals, solvability'], text: 'Creator implements the level with a node Harness initialized from its Base Harness or inherited parent modules; Evolver’s verifier pool stays private.' },
+  { k: '3', title: 'Generation world', items: ['Browser world', '3D scene', 'Public rules'], text: 'A simplified level that preserves the core decision process. Creator omits aesthetic optimization to focus on task mechanisms.' },
+  { k: '4', title: 'Host verification', items: ['Node binding', 'Execution', 'Transitions', 'Rendering', 'Completion'], text: 'The host-executed verifier pool checks the world; private verifiers and public feedback guide Creator’s revisions.' },
+  { k: '5', title: 'Difficulty screening', items: ['Too hard', 'Admit', 'Too easy'], text: 'Explorer tests the world with a frozen screening Harness and admits it only inside a predefined intermediate-performance band; otherwise Creator adjusts the difficulty.' },
 ];
 
 function Pipeline() {
@@ -191,7 +191,7 @@ export default function WorldSection() {
           </div>
           <div>
             <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">
-              Heterogeneous tasks at the same node share a learning objective. Creator abstracts their common requirements into simplified, verifiable worlds for capability learning, while evaluation on the original tasks measures transfer.
+              Once the capability tree is built, every node is linked to training benchmarks through shared requirements. The four tasks of Figure 3 differ, yet all require evidence verification before deciding. Creator turns that shared requirement into simplified, verifiable worlds, while evaluation on the original tasks measures transfer.
             </p>
             <PaperFigure fig={PAPER_FIGS.worlds} className="mt-4" />
           </div>
@@ -203,7 +203,7 @@ export default function WorldSection() {
 
         <div className="mt-20">
           <h3 className="display-md text-[clamp(1.5rem,2.6vw,2.1rem)] text-ink">From a requirement to an admitted world</h3>
-          <p className="mt-3 max-w-[70ch] font-serif text-[1.04rem] leading-[1.6] text-ink-2">Trial count, band, action budget and retry limit are fixed beforehand; screening trials stay separate from training.</p>
+          <p className="mt-3 max-w-[70ch] font-serif text-[1.04rem] leading-[1.6] text-ink-2">Trial counts, performance thresholds, action budgets and retry limits are fixed in advance; worlds and verifiers stay unchanged during local training.</p>
           <div className="mt-8">
             <Pipeline />
           </div>

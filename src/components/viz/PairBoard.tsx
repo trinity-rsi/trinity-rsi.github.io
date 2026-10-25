@@ -9,7 +9,7 @@ import { useMediaQuery, useNearViewport, useReducedMotion } from '@/lib/hooks';
 
 /**
  * Tasks that look different but need some of the same capabilities. A task requires the
- * capabilities on the branch of its capability-tree node (Figures 8 and 9), so every task here
+ * capabilities on the branch of its capability-tree node (Figures 9 and 10), so every task here
  * lists all six capabilities with the ones it requires lit, and only the capabilities both tasks
  * require are linked. Frames are the benchmarks' start frames (Appendix E.1). The first pair is
  * the paper's own example; the others come from different domains and different nodes.
@@ -333,7 +333,7 @@ export default function PairBoard() {
       </div>
 
       <p className="text-center text-[12px] text-ink-3 lg:col-span-2">
-        A task requires the capabilities on its capability-tree branch (Figures 8 and 9) · frames from Appendix E.1 · * rebuilt environment
+        A task requires the capabilities on its capability-tree branch (Figures 9 and 10) · frames from Appendix E.1 · * rebuilt environment
       </p>
     </div>
   );

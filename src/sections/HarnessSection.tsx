@@ -40,7 +40,7 @@ export default function HarnessSection() {
               <SplitText text="Harnesses evolve along the capability tree" tag="span" splitType="words, chars" effect="rise" delay={18} duration={0.7} textAlign="left" mask className="!block" />
             </h2>
             <p className="prose-serif mt-5">
-              Every node of the capability tree owns a Harness. Explorer plays the node’s worlds with inherited and local modules, Evolver turns contrasting runs into reusable modules, and validated updates accumulate across iterations within the fixed tree.
+              Every node of the capability tree owns a Harness. Explorer plays the node’s worlds with inherited and local modules, Evolver compares successful and failed runs and turns them into reusable modules, and validated updates accumulate across iterations within the fixed tree. Creator follows at the same nodes.
             </p>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default function HarnessSection() {
 
         <div className="mt-24">
           <SubHead k="b" title="The Harness tree, iteration by iteration" aside={<PaperFigure fig={PAPER_FIGS.harnessTree} />}>
-            Each iteration is one top-down pass. At every node Explorer plays the level Creator built, a failing run becomes a new module or a revision, and the next run solves the level. The 28 modules M01–M28 are the paper’s own, recorded per node and iteration.
+            Each iteration is one top-down pass. At every node Explorer plays the level Creator built, a failing run becomes a new module or a revision, and the next run solves the level. The modules M01–M29 are the paper’s own: 28 are recorded per node and iteration, and M29 sits at node d in the iteration-4 tree.
           </SubHead>
           <HarnessTreeViz />
         </div>
@@ -86,8 +86,8 @@ export default function HarnessSection() {
         </div>
 
         <div className="mt-24">
-          <SubHead k="d" title="Creator keeps one shared library" aside={<PaperFigure fig={PAPER_FIGS.creatorLib} />}>
-            Creator follows a different RSI process: it starts a fresh coding Harness at each node and iteration, with no parent–child inheritance. At the end of an iteration all nodes’ proposals are pooled with the library and consolidated: revisions replace their predecessors, partial overlaps merge, near-duplicates keep the earlier module.
+          <SubHead k="d" title="Creator consolidates a new Base Harness" aside={<PaperFigure fig={PAPER_FIGS.creatorLib} />}>
+            Creator evolves along the same tree, top-down within each iteration: the root’s children start from its Base Harness, every other node inherits its parent’s updated modules, and a node evolves only when a verifier detects a failure. At the end of the iteration the validated proposals are consolidated with the Base Harness modules into the next Base Harness: revisions replace their predecessors, partial overlaps merge, near-duplicates keep the earlier-learned module.
           </SubHead>
           <CreatorLibrary />
         </div>

@@ -1,10 +1,10 @@
 /**
- * Task tree, capability tree and Harness tree, exactly as in the paper (2026-10-23 version):
- *   - benchmarks, domains and the 15 task families: Appendix A, Table 1, Figure 7;
- *   - the six capabilities and each benchmark's node: Appendix B, Figures 8 and 9;
- *   - the eleven node Harnesses, modules M01–M28 and what each node learned in iterations 1–4:
- *     Appendix C.1, Figure 10 and the node figures of Appendix E.2;
- *   - every score: Table 7 (Appendix D).
+ * Task tree, capability tree and Harness tree, exactly as in the paper (2026-10-25 version):
+ *   - benchmarks, domains and the 15 task families: Appendix A, Table 1, Figure 8;
+ *   - the six capabilities and each benchmark's node: Appendix B, Figures 9 and 10;
+ *   - the eleven node Harnesses, modules M01–M29 and what each node learned in iterations 1–4:
+ *     Appendix C.1, Figure 11 and the node figures of Appendix E.2;
+ *   - every score: Table 8 (Appendix D).
  * Edit this file to update every visualization on the page at once.
  */
 import {
@@ -46,7 +46,7 @@ import {
 export type IconSvg = typeof Chess01Icon;
 
 /* ------------------------------------------------------------------ */
-/* Task domains (Table 1) and task families (Figure 7)                 */
+/* Task domains (Table 1) and task families (Figure 8)                 */
 /* ------------------------------------------------------------------ */
 export type DomainId = 'rule' | 'constraint' | 'percep' | 'multi' | 'long';
 
@@ -257,7 +257,7 @@ export type CapNode = {
   /** capability path from the root, in the fixed order */
   path: CapId[];
   parent: NodeId | null;
-  /** the node Harness's name (Figure 10, Appendix E.2) */
+  /** the node Harness's name (Figure 11, Appendix E.2) */
   name: string;
   /** modules the node owns (local); descendants inherit them */
   local: string[];
@@ -267,14 +267,15 @@ export type CapNode = {
 
 const ev = (...xs: string[]): NodeEvent[] => xs.map((x) => (x.startsWith('+') ? { kind: 'new', module: x.slice(1) } : { kind: 'revised', module: x }));
 
-/** root first, then a depth-first walk in the order of Figure 9 (left to right) */
+/** root first, then a depth-first walk in the order of Figure 10 (left to right) */
 export const NODES: CapNode[] = [
   { id: 'root', path: [], parent: null, name: 'Base Harness', local: [], events: [] },
   { id: 'c', path: ['c'], parent: 'root', name: 'Gate Planning & Reachability', local: ['M07', 'M08'], events: ev('+M07', 'M07', '+M08', 'M07') },
   { id: 'cd', path: ['c', 'd'], parent: 'c', name: 'Value & Goal Commitment', local: ['M12', 'M13', 'M14'], events: ev('+M12', '+M13', '+M14', 'M14') },
   { id: 'cda', path: ['c', 'd', 'a'], parent: 'cd', name: 'Execution & Revision Memory', local: ['M15', 'M16'], events: ev('+M15', 'M15', '+M16', 'M15') },
   { id: 'ca', path: ['c', 'a'], parent: 'c', name: 'Identity, Order & Memory', local: ['M09', 'M10', 'M11'], events: ev('+M10', '+M09', '+M11', 'M09') },
-  { id: 'd', path: ['d'], parent: 'root', name: 'Evidence-Gated Commitment', local: ['M17', 'M18'], events: ev('+M17', 'M17', '+M18', 'M17') },
+  // M29 sits at d in the iteration-4 tree (Figure 11); the node's level record (Figure 61) has no event for it
+  { id: 'd', path: ['d'], parent: 'root', name: 'Evidence-Gated Commitment', local: ['M17', 'M18', 'M29'], events: ev('+M17', 'M17', '+M18', 'M17') },
   { id: 'da', path: ['d', 'a'], parent: 'd', name: 'Exploration & Routing', local: ['M19', 'M20', 'M21'], events: ev('+M19', '+M20', '+M21', 'M19') },
   { id: 'db', path: ['d', 'b'], parent: 'd', name: 'Hypothesis Tracking & Probing', local: ['M22', 'M23'], events: ev('+M22', '+M23', 'M22', 'M22') },
   { id: 'a', path: ['a'], parent: 'root', name: 'Evidence & Inspection', local: ['M01', 'M02', 'M03'], events: ev('+M01', '+M02', '+M03', 'M01') },
@@ -302,7 +303,7 @@ export function nodeLineage(id: NodeId): CapNode[] {
 export const nodeModules = (id: NodeId) => nodeLineage(id).flatMap((n) => n.local);
 
 /* ------------------------------------------------------------------ */
-/* Modules M01–M28 (Appendix C.1)                                      */
+/* Modules M01–M29 (Appendix C.1)                                      */
 /* ------------------------------------------------------------------ */
 export type Module = { id: string; cap: CapId; name: string; node: NodeId };
 const MOD_NAMES: [string, CapId, string][] = [
@@ -334,13 +335,14 @@ const MOD_NAMES: [string, CapId, string][] = [
   ['M26', 'e', 'Evidence Gap Acquisition and Unproductive Retry Suppression'],
   ['M27', 'f', 'Handoff Episode Aggregation, Event Ledger and Endpoint Audit'],
   ['M28', 'f', 'Candidate Identity Association Across Frames'],
+  ['M29', 'd', 'Fixed Goal Conditions, Evidence Ledger and Bounded Commit Review'],
 ];
 const ownerOf = (m: string) => NODES.find((n) => n.local.includes(m))!.id;
 export const MODULES: Module[] = MOD_NAMES.map(([id, cap, name]) => ({ id, cap, name, node: ownerOf(id) }));
 export const moduleById = Object.fromEntries(MODULES.map((m) => [m.id, m])) as Record<string, Module>;
 
 /* ------------------------------------------------------------------ */
-/* Benchmarks (44 identities) with their Table 7 scores                */
+/* Benchmarks (44 identities) with their Table 8 scores                */
 /* ------------------------------------------------------------------ */
 export type Split = 'train' | 'unseen';
 /** Base, H(1)..H(4); comparators where the paper reports them */
@@ -372,11 +374,11 @@ export const BENCHES: Bench[] = [
   { id: 'wilt', name: 'WILT', domain: 'rule', family: 'query-oracle', split: 'train', node: 'db', icon: Chat01Icon, measure: 'accuracy, 8 rules, 120 episodes', scores: s(80, 94.2, 94.2, 94.2, 94.2) },
   { id: 'eleusis', name: 'Eleusis', domain: 'rule', family: 'query-oracle', split: 'train', node: 'db', rebuilt: true, icon: Cards01Icon, measure: 'rule found, 6 rules, 90 episodes', scores: s(43.3, 82.2, 81.1, 81.1, 81.1) },
   { id: 'mastermind', name: 'Mastermind', domain: 'rule', family: 'query-oracle', split: 'train', node: 'db', icon: Target01Icon, measure: 'solve rate, 3 codes, 45 episodes', scores: s(53.3, 88.9, 88.9, 88.9, 88.9) },
-  { id: 'entity-deduction-arena', name: 'Entity Deduction Arena', short: 'Entity Deduction', domain: 'rule', family: 'query-oracle', split: 'unseen', node: 'b', icon: UserSearch01Icon, measure: 'performance, 200 entities, 200 episodes', scores: s(64.5, 95, 95, 94.5, 95, 72.5, 67.5) },
-  { id: 'boxinggym', name: 'BoxingGym', domain: 'rule', family: 'experiment', split: 'train', node: 'a', icon: BoxingGloveIcon, measure: 'performance, 3 environments, 45 episodes', scores: s(60, 80, 84.4, 84.4, 84.4) },
+  { id: 'entity-deduction-arena', name: 'Entity Deduction Arena', short: 'Entity Deduction', domain: 'rule', family: 'query-oracle', split: 'unseen', node: 'b', icon: UserSearch01Icon, measure: 'success rate, 200 entities, 200 episodes', scores: s(64.5, 95, 95, 94.5, 95, 72.5, 67.5) },
+  { id: 'boxinggym', name: 'BoxingGym', domain: 'rule', family: 'experiment', split: 'train', node: 'a', icon: BoxingGloveIcon, measure: 'success rate, 3 environments, 45 episodes', scores: s(60, 80, 84.4, 84.4, 84.4) },
   { id: 'discoverphysics', name: 'DiscoverPhysics', domain: 'rule', family: 'experiment', split: 'train', node: 'a', icon: Atom01Icon, measure: 'pass rate, 2 worlds, 30 episodes', scores: s(40, 70, 73.3, 73.3, 73.3) },
   { id: 'scigym', name: 'SciGym', domain: 'rule', family: 'experiment', split: 'unseen', node: 'db', icon: FlaskConicalIcon, measure: 'recovered, 126 systems, 126 episodes', scores: s(25.4, 45.2, 47.6, 50, 57.1, 26.2, 33.3) },
-  { id: 'arc-agi-3', name: 'ARC-AGI-3', domain: 'rule', family: 'undisclosed', split: 'train', node: 'da', icon: Grid3x3Icon, measure: 'performance, 25 games (public set), 183 levels', scores: s(22.4, 41, 45.9, 50.3, 53.6) },
+  { id: 'arc-agi-3', name: 'ARC-AGI-3', domain: 'rule', family: 'undisclosed', split: 'train', node: 'da', icon: Grid3x3Icon, measure: 'success rate, 25 games (public set), 183 levels', scores: s(22.4, 41, 45.9, 50.3, 53.6) },
   { id: 'puzzlescript', name: 'PuzzleScript', domain: 'rule', family: 'undisclosed', split: 'train', node: 'c', icon: BlockGameIcon, measure: 'solve rate, 3 levels, 9 episodes', scores: s(66.7, 77.8, 77.8, 77.8, 77.8) },
   { id: 'dig-bench', name: 'DiG-bench', domain: 'rule', family: 'undisclosed', split: 'unseen', node: 'c', icon: LayerIcon, measure: 'levels passed, 13 games, 13 episodes', scores: s(32.5, 33.3, 34.2, 35.1, 36.8, 40.4, 54.4) },
 
@@ -386,13 +388,13 @@ export const BENCHES: Bench[] = [
   { id: 'pencil-puzzle-bench', name: 'Pencil Puzzle Bench', short: 'Pencil Puzzle', domain: 'constraint', family: 'deduction', split: 'unseen', node: 'd', icon: Grid3x3Icon, measure: 'solve rate, 30 puzzles, 30 episodes', scores: s(20, 26.7, 26.7, 26.7, 30, 23.3, 23.3) },
   { id: 'wca-cube-solving', name: 'WCA Cube Solving', short: 'WCA Cube', domain: 'constraint', family: 'rearrangement', split: 'train', node: 'cd', rebuilt: true, icon: CubeIcon, measure: 'solve rate, 3 scrambles, 45 episodes', scores: s(13.3, 51.1, 80, 80, 80) },
   { id: 'minihack-boxoban', name: 'MiniHack Boxoban', domain: 'constraint', family: 'rearrangement', split: 'unseen', node: 'c', icon: BlockGameIcon, measure: 'solve rate, 10 levels, 10 episodes', scores: s(0, 10, 20, 20, 30, 10, 0) },
-  { id: 'master-keying', name: 'Master Keying', domain: 'constraint', family: 'artifact', split: 'train', node: 'ca', rebuilt: true, icon: Key01Icon, measure: 'performance, 3 designs, 33 episodes', scores: s(45.5, 84.8, 84.8, 84.8, 84.8) },
+  { id: 'master-keying', name: 'Master Keying', domain: 'constraint', family: 'artifact', split: 'train', node: 'ca', rebuilt: true, icon: Key01Icon, measure: 'success rate, 3 designs, 33 episodes', scores: s(45.5, 84.8, 84.8, 84.8, 84.8) },
   { id: 'adaplanbench', name: 'AdaPlanBench', domain: 'constraint', family: 'artifact', split: 'train', node: 'ca', icon: Flowchart01Icon, measure: 'accuracy, 3 queries, 27 episodes', scores: s(22.2, 70.4, 74.1, 74.1, 74.1) },
   { id: 'ale-bench', name: 'ALE-Bench', domain: 'constraint', family: 'artifact', split: 'unseen', node: 'cd', icon: CodeIcon, measure: 'percentile, 26 problems, 26 episodes', scores: s(81.3, 85.4, 86.4, 87.4, 91.9, 85, 91.4) },
   { id: 'buildarena', name: 'BuildArena', domain: 'constraint', family: 'artifact', split: 'unseen', node: 'cda', icon: BrickWallIcon, measure: 'pass rate, 9 levels, 45 episodes', scores: s(73.3, 93.3, 95.6, 95.6, 97.8, 77.8, 80) },
 
   // ---------------- Perception and control
-  { id: 'pallet-rack-inspection', name: 'Pallet Rack Inspection', short: 'Pallet Rack', domain: 'percep', family: 'active-perception', split: 'train', node: 'a', rebuilt: true, icon: CheckListIcon, measure: 'performance, 3 racks, 27 episodes', scores: s(0, 29.6, 37, 37, 59.3) },
+  { id: 'pallet-rack-inspection', name: 'Pallet Rack Inspection', short: 'Pallet Rack', domain: 'percep', family: 'active-perception', split: 'train', node: 'a', rebuilt: true, icon: CheckListIcon, measure: 'success rate, 3 racks, 27 episodes', scores: s(0, 29.6, 37, 37, 59.3) },
   { id: 'pinverify', name: 'PInVerify', domain: 'percep', family: 'active-perception', split: 'train', node: 'd', icon: EyeIcon, measure: 'accuracy, 3 pairs, 45 episodes', scores: s(66.7, 88.9, 93.3, 93.3, 93.3) },
   { id: 'actiview', name: 'ActiView', domain: 'percep', family: 'active-perception', split: 'unseen', node: 'a', icon: EyeIcon, measure: 'accuracy, 1,625 questions, 1,625 episodes', scores: s(73.5, 93.7, 94.6, 95.7, 97.4, 77.2, 73.7) },
   {
@@ -403,13 +405,13 @@ export const BENCHES: Bench[] = [
     split: 'both',
     node: 'da',
     icon: Robot01Icon,
-    measure: 'performance, 1 route, 5 episodes',
+    measure: 'success rate, 1 route, 5 episodes (sim.) / 10 episodes (robot)',
     scores: s(0, 20, 20, 80, 80),
-    robot: s(0, 20, 40, 60, 60),
+    robot: s(0, 20, 20, 60, 60),
   },
-  { id: 'minihack-maze-corridor', name: 'MiniHack Maze / Corridor', short: 'MiniHack Maze', domain: 'percep', family: 'navigation', split: 'unseen', node: 'c', icon: MazeIcon, measure: 'performance, 20 levels, 20 episodes', scores: s(55, 80, 80, 80, 85, 60, 75) },
-  { id: 'micromouse', name: 'Micromouse', domain: 'percep', family: 'navigation', split: 'train', node: 'da', rebuilt: true, icon: MazeIcon, measure: 'performance, 3 mazes, 27 episodes', scores: s(55.6, 66.7, 66.7, 77.8, 77.8) },
-  { id: 'memory-maze', name: 'Memory Maze', domain: 'percep', family: 'navigation', split: 'train', node: 'ca', icon: MazeIcon, measure: 'performance, 3 mazes, 9 episodes', scores: s(0, 11.1, 11.1, 11.1, 11.1) },
+  { id: 'minihack-maze-corridor', name: 'MiniHack Maze / Corridor', short: 'MiniHack Maze', domain: 'percep', family: 'navigation', split: 'unseen', node: 'c', icon: MazeIcon, measure: 'success rate, 20 levels, 20 episodes', scores: s(55, 80, 80, 80, 85, 60, 75) },
+  { id: 'micromouse', name: 'Micromouse', domain: 'percep', family: 'navigation', split: 'train', node: 'da', rebuilt: true, icon: MazeIcon, measure: 'success rate, 3 mazes, 27 episodes', scores: s(55.6, 66.7, 66.7, 77.8, 77.8) },
+  { id: 'memory-maze', name: 'Memory Maze', domain: 'percep', family: 'navigation', split: 'train', node: 'ca', icon: MazeIcon, measure: 'success rate, 3 mazes, 9 episodes', scores: s(0, 11.1, 11.1, 11.1, 11.1) },
   {
     id: 'cap-x',
     name: 'CaP-X',
@@ -418,13 +420,13 @@ export const BENCHES: Bench[] = [
     split: 'both',
     node: 'da',
     icon: Robot01Icon,
-    measure: 'performance, 10 layouts (sim.) / 5 layouts (robot)',
+    measure: 'success rate, 10 layouts, 10 episodes (sim. and robot)',
     scores: s(10, 20, 30, 40, 60),
-    robot: s(0, 20, 20, 30, 60),
+    robot: s(0, 20, 20, 40, 60),
   },
   { id: 'phyre', name: 'PHYRE', domain: 'percep', family: 'control', split: 'unseen', node: 'ca', icon: Billiard01Icon, measure: 'solved, 50 tasks, 50 episodes', scores: s(42, 82, 86, 86, 90, 84, 52) },
-  { id: 'pooltool-billiards', name: 'Pooltool Billiards', short: 'Pooltool', domain: 'percep', family: 'control', split: 'train', node: 'ca', icon: Billiard01Icon, measure: 'performance, 3 seeds, 27 episodes', scores: s(33.3, 66.7, 66.7, 66.7, 66.7) },
-  { id: 'euro-ncap-aeb', name: 'Euro NCAP AEB', domain: 'percep', family: 'control', split: 'train', node: 'd', rebuilt: true, icon: Car01Icon, measure: 'performance, 3 scenarios, 9 episodes', scores: s(66.7, 77.8, 88.9, 88.9, 88.9) },
+  { id: 'pooltool-billiards', name: 'Pooltool Billiards', short: 'Pooltool', domain: 'percep', family: 'control', split: 'train', node: 'ca', icon: Billiard01Icon, measure: 'success rate, 3 seeds, 27 episodes', scores: s(33.3, 66.7, 66.7, 66.7, 66.7) },
+  { id: 'euro-ncap-aeb', name: 'Euro NCAP AEB', domain: 'percep', family: 'control', split: 'train', node: 'd', rebuilt: true, icon: Car01Icon, measure: 'success rate, 3 scenarios, 9 episodes', scores: s(66.7, 77.8, 88.9, 88.9, 88.9) },
   { id: 'video-index', name: 'Video-Index', domain: 'percep', family: 'video', split: 'train', node: 'ef', icon: Video01Icon, measure: 'accuracy, 777 questions, 777 episodes', scores: s(47.9, 87.5, 87.5, 88.9, 89.4) },
   { id: 'video-mme-v2', name: 'Video-MME-v2', domain: 'percep', family: 'video', split: 'unseen', node: 'ef', icon: Film01Icon, measure: 'accuracy, 1,600 questions, 1,600 episodes', scores: s(48.4, 77.4, 79.5, 80, 80, 54.5, 45.9) },
 
@@ -433,25 +435,25 @@ export const BENCHES: Bench[] = [
   { id: 'saboteur', name: 'Saboteur', domain: 'multi', family: 'hidden-identity', split: 'train', node: 'cd', rebuilt: true, icon: PickaxeIcon, measure: 'win rate, 3 games, 27 episodes', scores: s(55.6, 77.8, 77.8, 77.8, 77.8) },
   { id: 'coup', name: 'Coup', domain: 'multi', family: 'hidden-identity', split: 'unseen', node: 'd', icon: SwordsIcon, measure: 'win rate, 40 games, 40 episodes', scores: s(45, 57.5, 57.5, 65, 65, 32.5, 35) },
   { id: 'codenames', name: 'Codenames', domain: 'multi', family: 'cooperative', split: 'train', node: 'b', icon: Cards01Icon, measure: 'win rate, 3 games, 27 episodes', scores: s(33.3, 66.7, 81.5, 81.5, 81.5) },
-  { id: 'hanabi', name: 'Hanabi', domain: 'multi', family: 'cooperative', split: 'unseen', node: 'b', icon: DiceIcon, measure: 'performance, 40 games, 40 episodes', scores: s(0, 5, 10, 15, 20, 0, 0) },
+  { id: 'hanabi', name: 'Hanabi', domain: 'multi', family: 'cooperative', split: 'unseen', node: 'b', icon: DiceIcon, measure: 'success rate, 40 games, 40 episodes', scores: s(0, 5, 10, 15, 20, 0, 0) },
   { id: 'colonel-blotto', name: 'Colonel Blotto', domain: 'multi', family: 'repeated', split: 'train', node: 'b', icon: Flag01Icon, measure: 'win rate, 3 matches, 27 episodes', scores: s(55.6, 85.2, 85.2, 85.2, 88.9) },
   { id: 'glee-persuasion', name: 'GLEE Persuasion', domain: 'multi', family: 'repeated', split: 'train', node: 'd', icon: Message01Icon, measure: 'revenue ≥50%, 3 games, 27 episodes', scores: s(33.3, 63, 63, 63, 63) },
   { id: 'hu-nlhe', name: 'Heads-Up No-Limit Texas Hold’em', short: 'Heads-Up NLHE', domain: 'multi', family: 'repeated', split: 'unseen', node: 'da', icon: Cards01Icon, measure: 'matches ahead, 20 matches, 20 episodes', scores: s(60, 80, 80, 80, 85, 30, 35) },
 
   // ---------------- Long-horizon environments
-  { id: 'textquests', name: 'TextQuests', domain: 'long', family: 'command', split: 'train', node: 'ca', icon: Book01Icon, measure: 'performance, 3 games, 9 episodes', scores: s(0, 11.1, 11.1, 11.1, 22.2) },
+  { id: 'textquests', name: 'TextQuests', domain: 'long', family: 'command', split: 'train', node: 'ca', icon: Book01Icon, measure: 'success rate, 3 games, 9 episodes', scores: s(0, 11.1, 11.1, 11.1, 22.2) },
   { id: 'nethack', name: 'NetHack', domain: 'long', family: 'command', split: 'unseen', node: 'cda', icon: SwordsIcon, measure: 'progress, 5 seeds, 5 episodes, 500 steps', scores: s(2.2, 3, 3, 3, 4, 3.7, 2.3) },
-  { id: 'the-long-dark', name: 'The Long Dark', domain: 'long', family: 'resource', split: 'train', node: 'cd', rebuilt: true, icon: MountainSnowIcon, measure: 'performance, 3 runs, 27 episodes', scores: s(77.8, 88.9, 88.9, 88.9, 88.9) },
+  { id: 'the-long-dark', name: 'The Long Dark', domain: 'long', family: 'resource', split: 'train', node: 'cd', rebuilt: true, icon: MountainSnowIcon, measure: 'success rate, 3 runs, 27 episodes', scores: s(77.8, 88.9, 88.9, 88.9, 88.9) },
   { id: 'crafter', name: 'Crafter', domain: 'long', family: 'resource', split: 'unseen', node: 'ca', icon: PickaxeIcon, measure: 'progress, 10 seeds, 10 episodes', scores: s(51, 56, 57, 58, 60, 82.7, 70) },
 ];
 
 export const benchById = Object.fromEntries(BENCHES.map((b) => [b.id, b])) as Record<string, Bench>;
 export const benchesOfNode = (id: NodeId) => BENCHES.filter((b) => b.node === id);
-/** benches whose capability set contains every capability on the node's path (the flat tree, Figure 8) */
+/** benches whose capability set contains every capability on the node's path (the flat tree, Figure 9) */
 export const benchesNeeding = (cap: CapId) => BENCHES.filter((b) => nodeById[b.node].path.includes(cap));
 
 /**
- * The evaluation settings of Table 7: 26 training benchmarks plus SOON and CaP-X in simulation
+ * The evaluation settings of Table 8: 26 training benchmarks plus SOON and CaP-X in simulation
  * (28 Train), 16 unseen benchmarks plus the two real-robot settings (18 Unseen).
  */
 export type Setting = { key: string; bench: Bench; label: string; split: Split; embodied?: 'sim' | 'robot'; scores: Scores };

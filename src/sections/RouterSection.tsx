@@ -6,7 +6,7 @@ import Icon from '@/components/ui/Icon';
 import { PlaceholderNote } from '@/components/ui/Ph';
 import RouterFlow from '@/components/viz/RouterFlow';
 import MetricBars from '@/components/viz/MetricBars';
-import { FINDINGS, TABLE3 } from '@/data/results';
+import { FINDINGS, TABLE4 } from '@/data/results';
 import { useTokens } from '@/theme/tokens';
 import { Database02Icon, FileSearchIcon, ShieldCheck } from '@hugeicons/core-free-icons';
 
@@ -22,7 +22,7 @@ export default function RouterSection() {
   return (
     <Section id="router" className="pt-32">
       <Container wide>
-        <SectionHeader kicker="Capability-aware Harness routing" title="Routing a new task to the right Harness" aside={<PlaceholderNote>Walk-through: the committed branch is the one Figure 9 assigns; scores are Table 7</PlaceholderNote>}>
+        <SectionHeader kicker="Capability-aware Harness routing" title="Routing a new task to the right Harness" aside={<PlaceholderNote>Walk-through: the committed branch is the one Figure 10 assigns; scores are Table 8</PlaceholderNote>}>
           The evolved Harnesses specialize in different capabilities, so deployment needs a task-dependent choice. The Router follows a context–action–feedback loop: public task information, retrieved verified experience and observed performance–cost summaries guide the choice of one Harness from the tree.
         </SectionHeader>
 
@@ -45,9 +45,9 @@ export default function RouterSection() {
 
         <div className="mt-20 grid gap-8 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <Reveal className="figure-frame p-5 sm:p-6">
-            <p className="text-[12.5px] font-[700] text-accent">Table 3</p>
+            <p className="text-[12.5px] font-[700] text-accent">Table 4</p>
             <p className="mt-1 text-[17px] font-[740] text-ink">Capability-aware Harness routing on the iteration-4 tree H⁽⁴⁾</p>
-            <p className="mb-4 mt-1 text-[13px] text-ink-3">Benchmark-equal task completion (%) and total inference tokens (M), including skill preparation, routing and formal inference.</p>
+            <p className="mb-4 mt-1 text-[13px] text-ink-3">Benchmark-equal performance and estimated total inference tokens (M), covering skill preparation, routing and formal inference.</p>
             <MetricBars
               min={30}
               max={80}
@@ -56,7 +56,7 @@ export default function RouterSection() {
                 { key: 'unseen', label: 'Unseen', color: t.explorer },
               ]}
               extraCols={['Train tok.', 'Unseen tok.']}
-              rows={TABLE3.map((r, i) => ({
+              rows={TABLE4.map((r, i) => ({
                 key: `${r.name}-${i}`,
                 name: r.name,
                 sub: r.cap === null ? (r.oracle ? 'best compatible Harness, chosen retrospectively' : 'one candidate per task at random') : `${r.cap ? '+ capability definitions' : 'task information and interfaces only'}${r.mem ? ' + retrieved experience' : ''}`,
@@ -69,7 +69,7 @@ export default function RouterSection() {
           </Reveal>
           <div className="flex flex-col gap-4">
             <Finding n={f3.n} title={f3.title}>
-              {f3.text} Full self-routing reaches 71.27% Train and 55.96% Unseen, versus Oracle’s 73.40% and 58.03%.
+              {f3.text} Full self-routing scores 71.27 on Train and 60.96 on Unseen, against Oracle’s 73.16 and 63.61.
             </Finding>
           </div>
         </div>

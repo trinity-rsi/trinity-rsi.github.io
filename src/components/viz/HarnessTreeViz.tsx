@@ -10,11 +10,11 @@ import { Brick, BrickDefs, Plate } from './Bricks';
 import { LockIcon, NextIcon, PauseIcon, PlayIcon, RepeatIcon } from '@hugeicons/core-free-icons';
 
 /**
- * Explorer's Harness tree evolving over iterations 1–4 (Section 3.5, Figure 10, Appendix E.2).
+ * Explorer's Harness tree evolving over iterations 1–4 (Section 3.5, Figure 11, Appendix E.2).
  * Each iteration is one top-down pass over the fixed tree. At every node Creator's level is played,
  * the failing run turns into one module event (a new module or a revision, exactly as recorded in
  * Appendix E.2), and the next run solves the level. Children show their parent's modules as
- * inherited (outlined) bricks. Scores are Table 7. Drawn as in the film (promo/src/tree.tsx):
+ * inherited (outlined) bricks. Scores are Table 8. Drawn as in the film (promo/src/tree.tsx):
  * the same plates, bricks and layout, with Creator's level for every node along the top.
  */
 type Nid = Exclude<NodeId, 'root'>;
@@ -55,6 +55,8 @@ const THUMBS: Nid[] = (Object.keys(ANCHOR) as (Nid | 'root')[]).filter((n): n is
 
 /** a node's registry at iteration 4: inherited modules first (root side), then its own */
 const finalModules = (n: Nid) => nodeLineage(n).flatMap((x) => x.local);
+/** a node's own modules that its level record (Appendix E.2) gives no event for */
+const undated = (n: Nid) => nodeById[n].local.filter((m) => !nodeById[n].events.some((e) => e.module === m));
 
 /** the timeline at time τ: iteration (1..4), index of the node being visited (−1 = banner), phase in [0, 1) */
 function at(time: number) {
@@ -103,7 +105,7 @@ function MiniMeans({ it }: { it: number }) {
   const line = (vals: number[]) => vals.map((v, i) => `${i ? 'L' : 'M'} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
   const vis = (vals: number[]) => vals.slice(0, it + 1);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="Mean performance across RSI iterations (Figure 4)">
+    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="Mean performance across RSI iterations, 28 Train and 18 Unseen benchmarks (Table 8)">
       {[40, 50, 60, 70, 80].map((v) => (
         <g key={v}>
           <line x1={18} x2={W - 18} y1={y(v)} y2={y(v)} stroke={t.rule} strokeWidth={0.8} />
@@ -112,22 +114,18 @@ function MiniMeans({ it }: { it: number }) {
           </text>
         </g>
       ))}
-      <line x1={18} x2={W - 18} y1={y(MEANS.codex)} y2={y(MEANS.codex)} stroke={t.ink3} strokeDasharray="3 3" strokeWidth={1} />
-      <text x={W - 18} y={y(MEANS.codex) - 3} textAnchor="end" fill={t.ink3} style={{ fontSize: 8.5 }}>
-        Codex {MEANS.codex}
-      </text>
       <path d={line(MEANS.train)} fill="none" stroke={t.rule2} strokeWidth={1.2} />
-      <path d={line(MEANS.unseen)} fill="none" stroke={t.rule2} strokeWidth={1.2} />
+      <path d={line(MEANS.unseen18)} fill="none" stroke={t.rule2} strokeWidth={1.2} />
       <path d={line(vis(MEANS.train))} fill="none" stroke={t.accent} strokeWidth={2.4} strokeLinecap="round" />
-      <path d={line(vis(MEANS.unseen))} fill="none" stroke={t.explorer} strokeWidth={2.4} strokeLinecap="round" />
+      <path d={line(vis(MEANS.unseen18))} fill="none" stroke={t.explorer} strokeWidth={2.4} strokeLinecap="round" />
       {[
         { vals: MEANS.train, c: t.accent, label: 'Train' },
-        { vals: MEANS.unseen, c: t.explorer, label: 'Unseen' },
+        { vals: MEANS.unseen18, c: t.explorer, label: 'Unseen' },
       ].map((s) => (
         <g key={s.label}>
           <circle cx={x(it)} cy={y(s.vals[it])} r={4.5} fill={s.c} stroke={t.surface} strokeWidth={1.5} />
           <text x={x(it) + (it > 2 ? -8 : 8)} y={y(s.vals[it]) + (s.label === 'Train' ? -7 : 13)} textAnchor={it > 2 ? 'end' : 'start'} fill={s.c} style={{ fontSize: 10.5, fontWeight: 760 }}>
-            {s.label} {s.vals[it]}
+            {s.label} {s.vals[it].toFixed(2)}
           </text>
         </g>
       ))}
@@ -140,7 +138,7 @@ function MiniMeans({ it }: { it: number }) {
   );
 }
 
-/** a node's benchmarks, H₀ against the score as of now (Table 7); SOON and CaP-X show simulation and robot */
+/** a node's benchmarks, H₀ against the score as of now (Table 8); SOON and CaP-X show simulation and robot */
 function BenchBars({ focus, cur, compact = false }: { focus: Nid; cur: ReturnType<typeof at>; compact?: boolean }) {
   const { t } = useTokens();
   return (
@@ -247,7 +245,11 @@ export default function HarnessTreeViz() {
         const childSeen = mine || cur.done || cur.it > 1 || ORDER.indexOf(id) < cur.k || (ORDER.indexOf(id) === cur.k && cur.phase > 0.15);
         if (!childSeen) continue;
         anc.local.forEach((m) => {
-          if (!st.has(m)) return;
+          // a module without a recorded event (M29) appears with the iteration-4 tree (Figure 11)
+          if (!st.has(m)) {
+            if (cur.done && !anc.events.some((e) => e.module === m)) list.push({ id: m, inherited: !mine, rev: 0, fresh: 0 });
+            return;
+          }
           // the brick that the current visit just created or revised
           let fresh = 0;
           if (mine && visiting === id) {
@@ -341,7 +343,8 @@ export default function HarnessTreeViz() {
                   type="button"
                   onClick={() => {
                     setPlaying(false);
-                    seek(i * ITER_T - 0.001);
+                    // iteration 4 ends in the finished tree of Figure 11
+                    seek(i === 4 ? TOTAL : i * ITER_T - 0.001);
                   }}
                   className={`h-8 flex-1 rounded-full px-3 text-[12.5px] font-[700] transition-colors sm:flex-none ${i === cur.it && !cur.done ? 'bg-accent text-white' : i <= iterShown ? 'bg-accent-wash text-accent-ink' : 'bg-paper-2 text-ink-3'}`}
                 >
@@ -371,11 +374,11 @@ export default function HarnessTreeViz() {
             <span className="h-9 w-px bg-rule" aria-hidden />
             <span className="tabular text-right">
               <span className="block text-[11px] font-[700] text-ink-3">Train</span>
-              <span className="block text-[17px] font-[800] leading-none text-accent">{MEANS.train[completed]}</span>
+              <span className="block text-[17px] font-[800] leading-none text-accent">{MEANS.train[completed].toFixed(2)}</span>
             </span>
             <span className="tabular text-right">
               <span className="block text-[11px] font-[700] text-ink-3">Unseen</span>
-              <span className="block text-[17px] font-[800] leading-none text-explorer">{MEANS.unseen[completed]}</span>
+              <span className="block text-[17px] font-[800] leading-none text-explorer">{MEANS.unseen18[completed].toFixed(2)}</span>
             </span>
           </div>
         </div>
@@ -569,6 +572,15 @@ export default function HarnessTreeViz() {
                         <span className="font-[700] text-ink">{e.kind === 'new' ? 'new module' : 'revised'}</span> · {m.name}
                       </span>
                     </p>
+                    {cur.done &&
+                      undated(focus).map((u) => (
+                        <p key={u} className="mt-1 flex items-center gap-2 text-[11px] leading-[1.35] text-ink-3">
+                          <span className="grid h-[16px] shrink-0 place-items-center rounded-[5px] px-1.5 text-[10px] font-[800] text-white" style={{ background: t.caps[moduleById[u].cap] }}>
+                            {u}
+                          </span>
+                          <span className="truncate">also in the iteration-4 tree (Fig. 11), no recorded event</span>
+                        </p>
+                      ))}
                   </div>
                 )
               );
@@ -615,7 +627,7 @@ export default function HarnessTreeViz() {
                 <span className="grid h-4 w-4 place-items-center rounded-full bg-ink text-[8px] font-[800] text-paper">v2</span> revised
               </span>
             </span>
-            <span>Module events: Appendix E.2 · scores: Table 7</span>
+            <span>Module events: Appendix E.2 · scores: Table 8</span>
           </div>
         </div>
       </figure>
@@ -667,6 +679,11 @@ export default function HarnessTreeViz() {
               );
             })}
           </ol>
+          {undated(focus).length > 0 && (
+            <p className="mt-3 text-[12px] leading-snug text-ink-3">
+              {undated(focus).join(', ')} {undated(focus).length > 1 ? 'are' : 'is'} in the iteration-4 tree (Figure 11) without a recorded event.
+            </p>
+          )}
           {fn.parent !== 'root' && (
             <p className="mt-3 text-[12px] leading-snug text-ink-3">
               Inherits {nodeLineage(focus).slice(1, -1).flatMap((x) => x.local).join(', ')} from {pathLabel(fn.parent as Nid)} (outlined bricks).
@@ -682,7 +699,7 @@ export default function HarnessTreeViz() {
           )}
           {benches.length === 0 && <p className="text-[12.5px] text-ink-3">No benchmark ends at this node; Video-Index and Video-MME-v2 sit one level below, at e → f.</p>}
           <div className="mt-auto border-t border-rule pt-3">
-            <p className="mb-1 text-[12px] font-[700] text-ink-3">Mean performance (Figure 4)</p>
+            <p className="mb-1 text-[12px] font-[700] text-ink-3">Mean performance · 28 Train, 18 Unseen (Table 8)</p>
             <MiniMeans it={completed} />
           </div>
         </div>

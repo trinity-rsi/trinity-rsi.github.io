@@ -1,5 +1,5 @@
 /**
- * Paper metadata (2026-10-23 version). Links are empty until the paper / code are public.
+ * Paper metadata (2026-10-25 version). Links are empty until the paper / code are public.
  */
 export const LINKS = {
   paper: '', // e.g. https://arxiv.org/abs/xxxx.xxxxx  (empty = button shows "coming soon")
@@ -15,12 +15,12 @@ export const PAPER = {
   date: 'October 2026',
   backbone: 'Claude Opus 5',
   position:
-    'Current RSI training relies too heavily on specific tasks, limiting capability generalization across tasks. We advocate a shift from task-driven training to a capability-driven loop: shared capability requirements across tasks guide learning and optimization of multiple specialized Harnesses. This reveals cross-task generalization mechanisms and naturally motivates a Router that matches tasks to Harnesses by required capabilities.',
+    'Current RSI training relies heavily on task-specific optimization, limiting capability generalization across tasks. We advocate a shift from task-driven to capability-driven self-improvement, where shared capability requirements across tasks guide the learning and optimization of multiple specialized Harnesses. This shift highlights the role of shared capabilities in cross-task generalization and naturally motivates a capability-aware Router that matches tasks to suitable Harnesses based on their capability requirements.',
   abstract: [
     'Multimodal intelligence can be viewed as human-guided co-evolution between worlds and agents through interaction. However, scaling this process faces two bottlenecks: constructing heterogeneous, verifiable environments is costly, and manual Harness iteration cannot keep pace with growing task diversity and complexity.',
     'A key insight is that tasks with different modalities and surface forms can share the same underlying capability requirements. We therefore introduce The Trinity, a recursive self-improvement framework coupling world generation with Harness evolution through three roles: Creator, Explorer, and Evolver. Drawing on verified execution trajectories, Evolver shifts the basis of task organization from surface categories to shared requirements, reorganizing the original task tree into a hierarchical capability tree.',
     'We introduce Capability-Driven Real2Sim2Real: for heterogeneous tasks at the same node, Creator abstracts their common requirements into simplified, verifiable simulated worlds for capability learning, while evaluation on original tasks measures transfer. Along this capability tree, Explorer progressively evolves reusable capability modules through selective inheritance, forming a Harness tree whose validated updates accumulate across iterations within a fixed topology.',
-    'The resulting Harnesses specialize in different capabilities, motivating a Capability-Aware Harness Router that uses public task information to select compatible module configurations from the tree. Our evolved Harnesses improve mean performance by 34.1 points across 28 training benchmarks and 22.0 points across 16 unseen benchmarks, with transfer to two real-world embodied settings.',
+    'The resulting Harnesses specialize in different capabilities, motivating a Capability-Aware Harness Router that uses public task information to select compatible module configurations from the tree. Our evolved Harnesses improve mean performance by 34 points across 28 training benchmarks and 26 points across 18 unseen benchmarks, including two real-world embodied tasks.',
   ],
   contributions: [
     {
@@ -33,7 +33,7 @@ export const PAPER = {
     },
     {
       title: 'Efficient evolution and transfer',
-      text: 'Targeting shared decision logic supports effective Harness improvement at low evolution cost, with transfer across heterogeneous tasks, unseen benchmarks and real-world embodied settings.',
+      text: 'Targeting shared decision logic supports effective Harness improvement at low evolution cost, with transfer across heterogeneous tasks, unseen benchmarks, and real-world embodied settings.',
     },
   ],
 };
@@ -75,6 +75,7 @@ export const AUTHORS: { group: string; people: Author[] }[] = [
       { name: 'Zhiqing Cui', aff: [7] },
       { name: 'Xinxiang Yin', aff: [9] },
       { name: 'Zhenglin Wan', aff: [4] },
+      { name: 'Hongzhan Lin', aff: [4] },
       { name: 'Wangbo Zhao', aff: [7] },
       { name: 'Kaipeng Zhang', aff: [1] },
     ],
@@ -96,9 +97,9 @@ export const BIBTEX = `@article{trinity2026,
              and Wang, Hexin and Chen, Haoyuan and Zhang, Zhengfeiyang
              and Ma, Yixing and Jiang, Zichen and Guo, Ziyu
              and Li, Haodong and Jiao, Zhengbo and Cui, Zhiqing
-             and Yin, Xinxiang and Wan, Zhenglin and Zhao, Wangbo
-             and Zhang, Kaipeng and Zhou, Pengfei and Zhang, Odin
-             and You, Yang},
+             and Yin, Xinxiang and Wan, Zhenglin and Lin, Hongzhan
+             and Zhao, Wangbo and Zhang, Kaipeng and Zhou, Pengfei
+             and Zhang, Odin and You, Yang},
   journal = {arXiv preprint},
   year    = {2026}
 }`;
@@ -109,15 +110,15 @@ export const ROLES = [
     name: 'Creator',
     color: 'var(--creator)',
     verb: 'Builds worlds',
-    text: 'Abstracts the requirements a capability node shares into simplified, verifiable worlds, and pools module proposals from every node into one shared library.',
-    stages: 'Stage 2',
+    text: 'Turns the requirements a capability node shares into simplified, verifiable worlds. It evolves along the same tree as Explorer and, at the end of each iteration, consolidates its validated updates into a new Base Harness.',
+    stages: 'Stages 2, 3',
   },
   {
     id: 'explorer',
     name: 'Explorer',
     color: 'var(--explorer)',
     verb: 'Acts in worlds',
-    text: 'Collects verified trajectories on every task, then evolves a Harness tree along the capability tree through selective inheritance and local refinement.',
+    text: 'Collects verified trajectories on the training tasks, then evolves a Harness tree along the capability tree through selective inheritance and local refinement.',
     stages: 'Stages 1, 3',
   },
   {
@@ -125,7 +126,7 @@ export const ROLES = [
     name: 'Evolver',
     color: 'var(--evolver)',
     verb: 'Organizes and evolves',
-    text: 'Turns task specifications and verified trajectories into capability requirements, builds the capability tree, and writes the module updates.',
+    text: 'Turns training-task specifications and verified trajectories into capability requirements, builds the capability tree, and writes the module updates.',
     stages: 'Stages 1–3',
   },
 ] as const;
@@ -149,7 +150,7 @@ export const STAGES = [
     title: 'Task tree construction',
     who: ['evolver', 'explorer'],
     parts: ['Benchmark organization', 'World exploration'],
-    text: 'Public multimodal benchmarks are normalized into specifications of goals, observations, actions, feedback, completion criteria and budgets, and grouped into five domains. Explorer runs H₀ on sampled instances of every task.',
+    text: 'Public multimodal benchmarks are normalized into specifications of goals, observations, actions, feedback, completion criteria and budgets, and grouped into five domains. Explorer runs H₀ on sampled training instances.',
     href: 'stage-1',
   },
   {
@@ -159,7 +160,7 @@ export const STAGES = [
     title: 'Capability tree construction',
     who: ['evolver', 'creator'],
     parts: ['Requirement organization', 'World creation'],
-    text: 'Verified trajectories reveal what each task requires. Capability paths merge into a tree, and Creator turns each node’s requirement into simplified, verifiable worlds.',
+    text: 'Training trajectories reveal what each task requires. Capability paths merge into a tree built from training tasks only, and Creator turns each node’s requirement into simplified, verifiable worlds.',
     href: 'stage-2',
   },
   {
@@ -167,9 +168,9 @@ export const STAGES = [
     n: '3',
     kicker: 'Stage 3',
     title: 'Harness tree construction',
-    who: ['explorer', 'evolver'],
+    who: ['explorer', 'evolver', 'creator'],
     parts: ['Reusable modules', 'Selective inheritance'],
-    text: 'Explorer plays each node’s worlds with inherited and local modules; Evolver builds reusable modules from the runs. Validated updates accumulate over iterations on the fixed tree.',
+    text: 'Explorer plays each node’s worlds with inherited and local modules; Evolver builds reusable modules from the runs. Creator evolves at the same nodes and consolidates its updates into a new Base Harness.',
     href: 'stage-3',
   },
   {

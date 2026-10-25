@@ -13,7 +13,7 @@ import { CheckmarkBadge01Icon, Database02Icon, DatabaseAddIcon, FileSearchIcon, 
  *   ① read the public task information → ② retrieve verified experience → ③ commit one Harness
  *   → ④ execute and verify → ⑤ append the verified record to memory.
  * Illustrative walk-through: the committed Harness is the branch the task's capabilities point
- * to (Figure 9); retrieved records are training tasks on the same branch; scores are Table 7,
+ * to (Figure 10); retrieved records are training tasks on the same branch; scores are Table 8,
  * whose H(4) column is played with the Harness the Router selects.
  */
 const STEPS = [
@@ -214,7 +214,7 @@ export default function RouterFlow() {
 
             {/* ④ verified outcome */}
             <div style={{ opacity: step >= 3 ? 1 : 0.35 }}>
-              <p className="mb-2 text-[12px] font-[700] text-ink-3">Verified outcome on {task.label} (Table 7)</p>
+              <p className="mb-2 text-[12px] font-[700] text-ink-3">Verified outcome on {task.label} (Table 8)</p>
               <div className="space-y-1.5">
                 {[
                   { label: 'Base Harness H₀', v: h0, c: t.iters[0] },

@@ -1,54 +1,83 @@
-import { useState } from 'react';
-import { motion } from 'motion/react';
-import { Cancel01Icon, CheckmarkCircle02Icon, Robot01Icon } from '@hugeicons/core-free-icons';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowRight01Icon, Cancel01Icon, CheckmarkCircle02Icon, PauseIcon, PlayIcon, Robot01Icon } from '@hugeicons/core-free-icons';
 import { Container, Section } from '@/components/ui/Section';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Reveal from '@/components/ui/Reveal';
 import Icon from '@/components/ui/Icon';
+import Finding from '@/components/ui/Finding';
 import PaperFigure from '@/components/ui/PaperFigure';
 import { Brick, BrickDefs, Plate } from '@/components/viz/Bricks';
 import { benchById } from '@/data/tree';
-import { embodied, scene, type PaperFig } from '@/data/media';
+import { FINDINGS } from '@/data/results';
+import { PAPER_FIGS, embodied, recordFrame, trial, type PaperFig, type RecordView } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
-import { useReducedMotion } from '@/lib/hooks';
+import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 
 /**
- * Appendix E.3: the two embodied benchmarks, the way the film shows them. The real robot comes
- * first (hover or switch to see the simulation rebuilt from its scene, Figure 67); the scores are
- * brick towers, ten points a brick, each brick coloured by the iteration that earned it (Table 7);
- * the frame-by-frame record of Base and evolved Harness (Figures 68–71) opens on request.
+ * Section 4.6 and Appendix E.3, embodied Real2Sim2Real. Both robot tasks sit at node d → a and use
+ * the Harnesses evolved there; five trial-and-error episodes in the rebuilt simulator become skills,
+ * frozen for the formal tests (Figure 7). Each card plays the paper's recorded frames in order: the
+ * real-robot trial of Figure 7, and the Base and evolved runs of Figures 69–72, real robot or
+ * simulation, from either camera. The scores are Table 6, as brick towers, ten points a brick, each
+ * brick coloured by the iteration that earned it.
  */
-const TASKS = [
+type Task = 'soon' | 'capx';
+type Mode = 'trial' | 'h0' | 'h4';
+const TASKS: {
+  id: Task;
+  bench: string;
+  name: string;
+  robot: string;
+  goal: string;
+  h0: string;
+  h4: string;
+  steps: string[];
+  cams: { id: 'office' | 'head' | 'wrist'; label: string }[];
+  figs: { h0: 69 | 71; h4: 70 | 72 };
+}[] = [
   {
-    id: 'soon' as const,
+    id: 'soon',
     bench: 'soon',
     name: 'SOON',
     robot: 'Unitree G1',
-    goal: 'Walk from the side room into the office and touch the desk next to the white fan, judging distance from head-camera images alone.',
-    h0: 'stops and reaches as soon as the desk looks close.',
-    h4: 'turns towards the desk after the doorway and advances in small steps until the hand touches it.',
-    figs: { base: 68 as const, evolved: 69 as const },
+    goal: 'Walk from the side room into the office and reach towards the desk beside the white fan. On the real robot, success needs the desk ahead of the outstretched arm, within 30 cm; a collision fails the episode.',
+    h0: 'looks left and right and, once the desk looks close, reaches too early: in simulation the hand stops about 0.5 m short, on the robot the arm rises while the desk is out of reach.',
+    h4: 'turns towards the desk right after the doorway, does not take a desk that merely looks close as proof of reach, and advances in small steps until the hand ends within the range judged a touch.',
+    steps: ['Enter aisle', 'Move closer', 'Before reach', 'Reach (30 cm)'],
+    cams: [
+      { id: 'office', label: 'Office camera' },
+      { id: 'head', label: 'Head camera' },
+    ],
+    figs: { h0: 69, h4: 70 },
   },
   {
-    id: 'capx' as const,
+    id: 'capx',
     bench: 'cap-x',
     name: 'CaP-X',
     robot: 'AlohaMini2',
-    goal: 'Three upside-down paper cups on a white table: report the colour of the cube and the cup it is under, having lifted that cup.',
-    h0: 'knocks cup 1 over, tries cup 3, and answers “no cube” without examining cup 2.',
-    h4: 'checks the cups one by one, retries a missed grasp, and answers only after it has seen the cube.',
-    figs: { base: 70 as const, evolved: 71 as const },
+    goal: 'Three paper cups stand upside down on a white table; uncover them and report whether a cube is present and, if it is, its colour and the cup it is under.',
+    h0: 'grasps clumsily, knocks cup 1 over, tries cup 3 and answers that there is no cube without ever examining cup 2.',
+    h4: 'checks the cups one by one, retries a missed grasp, and answers only after it has seen the cube; on the real robot it sweeps the cups aside to uncover it.',
+    steps: ['Inspect cups', 'Approach', 'Align', 'Lift & reveal'],
+    cams: [
+      { id: 'head', label: 'Head camera' },
+      { id: 'wrist', label: 'Wrist camera' },
+    ],
+    figs: { h0: 71, h4: 72 },
   },
 ];
 
-const FIG_SIZE: Record<number, [number, number]> = { 68: [1600, 741], 69: [1600, 741], 70: [1400, 984], 71: [1400, 984] };
-const figOf = (n: 68 | 69 | 70 | 71, task: string, evolved: boolean): PaperFig => ({
-  n,
-  src: embodied(n),
-  w: FIG_SIZE[n][0],
-  h: FIG_SIZE[n][1],
-  caption: `Figure ${n}: ${task}, ${evolved ? 'evolved Harness H(4)' : 'Base Harness H₀'}, in simulation and on the real robot (frame by frame). Faces of people in the real scenes are pixelated.`,
-});
+const FIG_SIZE: Record<number, [number, number]> = { 69: [1600, 741], 70: [1600, 741], 71: [1400, 984], 72: [1400, 984] };
+const CAPTION: Record<number, string> = {
+  69: 'Figure 69: SOON with the Base Harness. Rows show simulation and real-robot views from the fixed office camera, followed by the head camera. Faces of people in the real scenes are pixelated.',
+  70: 'Figure 70: SOON with the evolved Harness. Rows follow Figure 69. Faces of people in the real scenes are pixelated.',
+  71: 'Figure 71: CaP-X with the Base Harness. Rows show head, side and wrist cameras in simulation, followed by the real robot.',
+  72: 'Figure 72: CaP-X with the evolved Harness. Rows follow Figure 71.',
+};
+const figOf = (n: 69 | 70 | 71 | 72): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n] });
+
+const STEP_MS = 1150;
 
 /* tower geometry (one brick = ten points) */
 const TW = { w: 250, h: 236, col: 66, brickH: 15, gap: 3, base: 186 };
@@ -117,71 +146,177 @@ function Towers({ sim, real, delay }: { sim: number[]; real: number[]; delay: nu
   );
 }
 
-function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
-  const { t, theme } = useTokens();
-  const reduce = useReducedMotion();
-  const b = benchById[task.bench];
-  const [view, setView] = useState<'real' | 'sim'>('real');
-  const [peek, setPeek] = useState(false);
-  const shown = peek ? (view === 'real' ? 'sim' : 'real') : view;
-  const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
+/** a small segmented switch over the picture */
+function Seg<T extends string>({ value, items, onChange, id, label }: { value: T; items: { v: T; l: string; off?: boolean }[]; onChange: (v: T) => void; id: string; label: string }) {
   return (
-    <Reveal delay={i * 0.08} className="overflow-hidden rounded-[26px] border border-rule bg-surface shadow-[0_40px_90px_-60px_rgba(20,24,40,0.7)]">
-      {/* the robot first */}
-      <div
-        className="group relative aspect-[900/593] select-none overflow-hidden bg-paper-2"
-        onMouseEnter={() => setPeek(true)}
-        onMouseLeave={() => setPeek(false)}
-      >
-        <img
-          src={scene(task.id, 'real')}
-          alt={`${task.name} on the ${task.robot}: the real scene`}
-          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1.8s] ease-out ${reduce ? '' : 'group-hover:scale-[1.035]'}`}
-          draggable={false}
-        />
+    <div className="inline-flex rounded-full bg-[rgba(12,14,22,0.58)] p-1 backdrop-blur-md" role="radiogroup" aria-label={label}>
+      {items.map((x) => (
+        <button
+          key={x.v}
+          type="button"
+          role="radio"
+          aria-checked={value === x.v}
+          disabled={x.off}
+          onClick={() => onChange(x.v)}
+          className={`relative rounded-full px-2.5 py-1 text-[11.5px] font-[700] transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${value === x.v ? 'text-[#12141c]' : 'text-white/80 hover:text-white'}`}
+        >
+          {value === x.v && <motion.span layoutId={id} className="absolute inset-0 rounded-full bg-white" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />}
+          <span className="relative">{x.l}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** the paper's recorded frames, played in order */
+function Replay({ task }: { task: (typeof TASKS)[number] }) {
+  const reduce = useReducedMotion();
+  const [ref, near] = useNearViewport<HTMLDivElement>('-15% 0px');
+  const [mode, setMode] = useState<Mode>('trial');
+  const [real, setReal] = useState(true);
+  const [cam, setCam] = useState(task.cams[0].id);
+  const [k, setK] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const n = mode === 'trial' ? 4 : 6;
+  const running = playing && near && !reduce;
+
+  useEffect(() => setK(0), [mode, task.id]);
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(() => setK((v) => (v + 1) % n), mode === 'trial' ? STEP_MS * 1.25 : STEP_MS);
+    return () => window.clearInterval(id);
+  }, [running, n, mode]);
+
+  // decode the frames of this view ahead of time
+  useEffect(() => {
+    if (!near) return;
+    for (let i = 1; i <= n; i++) {
+      const im = new Image();
+      im.src = frameSrc(task.id, mode, real, cam, i);
+      im.decode?.().catch(() => undefined);
+    }
+  }, [near, task.id, mode, real, cam, n]);
+
+  const src = frameSrc(task.id, mode, real, cam, k + 1);
+  const label =
+    mode === 'trial'
+      ? `${k + 1}. ${task.steps[k]}`
+      : `${real ? 'Real robot' : 'Simulation'} · ${task.cams.find((c) => c.id === cam)!.label.toLowerCase()} · frame ${k + 1} of 6`;
+  const source = mode === 'trial' ? `Real-robot trial, Figure 7 (${task.id === 'soon' ? 'SOON E01' : 'CaP-X C-01'})` : `${mode === 'h0' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}, Figure ${task.figs[mode]}`;
+  const good = mode === 'h4' || mode === 'trial';
+
+  return (
+    <div ref={ref} className="relative aspect-[4/3] select-none overflow-hidden bg-[#0c0e15]">
+      <AnimatePresence initial={false}>
         <motion.img
-          src={scene(task.id, 'sim')}
-          alt={`${task.name}: the simulation rebuilt from the real scene`}
+          key={src}
+          src={src}
+          alt={`${task.name}: ${label}`}
           className="absolute inset-0 h-full w-full object-cover"
-          animate={{ opacity: shown === 'sim' ? 1 : 0 }}
-          transition={{ duration: 0.45, ease: 'easeOut' }}
+          initial={{ opacity: 0, scale: 1.035 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.45 } }}
+          transition={{ opacity: { duration: 0.42 }, scale: { duration: STEP_MS / 1000 + 0.4, ease: 'linear' } }}
           draggable={false}
         />
-        <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" aria-hidden />
-        <span className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-[12px] bg-[rgba(12,14,22,0.72)] px-3 py-1.5 text-white backdrop-blur-md">
-          <Icon icon={Robot01Icon} size={15} stroke={2} />
-          <span className="text-[13.5px] font-[760]">
-            {task.name} <span className="text-white/60">·</span> {task.robot}
-          </span>
-        </span>
-        {/* real ⇄ simulation */}
-        <div className="absolute right-3 top-3 inline-flex rounded-full bg-[rgba(12,14,22,0.55)] p-1 backdrop-blur-md" role="radiogroup" aria-label="Real scene or simulation">
-          {(['real', 'sim'] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="radio"
-              aria-checked={view === k}
-              onClick={() => {
-                setView(k);
-                setPeek(false);
-              }}
-              className={`relative rounded-full px-2.5 py-1 text-[11.5px] font-[700] transition-colors ${shown === k ? 'text-[#12141c]' : 'text-white/80 hover:text-white'}`}
-            >
-              {shown === k && <motion.span layoutId={`rw-${task.id}`} className="absolute inset-0 rounded-full bg-white" transition={{ type: 'spring', stiffness: 420, damping: 32 }} />}
-              <span className="relative">{k === 'real' ? 'Real robot' : 'Simulation'}</span>
+      </AnimatePresence>
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/50 to-transparent" aria-hidden />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 to-transparent" aria-hidden />
+
+      {/* what is playing */}
+      <div className="absolute left-3 right-3 top-3 flex flex-wrap items-center justify-between gap-2">
+        <Seg
+          id={`rw-mode-${task.id}`}
+          label="Which run"
+          value={mode}
+          onChange={setMode}
+          items={[
+            { v: 'trial', l: 'Robot trial' },
+            { v: 'h0', l: 'Base H₀' },
+            { v: 'h4', l: 'Evolved H(4)' },
+          ]}
+        />
+        {mode !== 'trial' && (
+          <div className="flex flex-wrap gap-2">
+            <Seg
+              id={`rw-real-${task.id}`}
+              label="Real robot or simulation"
+              value={real ? 'real' : 'sim'}
+              onChange={(v) => setReal(v === 'real')}
+              items={[
+                { v: 'real', l: 'Real' },
+                { v: 'sim', l: 'Sim.' },
+              ]}
+            />
+            <Seg id={`rw-cam-${task.id}`} label="Camera" value={cam} onChange={setCam} items={task.cams.map((c) => ({ v: c.id, l: c.label.replace(' camera', '') }))} />
+          </div>
+        )}
+      </div>
+
+      {/* progress, caption and controls */}
+      <div className="absolute inset-x-3 bottom-3">
+        <div className="mb-2 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.p key={label} className="truncate text-[14px] font-[760] text-white" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.15 } }} transition={{ duration: 0.25 }}>
+                {label}
+              </motion.p>
+            </AnimatePresence>
+            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11.5px] font-[620] text-white/75">
+              <Icon icon={good ? CheckmarkCircle02Icon : Cancel01Icon} size={13} stroke={2.2} color={good ? '#5fe08a' : '#ff8a8a'} />
+              {source}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPlaying((v) => !v)}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/90 text-[#12141c] shadow"
+            aria-label={playing ? 'Pause' : 'Play'}
+          >
+            <Icon icon={playing ? PauseIcon : PlayIcon} size={14} stroke={2.2} />
+          </button>
+        </div>
+        <div className="flex gap-1">
+          {Array.from({ length: n }, (_, i) => (
+            <button key={i} type="button" onClick={() => setK(i)} className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-white/25" aria-label={`Frame ${i + 1}`}>
+              {i < k && <span className="absolute inset-0 bg-white/85" />}
+              {i === k && (
+                <motion.span
+                  key={`${mode}-${k}-${running}`}
+                  className="absolute inset-y-0 left-0 bg-white"
+                  initial={{ width: running ? '0%' : '100%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: running ? (mode === 'trial' ? STEP_MS * 1.25 : STEP_MS) / 1000 : 0, ease: 'linear' }}
+                />
+              )}
             </button>
           ))}
         </div>
-        {/* the result, on the picture, as in the film */}
-        <span
-          className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-[780] text-white shadow-lg transition-colors duration-300"
-          style={{ background: shown === 'real' ? '#14a23a' : teal[3] }}
-        >
-          {shown === 'real' ? 'real robot' : 'simulation'} {shown === 'real' ? b.robot!.it[0] : b.scores.it[0]} → {shown === 'real' ? b.robot!.it[4] : b.scores.it[4]}
-        </span>
-        <span className="absolute bottom-3.5 right-3 hidden text-[11.5px] font-[600] text-white/80 sm:block">hover to see the simulation</span>
       </div>
+      <span className="pointer-events-none absolute left-3 top-14 inline-flex items-center gap-1.5 rounded-[10px] bg-[rgba(12,14,22,0.62)] px-2.5 py-1 text-white backdrop-blur-md">
+        <Icon icon={Robot01Icon} size={14} stroke={2} />
+        <span className="text-[12.5px] font-[760]">
+          {task.name} <span className="text-white/55">·</span> {task.robot}
+        </span>
+      </span>
+      <span className="sr-only">Frames from the paper, played in order</span>
+    </div>
+  );
+}
+
+function frameSrc(task: Task, mode: Mode, real: boolean, cam: string, k: number) {
+  if (mode === 'trial') return trial(task, k);
+  const view = `${real ? 'real' : 'sim'}-${cam}` as RecordView;
+  return recordFrame(task, mode, view, k);
+}
+
+function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
+  const { t, theme } = useTokens();
+  const b = benchById[task.bench];
+  const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
+  return (
+    <Reveal delay={i * 0.08} className="overflow-hidden rounded-[26px] border border-rule bg-surface shadow-[0_40px_90px_-60px_rgba(20,24,40,0.7)]">
+      <Replay task={task} />
 
       {/* scores as bricks, and what changed */}
       <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-center">
@@ -196,6 +331,7 @@ function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
               </span>
             ))}
           </div>
+          <p className="mt-1.5 text-center text-[11px] text-ink-3">Table 6 · success rate (%) with prepared skills</p>
         </div>
         <div>
           <p className="text-[14px] leading-[1.55] text-ink-2">{task.goal}</p>
@@ -214,8 +350,8 @@ function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
             </li>
           </ul>
           <div className="mt-3.5 flex flex-wrap gap-2">
-            <PaperFigure fig={figOf(task.figs.base, task.name, false)} label={`Frames · H₀ (Fig. ${task.figs.base})`} />
-            <PaperFigure fig={figOf(task.figs.evolved, task.name, true)} label={`Frames · H(4) (Fig. ${task.figs.evolved})`} />
+            <PaperFigure fig={figOf(task.figs.h0)} label={`All frames · H₀ (Fig. ${task.figs.h0})`} />
+            <PaperFigure fig={figOf(task.figs.h4)} label={`All frames · H(4) (Fig. ${task.figs.h4})`} />
           </div>
         </div>
       </div>
@@ -223,17 +359,62 @@ function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
   );
 }
 
+/** Figure 7's three steps: real site → simulation → real test */
+function Flow() {
+  const { t } = useTokens();
+  const steps = [
+    { n: '1', k: 'Real', title: 'Site and task', text: 'Each robot task is mapped by its capability requirements to node d → a and uses the Harness evolved there.', color: t.accent },
+    { n: '2', k: 'Sim', title: '5 trials → skills', text: 'Holding the Harness fixed, five trial-and-error episodes in the simulator rebuilt from the site are summarized into skills.', color: t.explorer },
+    { n: '3', k: 'Real', title: 'Test with fixed Harness and skills', text: 'The skills are frozen for the formal simulation and real-robot tests; the preparation episodes are not counted.', color: t.good },
+  ];
+  return (
+    <Reveal className="mt-12 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1.15fr)] md:items-stretch">
+      {steps.map((s, i) => (
+        <div key={s.n} className="contents">
+          <div className="rounded-[20px] border border-rule bg-surface p-4">
+            <p className="flex items-baseline gap-2">
+              <span className="text-[26px] font-[850] leading-none" style={{ color: s.color, fontStretch: '115%' }}>
+                {s.n}
+              </span>
+              <span className="text-[12px] font-[780] uppercase tracking-[0.14em]" style={{ color: s.color }}>
+                {s.k}
+              </span>
+              <span className="text-[15px] font-[740] text-ink">{s.title}</span>
+            </p>
+            <p className="mt-1.5 text-[13.5px] leading-[1.5] text-ink-2">{s.text}</p>
+          </div>
+          {i < steps.length - 1 && (
+            <span className="hidden items-center justify-center text-ink-3 md:flex" aria-hidden>
+              <Icon icon={ArrowRight01Icon} size={20} stroke={2} />
+            </span>
+          )}
+        </div>
+      ))}
+    </Reveal>
+  );
+}
+
 export default function RealWorldSection() {
+  const f5 = FINDINGS[4];
   return (
     <Section id="real-world" className="overflow-hidden pt-28 pb-10">
       <Container wide>
-        <SectionHeader kicker="Real → Sim → Real · Appendix E.3" title="From simulated worlds to two real robots">
-          Each embodied benchmark runs in a simulation rebuilt from its real scene, with a model of the same robot. The simulation trains; the real robot is unseen.
+        <SectionHeader kicker="Embodied Real2Sim2Real · Section 4.6, Appendix E.3" title="From simulated worlds to two real robots" aside={<PaperFigure fig={PAPER_FIGS.embodied} />}>
+          Each robot task runs in a simulation rebuilt from its real site, with a model of the same robot. Skills prepared in simulation are frozen, then every Harness, from H₀ to H(4), is tested in simulation and on the real robot.
         </SectionHeader>
-        <div className="mt-14 grid gap-6 lg:grid-cols-2">
+        <Flow />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
           {TASKS.map((task, i) => (
             <RobotCard key={task.id} task={task} i={i} />
           ))}
+        </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
+          <Finding n={f5.n} title={f5.title}>
+            {f5.text}
+          </Finding>
+          <p className="text-[13px] leading-[1.55] text-ink-3">
+            Recorded deployments differ in message handling, interfaces, guidance and acceptance rules (including lifting versus pushing), so these comparisons evaluate complete Harness–skill configurations and do not isolate module evolution from skill preparation. The pictures are the paper’s recorded frames, shown in order; real and simulated scenes: Figure 68.
+          </p>
         </div>
       </Container>
     </Section>

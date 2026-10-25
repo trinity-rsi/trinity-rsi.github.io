@@ -82,36 +82,6 @@ export function useScrollSpy(ids: string[]) {
   return active;
 }
 
-/** progress (0..1) of an element scrolling through a tall sticky wrapper */
-export function useStickyProgress<T extends HTMLElement>(): [RefObject<T | null>, number] {
-  const ref = useRef<T | null>(null);
-  const [p, setP] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const total = r.height - window.innerHeight;
-      const v = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
-      setP(v);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-  return [ref, p];
-}
-
 export function scrollToId(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
