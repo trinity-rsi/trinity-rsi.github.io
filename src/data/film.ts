@@ -15,7 +15,7 @@ export const SITE_URL = 'https://mikeeeeeeeeeeeeee.github.io/Trinity/';
 const BASE = import.meta.env.MODE === 'single' ? SITE_URL : import.meta.env.BASE_URL;
 
 export const FILM = {
-  duration: 106.55,
+  duration: 106.38,
   src: { en: `${BASE}film/the-trinity-en.mp4`, zh: `${BASE}film/the-trinity-zh.mp4` } as Record<FilmLang, string>,
   poster: { en: POSTERS['../assets/film/poster-en.webp'], zh: POSTERS['../assets/film/poster-zh.webp'] } as Record<FilmLang, string>,
   langName: { en: 'English', zh: '中文' } as Record<FilmLang, string>,
@@ -35,10 +35,10 @@ export const CHAPTERS: { t: number; en: string; zh: string; section: string }[] 
   { t: 18.86, en: 'Shared capabilities', zh: '共享的能力', section: 'examples' },
   { t: 33.72, en: 'The Trinity', zh: '三个角色', section: 'trinity' },
   { t: 44.94, en: 'Stage 1 · Task tree', zh: '阶段 1 · 任务树', section: 'stage-1' },
-  { t: 54.24, en: 'Stage 2 · Capability tree', zh: '阶段 2 · 能力树', section: 'stage-2' },
-  { t: 66.56, en: 'Stage 3 · Harness tree', zh: '阶段 3 · Harness 树', section: 'stage-3' },
-  { t: 82.12, en: 'Routing a new task', zh: '路由新任务', section: 'router' },
-  { t: 92.48, en: 'Results', zh: '结果', section: 'results' },
+  { t: 54.3, en: 'Stage 2 · Capability tree', zh: '阶段 2 · 能力树', section: 'stage-2' },
+  { t: 66.62, en: 'Stage 3 · Harness tree', zh: '阶段 3 · Harness 树', section: 'stage-3' },
+  { t: 82.18, en: 'Routing a new task', zh: '路由新任务', section: 'router' },
+  { t: 92.54, en: 'Results', zh: '结果', section: 'results' },
 ];
 export const chapterThumb = (i: number, lang: FilmLang) => THUMBS[`../assets/film/ch${i}-${lang}.webp`];
 export const chapterAt = (time: number) => {

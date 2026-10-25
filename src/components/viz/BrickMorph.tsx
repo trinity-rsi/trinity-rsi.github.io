@@ -199,9 +199,9 @@ const curves = (S: number) => ({
   capsTrain: smooth(2.0, 2.45, S),
   capsUnseen: smooth(3.42, 3.54, S),
   hold: smooth(0.9, 1.3, S) * (1 - smooth(3.42, 3.54, S)),
-  // the task tree steps back while the tree is built, and goes once the unseen bricks have left it
-  taskTree: 1 - 0.78 * smooth(2.9, 3.18, S) - 0.22 * smooth(3.7, 3.94, S),
-  capTree: smooth(2.86, 2.98, S),
+  // the task tree hands over to the capability tree in one short cross-fade
+  taskTree: 1 - smooth(2.86, 3.06, S),
+  capTree: smooth(2.94, 3.1, S),
 });
 /** a node's plate and its edge appear just before its first bricks land */
 const nodeIn = (depth: number, S: number) => smooth(DEPTH_WIN[depth][0] - 0.04, DEPTH_WIN[depth][0] + 0.06, S);
