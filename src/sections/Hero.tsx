@@ -4,7 +4,7 @@ import StarBorder from '@/components/reactbits/StarBorder/StarBorder';
 import Magnet from '@/components/reactbits/Magnet/Magnet';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
 import SideRays from '@/components/reactbits/SideRays/SideRays';
-import TrinityTriad, { TriadChain } from '@/components/viz/TrinityTriad';
+import TrinityTriangle, { TriangleChain } from '@/components/viz/TrinityTriangle';
 import LetterGlitch from '@/components/reactbits/LetterGlitch/LetterGlitch';
 import LazyMount from '@/components/ui/LazyMount';
 import Icon from '@/components/ui/Icon';
@@ -197,13 +197,13 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* the three roles, as in the film */}
+          {/* the three roles as a triangle (Figure 2) */}
           <div className="rise-in relative z-10 hidden sm:block" style={{ animationDelay: '0.3s' }}>
-            <TrinityTriad />
+            <TrinityTriangle />
           </div>
         </div>
         <div className="relative z-10 mt-7 sm:hidden">
-          <TriadChain />
+          <TriangleChain />
         </div>
 
         {/* the paper's position statement, across the page */}

@@ -395,7 +395,7 @@
   stroke-dashoffset: 1500;
   animation: row-draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
-/* the hero row's arrows (TrinityTriad): draw in, then a packet runs each one */
+/* the hero triangle's arrows (TrinityTriangle): draw in, then a packet runs each one */
 @keyframes row-line {
   from {
     stroke-dashoffset: 1;

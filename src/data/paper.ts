@@ -134,7 +134,7 @@ export const ROLES = [
 export const FLOWS = [
   { from: 'creator', to: 'explorer', label: 'Generate world' },
   { from: 'explorer', to: 'creator', label: 'Explore world' },
-  { from: 'explorer', to: 'evolver', label: 'Trajectory & outcome feedback' },
+  { from: 'explorer', to: 'evolver', label: 'Trajectory and outcome-level feedback' },
   { from: 'evolver', to: 'explorer', label: 'Adaptive Harness evolution' },
   { from: 'creator', to: 'evolver', label: 'World verification feedback' },
   { from: 'evolver', to: 'creator', label: 'Long-horizon Harness evolution' },
