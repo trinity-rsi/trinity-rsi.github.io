@@ -2,7 +2,8 @@ import { useRef, useState, type PointerEvent as RPointerEvent } from 'react';
 import { motion, useInView } from 'motion/react';
 import PaperFigure from '@/components/ui/PaperFigure';
 import GainList from '@/components/viz/GainList';
-import { FIG6, FIG6_COLS, FIG6_ROWS, FINDINGS, MEANS, TABLE2, TABLE3, TABLE5 } from '@/data/results';
+import { ModulesAndSkills } from '@/components/viz/ResultBits';
+import { FIG6, FIG6_COLS, FIG6_ROWS, FINDINGS, MEANS, TABLE3, TABLE5 } from '@/data/results';
 import { TRAIN_SETTINGS, UNSEEN_SETTINGS, capById, protocolById } from '@/data/tree';
 import { PAPER_FIGS } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
@@ -261,7 +262,15 @@ export default function PResults() {
       </Block>
 
       <Block tag="Table 2" title="Modules and skills work best together" note="At iteration 1. Module means evolved modules beyond the Base Harness; a skill comes from five preparation trials per benchmark and Harness.">
-        <PBars id="table2" range={[30, 70]} rows={TABLE2.map((r) => ({ key: r.name, name: r.name, score: { train: r.train, unseen: r.unseen }, ours: r.ours, muted: r.base }))} />
+        <p className="mb-2 flex items-center gap-3 text-[11.5px] font-[700] text-ink-3">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Train
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm bg-explorer" /> Unseen
+          </span>
+        </p>
+        <ModulesAndSkills />
       </Block>
 
       <Block tag={`Figure 6, Table 5, Finding ${f4.n}`} title={f4.title} note={f4.text}>

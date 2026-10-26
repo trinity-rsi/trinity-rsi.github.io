@@ -1,29 +1,54 @@
-import { motion } from 'motion/react';
-import ScrollFloat from '@/components/reactbits/ScrollFloat/ScrollFloat';
+import type { ReactNode } from 'react';
 import { Container, Section } from '@/components/ui/Section';
 import Fold from '@/components/ui/Fold';
 import Reveal from '@/components/ui/Reveal';
 import PaperFigure from '@/components/ui/PaperFigure';
+import CountUp from '@/components/reactbits/CountUp/CountUp';
 import PBars from '@/phone/ui/PBars';
 import IterScrub from '@/components/viz/IterScrub';
 import RadialBench from '@/components/viz/RadialBench';
 import GainList from '@/components/viz/GainList';
 import CorrHeatmap from '@/components/viz/CorrHeatmap';
-import { FINDINGS, TABLE2, TABLE3, TABLE5 } from '@/data/results';
+import { Interventions, ModulesAndSkills } from '@/components/viz/ResultBits';
+import { FINDINGS, HEADLINE, TABLE3 } from '@/data/results';
 import { TRAIN_SETTINGS, UNSEEN_SETTINGS } from '@/data/tree';
 import { PAPER_FIGS } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useMediaQuery } from '@/lib/hooks';
 
-function Card({ tag, title, sub, note, children, className = '' }: { tag: string; title: string; sub?: string; note?: React.ReactNode; children: React.ReactNode; className?: string }) {
+/**
+ * Results, told finding by finding. Each finding of the paper is a row: its claim, the one or two
+ * numbers that carry it and a folded explanation on one side, the figure or table on the other,
+ * sides alternating down the page. Figure 4 (every benchmark) runs the full width between them.
+ */
+
+/** the words of one finding: tag, claim, a sentence, its numbers, the paper's explanation folded */
+function Claim({ tag, title, children, figures, note }: { tag: string; title: string; children?: ReactNode; figures?: ReactNode; note?: ReactNode }) {
   return (
-    <Reveal className={`figure-frame p-5 sm:p-6 ${className}`}>
-      <p className="text-[12.5px] font-[700] text-accent">{tag}</p>
-      <p className="mt-1 text-[19px] font-[760] leading-snug tracking-[-0.01em] text-ink">{title}</p>
-      {sub && <p className="mt-1 text-[13px] leading-snug text-ink-3">{sub}</p>}
-      <div className="mt-5">{children}</div>
-      {note && <Fold className="mt-4">{note}</Fold>}
-    </Reveal>
+    <div className="min-w-0">
+      <p className="text-[13px] font-[700] text-accent">{tag}</p>
+      <h3 className="display-md mt-2 text-[clamp(1.6rem,2.4vw,2.2rem)] text-ink">{title}</h3>
+      {children && <p className="mt-3 max-w-[46ch] font-serif text-[1.06rem] leading-[1.6] text-ink-2">{children}</p>}
+      {figures && <div className="mt-6 max-w-[560px]">{figures}</div>}
+      {note && <Fold className="mt-5">{note}</Fold>}
+    </div>
+  );
+}
+
+/** big numbers with what they are */
+function Nums({ items }: { items: { v: string; l: string; sub?: string; c: string }[] }) {
+  return (
+    <div className="flex flex-wrap gap-x-9 gap-y-4">
+      {items.map((x) => (
+        <div key={x.l}>
+          <p className="tabular text-[clamp(2rem,3vw,2.6rem)] font-[820] leading-none tracking-[-0.03em]" style={{ color: x.c, fontStretch: '112%' }}>
+            {x.v}
+          </p>
+          <p className="mt-1.5 text-[13px] font-[620] text-ink-2">{x.l}</p>
+          {x.sub && <p className="tabular text-[12.5px] text-ink-3">{x.sub}</p>}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -32,47 +57,73 @@ export default function ResultsSection() {
   const phone = !useMediaQuery('(min-width: 640px)');
   const [f1, f2, , f4] = FINDINGS;
   const order = (xs: typeof TRAIN_SETTINGS) => [...xs].sort((a, b) => a.scores.it[4] - a.scores.it[0] - (b.scores.it[4] - b.scores.it[0])).reverse();
+  const tree = TABLE3.find((r) => r.ours)!;
+  const global = TABLE3.find((r) => r.name === 'Global')!;
 
   return (
     <Section id="results" tone="alt" className="py-20 sm:py-28">
       <Container wide>
-        <div className="grid items-end gap-6 lg:grid-cols-[1fr_minmax(0,460px)]">
-          <ScrollFloat containerClassName="!my-0" textClassName="!text-[clamp(2.6rem,6.4vw,5.6rem)] !leading-[0.95] !font-[800] tracking-[-0.04em] text-ink [font-stretch:120%]" animationDuration={1} stagger={0.025} mode="enter">
-            Results
-          </ScrollFloat>
-          <div className="space-y-3">
-            <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">Same Base Harness H₀, a frozen Claude Opus 5 backbone; 28 training and 18 unseen benchmarks, two real robots among the unseen.</p>
-            <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s summary" />
+        {/* the headline */}
+        <div className="grid items-end gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+          <div>
+            <p className="text-[14px] font-[700] text-accent">Results</p>
+            <h2 className="display-lg mt-2 text-[clamp(2.3rem,4.6vw,4.2rem)] text-ink [text-wrap:balance]">
+              <span className="text-accent">+</span>
+              <CountUp to={HEADLINE.trainGain} decimals={1} duration={1.8} /> on training, <span className="text-explorer">+</span>
+              <CountUp to={HEADLINE.unseenGain} decimals={1} duration={1.8} delay={0.15} /> on unseen benchmarks
+            </h2>
+          </div>
+          <div className="lg:pb-2">
+            <p className="font-serif text-[1.06rem] leading-[1.6] text-ink-2">
+              {HEADLINE.trainCount} training and {HEADLINE.unseenCount} unseen benchmarks, two real robots among the unseen; the same Base Harness H₀ and a frozen Claude Opus 5 throughout.
+            </p>
+            <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s summary" className="mt-4" />
           </div>
         </div>
 
-        {/* recursive self-improvement */}
-        <Card className="mt-16" tag={`Figure 5 · Finding ${f2.n}`} title={f2.title} sub="The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points." note={f2.text}>
-          <IterScrub />
-        </Card>
+        {/* Finding 2: RSI keeps improving */}
+        <div className="mt-16 grid items-center gap-x-14 gap-y-8 sm:mt-20 xl:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <Claim tag={`Figure 5 · Finding ${f2.n}`} title={f2.title} note={f2.text}>
+            The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points. Move across the charts to read each iteration.
+          </Claim>
+          <Reveal>
+            <IterScrub />
+          </Reveal>
+        </div>
 
-        <Card className="mt-6" tag="Figure 4" title="Every benchmark, from H₀ to iteration 4" sub="One wedge per benchmark, sorted by gain; hover a wedge for its values.">
-          {phone ? (
-            <GainList train={TRAIN_SETTINGS} unseen={UNSEEN_SETTINGS} />
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              <RadialBench items={order(TRAIN_SETTINGS)} title="Train" />
-              <RadialBench items={order(UNSEEN_SETTINGS)} title="Unseen" />
+        {/* Figure 4: every benchmark */}
+        <Reveal className="figure-frame mt-16 p-5 sm:mt-20 sm:p-7">
+          <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3">
+            <div>
+              <p className="text-[13px] font-[700] text-accent">Figure 4</p>
+              <h3 className="display-md mt-2 text-[clamp(1.5rem,2.2vw,2rem)] text-ink">Every benchmark, from H₀ to iteration 4</h3>
             </div>
-          )}
-          <div className={`mt-2 flex-wrap items-center justify-center gap-4 text-[12px] text-ink-2 ${phone ? 'hidden' : 'flex'}`}>
-            {['Base', 'Iter. 1', 'Iter. 2', 'Iter. 3', 'Iter. 4'].map((l, k) => (
-              <span key={l} className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-sm" style={{ background: t.iters[k] }} />
-                {l}
-              </span>
-            ))}
+            <div className={`flex-wrap items-center gap-4 text-[12px] text-ink-2 ${phone ? 'hidden' : 'flex'}`}>
+              {['Base', 'Iter. 1', 'Iter. 2', 'Iter. 3', 'Iter. 4'].map((l, k) => (
+                <span key={l} className="inline-flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-sm" style={{ background: t.iters[k] }} />
+                  {l}
+                </span>
+              ))}
+              <span className="text-ink-3">One wedge per benchmark, sorted by gain; hover for values.</span>
+            </div>
           </div>
-        </Card>
+          <div className="mt-4">
+            {phone ? (
+              <GainList train={TRAIN_SETTINGS} unseen={UNSEEN_SETTINGS} />
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <RadialBench items={order(TRAIN_SETTINGS)} title="Train" />
+                <RadialBench items={order(UNSEEN_SETTINGS)} title="Unseen" />
+              </div>
+            )}
+          </div>
+        </Reveal>
 
-        {/* organisation */}
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] xl:items-start">
-          <Card tag={`Table 3 · Finding ${f1.n}`} title={f1.title} sub="After one iteration, module-only, no skills; switch to tokens for inference cost." note={f1.text}>
+        {/* Finding 1: organize by capability */}
+        <div className="mt-16 grid items-center gap-x-12 gap-y-8 sm:mt-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] xl:gap-x-14">
+          <Reveal className="figure-frame p-5 sm:p-6 lg:order-1">
+            <p className="mb-3 text-[13px] text-ink-3">Table 3: after one iteration, module-only, no skills</p>
             <PBars
               id="d-table3"
               range={[30, 65]}
@@ -88,43 +139,53 @@ export default function ResultsSection() {
                 muted: r.base,
               }))}
             />
-          </Card>
-          <Card tag="Table 2" title="Modules and skills work best together" sub="At iteration 1: evolved modules, prepared skills, or both.">
-              <PBars id="d-table2" range={[30, 70]} rows={TABLE2.map((r) => ({ key: r.name, name: r.name, score: { train: r.train, unseen: r.unseen }, ours: r.ours, muted: r.base }))} />
-            </Card>
+          </Reveal>
+          <div className="lg:order-2">
+            <Claim
+              tag={`Table 3 · Finding ${f1.n}`}
+              title={f1.title}
+              note={f1.text}
+              figures={
+                <Nums
+                  items={[
+                    { v: tree.train.toFixed(2), l: 'Capability tree, simulated worlds', sub: `with ${tree.nEnv} environments; Global: ${global.train.toFixed(2)} with ${global.nEnv}`, c: t.accent },
+                    { v: tree.unseen.toFixed(2), l: 'Unseen', sub: `Global: ${global.unseen.toFixed(2)}`, c: t.explorer },
+                  ]}
+                />
+              }
+            >
+              Trained in simulated worlds along the capability tree, the Harnesses beat one global Harness trained on all {global.nEnv} real environments, with fewer inference tokens.
+            </Claim>
+          </div>
         </div>
 
-        {/* capability–module relationships */}
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] xl:items-start">
-          <Card tag={`Figure 6 · Finding ${f4.n}`} title={f4.title} sub="Capability–protocol correlations of the 29 modules; strongest: HCI–Inference 0.744, GVT–Loop 0.444, VEA–Perception 0.347." note={f4.text}>
+        {/* Table 2: modules and skills */}
+        <Reveal className="figure-frame mt-16 grid items-center gap-x-12 gap-y-6 p-5 sm:mt-20 sm:p-7 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+          <div>
+            <p className="text-[13px] font-[700] text-accent">Table 2</p>
+            <h3 className="display-md mt-2 text-[clamp(1.4rem,2vw,1.8rem)] text-ink">Modules and skills work best together</h3>
+            <p className="mt-3 text-[14px] leading-[1.55] text-ink-2">At iteration 1: evolved modules alone, prepared skills alone, or both.</p>
+            <p className="mt-4 flex items-center gap-4 text-[12px] font-[650] text-ink-3">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: t.accent }} /> Train
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: t.explorer }} /> Unseen
+              </span>
+            </p>
+          </div>
+          <ModulesAndSkills />
+        </Reveal>
+
+        {/* Finding 4: which modules matter */}
+        <div className="mt-16 grid items-center gap-x-12 gap-y-8 sm:mt-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] xl:gap-x-14">
+          <Claim tag={`Figure 6 · Table 5 · Finding ${f4.n}`} title={f4.title} note={f4.text} figures={<Interventions />}>
+            Adding one relevant module lifts the Base Harness by 19.39 points, an irrelevant one by 1.02; removing one relevant module from H(4) costs 2.74.
+          </Claim>
+          <Reveal className="figure-frame p-5 sm:p-6">
+            <p className="mb-4 text-[13px] text-ink-3">Figure 6: capability–protocol correlations of the 29 modules at iteration 4; strongest, HCI–Inference 0.744</p>
             <CorrHeatmap />
-          </Card>
-          <Card tag="Table 5" title="Module interventions" sub="Train (10 %), skills prepared; Δ against each bold baseline.">
-              <div className="space-y-2">
-                {TABLE5.map((r, i) => (
-                  <div key={r.name} className={`grid grid-cols-[132px_minmax(0,1fr)_44px_52px] items-center gap-3 text-[13px] ${r.baseline && i ? 'mt-3 border-t border-rule pt-3' : ''}`}>
-                    <span className={r.baseline ? 'font-[720] text-ink' : 'text-ink-2'}>{r.name}</span>
-                    <span className="relative h-3 rounded-full bg-paper-2">
-                      <motion.span
-                        className="absolute inset-y-0 left-0 origin-left rounded-full"
-                        style={{ width: `${(r.train / 80) * 100}%`, background: r.ours ? t.accent : r.baseline ? t.iters[0] : r.delta! > 0 ? t.iters[2] : t.iters[1] }}
-                        initial={{ scaleX: 0 }}
-                        whileInView={{ scaleX: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.15 + i * 0.1, ease: [0.2, 0.8, 0.2, 1] }}
-                      />
-                    </span>
-                    <span className={`tabular text-right font-[720] ${r.baseline ? 'text-ink' : 'text-ink-2'}`}>{r.train.toFixed(2)}</span>
-                    <span className={`tabular text-right text-[12px] font-[720] ${r.delta === null ? 'text-ink-3' : r.delta > 0 ? 'text-good' : 'text-bad'}`}>
-                      {r.delta === null ? '–' : `${r.delta > 0 ? '+' : '−'}${Math.abs(r.delta).toFixed(2)}`}
-                    </span>
-                  </div>
-                ))}
-                <p className="pt-2 text-[12.5px] leading-[1.5] text-ink-2">
-                  A relevant module adds <span className="font-[760] text-good">19.39</span> points, an irrelevant one 1.02; removing one costs <span className="font-[760] text-bad">2.74</span>.
-                </p>
-              </div>
-            </Card>
+          </Reveal>
         </div>
       </Container>
     </Section>
