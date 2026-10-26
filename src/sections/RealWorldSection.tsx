@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useInView } from 'motion/react';
 import { ArrowRight01Icon, Cancel01Icon, CheckmarkCircle02Icon, PauseIcon, PlayIcon, Robot01Icon } from '@hugeicons/core-free-icons';
 import { Container, Section } from '@/components/ui/Section';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Reveal from '@/components/ui/Reveal';
 import Icon from '@/components/ui/Icon';
-import Finding from '@/components/ui/Finding';
+import Claim from '@/components/ui/Claim';
 import PaperFigure from '@/components/ui/PaperFigure';
 import { Brick, BrickDefs, Plate } from '@/components/viz/Bricks';
+import { ScrubPanel } from '@/components/viz/IterScrub';
 import { benchById } from '@/data/tree';
-import { FINDINGS } from '@/data/results';
-import { PAPER_FIGS, embodied, recordFrame, trial, type PaperFig, type RecordView } from '@/data/media';
+import { FINDINGS, TABLE6 } from '@/data/results';
+import { PAPER_FIGS, embodied, figThumb, recordFrame, trial, type PaperFig, type RecordView } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 
@@ -75,7 +76,7 @@ const CAPTION: Record<number, string> = {
   71: 'Figure 71: CaP-X with the Base Harness. Rows show head, side and wrist cameras in simulation, followed by the real robot.',
   72: 'Figure 72: CaP-X with the evolved Harness. Rows follow Figure 71.',
 };
-export const figOf = (n: 69 | 70 | 71 | 72): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n] });
+export const figOf = (n: 69 | 70 | 71 | 72): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n], thumb: figThumb(`fig${n}`) });
 
 export const STEP_MS = 1150;
 
@@ -396,6 +397,45 @@ function Flow() {
   );
 }
 
+/** Table 6 read with the pointer: both robots, simulation and real robot, one cursor across both */
+function RobotScrub() {
+  const { t } = useTokens();
+  const [it, setIt] = useState(4);
+  const box = useRef<HTMLDivElement>(null);
+  const seen = useInView(box, { once: true, margin: '0px 0px -10% 0px' });
+  const panels = [
+    { task: TASKS[0], sim: TABLE6.soonSim, real: TABLE6.soonReal },
+    { task: TASKS[1], sim: TABLE6.capxSim, real: TABLE6.capxReal },
+  ];
+  return (
+    <div ref={box}>
+      <div className="grid gap-4 md:grid-cols-2">
+        {panels.map((p) => (
+          <ScrubPanel
+            key={p.task.id}
+            title={p.task.name}
+            sub={p.task.robot}
+            lo={0}
+            hi={100}
+            ticks={[0, 50, 100]}
+            digits={0}
+            unit="%"
+            it={it}
+            setIt={setIt}
+            seen={seen}
+            label={`${p.task.name}: success rate in simulation and on the real robot, H₀ to H(4) (Table 6)`}
+            series={[
+              { label: 'Simulation', vals: p.sim, color: t.explorer },
+              { label: 'Real robot', vals: p.real, color: t.accent },
+            ]}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-center text-[12px] text-ink-3">Table 6: success rate with the prepared skills. Move across a chart to read an iteration; 0 is the Base Harness H₀.</p>
+    </div>
+  );
+}
+
 export default function RealWorldSection() {
   const f5 = FINDINGS[4];
   return (
@@ -410,10 +450,21 @@ export default function RealWorldSection() {
             <RobotCard key={task.id} task={task} i={i} />
           ))}
         </div>
-        <div className="mt-6 max-w-[760px]">
-          <Finding n={f5.n} title={f5.title}>
-            {f5.text} Recorded deployments differ in message handling, interfaces, guidance and acceptance rules, so these comparisons evaluate complete Harness–skill configurations and do not isolate module evolution from skill preparation.
-          </Finding>
+        <div className="mt-16 grid items-center gap-x-14 gap-y-8 sm:mt-20 xl:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <Claim
+            tag={`Table 6 · Finding ${f5.n}`}
+            title={f5.title}
+            note={
+              <>
+                {f5.text} Recorded deployments differ in message handling, interfaces, guidance and acceptance rules, so these comparisons evaluate complete Harness–skill configurations and do not isolate module evolution from skill preparation.
+              </>
+            }
+          >
+            With the skills frozen, success climbs from H₀ to H(4) in simulation and on both real robots.
+          </Claim>
+          <Reveal>
+            <RobotScrub />
+          </Reveal>
         </div>
       </Container>
     </Section>

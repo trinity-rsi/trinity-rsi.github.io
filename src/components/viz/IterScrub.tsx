@@ -8,19 +8,47 @@ import { useReducedMotion } from '@/lib/hooks';
  * Figure 5, to be read with the pointer: Train and Unseen side by side, one cursor across both.
  * Moving over either chart picks the iteration; the means and their gains over H0 are read out
  * underneath. Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks.
+ * The panel is shared with Table 6 (the robots), which reads whole percentages.
  */
-type Series = { label: string; vals: number[]; color: string; dashed?: boolean };
+export type Series = { label: string; vals: number[]; color: string; dashed?: boolean };
 const W = 420;
 const H = 250;
 const P = { l: 34, r: 16, t: 22, b: 28 };
 const x = (i: number) => P.l + (i / 4) * (W - P.l - P.r);
 
-function Panel({ title, series, lo, hi, refs, it, setIt, seen }: { title: string; series: Series[]; lo: number; hi: number; refs?: { label: string; v: number }[]; it: number; setIt: (i: number) => void; seen: boolean }) {
+export function ScrubPanel({
+  title,
+  sub,
+  series,
+  lo,
+  hi,
+  ticks = Array.from({ length: 4 }, (_, i) => lo + ((hi - lo) / 3) * i),
+  digits = 2,
+  unit = '',
+  refs,
+  it,
+  setIt,
+  seen,
+  label = `${title}: mean performance across iterations (Figure 5)`,
+}: {
+  title: string;
+  sub?: string;
+  series: Series[];
+  lo: number;
+  hi: number;
+  ticks?: number[];
+  digits?: number;
+  unit?: string;
+  refs?: { label: string; v: number }[];
+  it: number;
+  setIt: (i: number) => void;
+  seen: boolean;
+  label?: string;
+}) {
   const { t } = useTokens();
   const reduce = useReducedMotion();
   const y = (v: number) => P.t + (1 - (v - lo) / (hi - lo)) * (H - P.t - P.b);
   const d = (vals: number[]) => vals.map((v, i) => `${i ? 'L' : 'M'} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-  const ticks = Array.from({ length: 4 }, (_, i) => lo + ((hi - lo) / 3) * i);
   const pick = (e: RPointerEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     const u = ((e.clientX - r.left) / r.width) * W;
@@ -28,9 +56,14 @@ function Panel({ title, series, lo, hi, refs, it, setIt, seen }: { title: string
   };
   return (
     <div className="rounded-[18px] border border-rule bg-surface p-3">
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full cursor-crosshair touch-pan-y" onPointerMove={pick} onPointerDown={pick} role="img" aria-label={`${title}: mean performance across iterations (Figure 5)`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full cursor-crosshair touch-pan-y" onPointerMove={pick} onPointerDown={pick} role="img" aria-label={label}>
         <text x={P.l} y={13} fill={t.ink} style={{ fontSize: 13, fontWeight: 760, fontStyle: 'italic', fontFamily: 'var(--font-serif)' }}>
           {title}
+          {sub && (
+            <tspan dx={7} fill={t.ink3} style={{ fontSize: 11, fontWeight: 600, fontStyle: 'normal', fontFamily: 'var(--font-sans)' }}>
+              {sub}
+            </tspan>
+          )}
         </text>
         {ticks.map((v) => (
           <g key={v}>
@@ -80,8 +113,9 @@ function Panel({ title, series, lo, hi, refs, it, setIt, seen }: { title: string
               <span className="h-[3px] w-4 rounded-full" style={{ background: s.color }} /> {s.label}
             </p>
             <p className="tabular mt-0.5 text-[22px] font-[800] leading-none" style={{ color: s.color }}>
-              {s.vals[it].toFixed(2)}
-              {it > 0 && <span className="ml-1.5 text-[12.5px] font-[700] text-good">+{(s.vals[it] - s.vals[0]).toFixed(1)}</span>}
+              {s.vals[it].toFixed(digits)}
+              {unit && <span className="text-[14px] font-[760]">{unit}</span>}
+              {it > 0 && <span className="ml-1.5 text-[12.5px] font-[700] text-good">+{(s.vals[it] - s.vals[0]).toFixed(Math.min(digits, 1))}</span>}
             </p>
           </div>
         ))}
@@ -98,7 +132,7 @@ export default function IterScrub() {
   return (
     <div ref={box}>
       <div className="grid gap-4 md:grid-cols-2">
-        <Panel
+        <ScrubPanel
           title="Train"
           lo={35}
           hi={80}
@@ -110,7 +144,7 @@ export default function IterScrub() {
             { label: 'Native 17', vals: MEANS.native, color: t.ink2, dashed: true },
           ]}
         />
-        <Panel
+        <ScrubPanel
           title="Unseen"
           lo={40}
           hi={70}

@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
 import { Container, Section } from '@/components/ui/Section';
-import Fold from '@/components/ui/Fold';
+import Claim from '@/components/ui/Claim';
 import Reveal from '@/components/ui/Reveal';
 import PaperFigure from '@/components/ui/PaperFigure';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
@@ -21,19 +20,6 @@ import { useMediaQuery } from '@/lib/hooks';
  * numbers that carry it and a folded explanation on one side, the figure or table on the other,
  * sides alternating down the page. Figure 4 (every benchmark) runs the full width between them.
  */
-
-/** the words of one finding: tag, claim, a sentence, its numbers, the paper's explanation folded */
-function Claim({ tag, title, children, figures, note }: { tag: string; title: string; children?: ReactNode; figures?: ReactNode; note?: ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[13px] font-[700] text-accent">{tag}</p>
-      <h3 className="display-md mt-2 text-[clamp(1.6rem,2.4vw,2.2rem)] text-ink">{title}</h3>
-      {children && <p className="mt-3 max-w-[46ch] font-serif text-[1.06rem] leading-[1.6] text-ink-2">{children}</p>}
-      {figures && <div className="mt-6 max-w-[560px]">{figures}</div>}
-      {note && <Fold className="mt-5">{note}</Fold>}
-    </div>
-  );
-}
 
 /** big numbers with what they are */
 function Nums({ items }: { items: { v: string; l: string; sub?: string; c: string }[] }) {

@@ -644,3 +644,286 @@
 .scroll-cue {
   animation: scroll-cue 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
+
+/* ------------------------------------------------------------------
+   "Figure N in the paper". The button carries a thumbnail of the figure.
+   Now and then a pointer (a fingertip on touch screens) glides in and
+   clicks it, and the thumbnail pops out of the button, so readers know the
+   paper's own figure opens. One 8 s cycle: 0-1.35 s the pointer arrives,
+   1.7 s press, 1.9 s release and pop, 3.3 s back to rest. Buttons in one row
+   take turns (--fig-hint-delay). Runs only while the button is on screen,
+   until it has been used, and never with reduced motion.
+   ------------------------------------------------------------------ */
+.fig-hint {
+  --fig-hint-x: 27px; /* the thumbnail's centre, where the click lands */
+  --fig-hint-cycle: 8s;
+}
+.fig-hint-thumb {
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: none;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 11px 5px 5px 11px; /* concentric with the pill on the left */
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(10, 12, 20, 0.12);
+  transform-origin: 50% 100%;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fig-hint-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+.fig-hint-btn:hover .fig-hint-thumb,
+.fig-hint-btn:focus-visible .fig-hint-thumb {
+  transform: translateY(-1px) scale(1.1);
+}
+.fig-hint-cursor,
+.fig-hint-tap,
+.fig-hint-ripple {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+}
+/* the pointer: a zero-size anchor on the click point; the arrow (or, on touch
+   screens, the hand) hangs from it by its tip */
+.fig-hint-cursor {
+  left: var(--fig-hint-x);
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.fig-hint-cursor svg {
+  position: absolute;
+  overflow: visible;
+  filter: drop-shadow(0 2px 2.5px rgba(10, 12, 20, 0.32));
+}
+.fig-hint-arrow {
+  left: -2px;
+  top: -2px;
+  width: 17px;
+  height: 22px;
+  transform-origin: 2px 2px;
+}
+.fig-hint-hand {
+  display: none;
+  left: -7.2px;
+  top: -1.4px;
+  width: 20px;
+  height: 24px;
+  transform-origin: 7.2px 1.4px;
+}
+/* where the fingertip touches the screen */
+.fig-hint-tap {
+  display: none;
+  left: var(--fig-hint-x);
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 999px;
+  background: rgba(18, 20, 28, 0.24);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+.fig-hint-ripple {
+  left: var(--fig-hint-x);
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+}
+@media (hover: none) {
+  .fig-hint-arrow {
+    display: none;
+  }
+  .fig-hint-hand,
+  .fig-hint-tap {
+    display: block;
+  }
+}
+
+/* the pointer travels on a curve: x eases out, y eases in and out */
+@keyframes fig-hint-cursor-x {
+  0% {
+    opacity: 0;
+    transform: translateX(44px);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.25, 1);
+  }
+  3% {
+    opacity: 1;
+  }
+  17% {
+    transform: translateX(0);
+  }
+  26% {
+    opacity: 1;
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.8, 0.45);
+  }
+  38%,
+  100% {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+}
+@keyframes fig-hint-cursor-y {
+  0% {
+    transform: translateY(32px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  }
+  17%,
+  19.5% {
+    transform: translateY(0) scale(1);
+  }
+  21.5% {
+    transform: translateY(0) scale(0.8);
+  }
+  24% {
+    transform: translateY(0) scale(1);
+  }
+  26% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.8, 0.45);
+  }
+  38%,
+  100% {
+    transform: translateY(20px);
+  }
+}
+@keyframes fig-hint-tap {
+  0%,
+  20.5% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  27%,
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+@keyframes fig-hint-ripple {
+  0%,
+  22% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  23% {
+    opacity: 0.9;
+    transform: scale(0.45);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  36%,
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+@keyframes fig-hint-press {
+  0%,
+  16% {
+    transform: none;
+    border-color: var(--rule);
+  }
+  19.5% {
+    border-color: color-mix(in oklch, var(--accent) 55%, var(--rule));
+    box-shadow: 0 0 0 0 transparent;
+  }
+  21.5% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--accent) 18%, transparent);
+  }
+  24.5% {
+    transform: none;
+  }
+  34% {
+    border-color: color-mix(in oklch, var(--accent) 55%, var(--rule));
+    box-shadow: 0 0 0 0 transparent;
+  }
+  42%,
+  100% {
+    border-color: var(--rule);
+  }
+}
+/* the thumbnail lifts on hover, dips on the press and pops out on release */
+@keyframes fig-hint-pop {
+  0%,
+  17% {
+    transform: none;
+  }
+  19.5% {
+    transform: translateY(-1px) scale(1.08);
+  }
+  21.5% {
+    transform: scale(0.93);
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  27% {
+    transform: translateY(-3px) rotate(-4deg) scale(1.38);
+    border-radius: 5px;
+    box-shadow: 0 0 0 0.75px rgba(10, 12, 20, 0.14), 0 7px 12px -5px rgba(10, 12, 20, 0.45);
+  }
+  36% {
+    transform: translateY(-3.5px) rotate(-2.5deg) scale(1.38);
+    border-radius: 5px;
+    box-shadow: 0 0 0 0.75px rgba(10, 12, 20, 0.14), 0 7px 12px -5px rgba(10, 12, 20, 0.45);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  42%,
+  100% {
+    transform: none;
+  }
+}
+.fig-hint[data-on] .fig-hint-cursor {
+  animation: fig-hint-cursor-x var(--fig-hint-cycle) linear var(--fig-hint-delay, 0s) infinite;
+}
+.fig-hint[data-on] .fig-hint-cursor svg {
+  animation: fig-hint-cursor-y var(--fig-hint-cycle) ease var(--fig-hint-delay, 0s) infinite;
+}
+.fig-hint[data-on] .fig-hint-tap {
+  animation: fig-hint-tap var(--fig-hint-cycle) ease-out var(--fig-hint-delay, 0s) infinite;
+}
+.fig-hint[data-on] .fig-hint-ripple {
+  animation: fig-hint-ripple var(--fig-hint-cycle) linear var(--fig-hint-delay, 0s) infinite;
+}
+.fig-hint[data-on] .fig-hint-btn {
+  animation: fig-hint-press var(--fig-hint-cycle) ease var(--fig-hint-delay, 0s) infinite;
+}
+.fig-hint[data-on] .fig-hint-thumb {
+  animation: fig-hint-pop var(--fig-hint-cycle) ease var(--fig-hint-delay, 0s) infinite;
+}
+/* a real pointer on the button takes over from the demonstration */
+@media (hover: hover) {
+  .fig-hint[data-on]:hover .fig-hint-cursor,
+  .fig-hint[data-on]:hover .fig-hint-cursor svg,
+  .fig-hint[data-on]:hover .fig-hint-ripple,
+  .fig-hint[data-on]:hover .fig-hint-btn,
+  .fig-hint[data-on]:hover .fig-hint-thumb {
+    animation: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fig-hint-cursor,
+  .fig-hint-tap,
+  .fig-hint-ripple {
+    display: none;
+  }
+  .fig-hint[data-on] .fig-hint-btn,
+  .fig-hint[data-on] .fig-hint-thumb {
+    animation: none;
+  }
+  .fig-hint-thumb {
+    transition: none;
+  }
+}
