@@ -1,0 +1,130 @@
+import { useEffect, useRef, useState } from 'react';
+import { CapabilityTree, GlobalHarness, PerTaskHarness } from '@/components/viz/Strategies';
+import { Opener } from '../ui/Opener';
+import More from '../ui/More';
+import PLoop, { type Wall } from './PLoop';
+
+/** The problem (Introduction): the loop's two bottlenecks and a challenge, then what to evolve a Harness around. */
+const WALLS: Wall[] = [
+  {
+    kind: 'Bottleneck',
+    at: 'World',
+    title: 'Verifiable worlds are costly',
+    text: 'Constructing large-scale, heterogeneous and verifiable environments by hand is costly, which calls for generating worlds automatically.',
+  },
+  {
+    kind: 'Bottleneck',
+    at: 'Human',
+    title: 'Manual Harness iteration lags',
+    text: 'Agent capability is increasingly constrained by the Harness, and iterating it by hand cannot keep pace with growing task complexity and diversity.',
+  },
+  {
+    kind: 'Challenge',
+    at: 'Agent',
+    title: 'Harness RSI stays task-driven',
+    text: 'Current Harness RSI focuses on text-modality tasks such as coding and math and evolves task by task, which can overfit the Harness and generalize poorly across heterogeneous tasks.',
+  },
+];
+
+const STRATEGIES = [
+  {
+    key: 'global',
+    title: 'One global Harness',
+    body: 'Struggles to accommodate conflicting task demands, such as the performance–efficiency trade-offs of embodied tasks.',
+    Fig: GlobalHarness,
+  },
+  {
+    key: 'task',
+    title: 'One Harness per task',
+    body: 'Suits tasks with similar requirements, but leads to Harness overfitting and poor generalization across heterogeneous tasks.',
+    Fig: PerTaskHarness,
+  },
+  {
+    key: 'cap',
+    title: 'Evolve along shared capabilities',
+    body: 'Group tasks by the capability requirements they share. Each requirement becomes a common learning objective, and specialized Harnesses grow from it.',
+    Fig: CapabilityTree,
+    ours: true,
+  },
+];
+
+/** cards that snap into place, with a pager that follows them */
+function Strategies() {
+  const row = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState(0);
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const on = () => {
+      const cards = Array.from(el.children) as HTMLElement[];
+      const mid = el.scrollLeft + el.clientWidth / 2;
+      let best = 0;
+      cards.forEach((c, i) => {
+        if (Math.abs(c.offsetLeft + c.clientWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].clientWidth / 2 - mid)) best = i;
+      });
+      setAt(best);
+    };
+    el.addEventListener('scroll', on, { passive: true });
+    return () => el.removeEventListener('scroll', on);
+  }, []);
+  const go = (i: number) => {
+    const el = row.current;
+    const c = el?.children[i] as HTMLElement | undefined;
+    if (el && c) el.scrollTo({ left: c.offsetLeft - (el.clientWidth - c.clientWidth) / 2, behavior: 'smooth' });
+  };
+  return (
+    <div>
+      <div ref={row} className="p-noscroll flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 scroll-px-5">
+        {STRATEGIES.map(({ key, title, body, Fig, ours }) => (
+          <article
+            key={key}
+            className={`w-[84%] shrink-0 snap-center rounded-[22px] border bg-surface p-3 pb-4 ${ours ? 'border-accent/60 shadow-[0_22px_44px_-30px_color-mix(in_oklch,var(--accent)_70%,transparent)]' : 'border-rule'}`}
+          >
+            <Fig />
+            <div className="px-1.5">
+              <p className="mt-3.5 flex flex-wrap items-center gap-2 text-[17px] font-[740] leading-tight text-ink" style={{ fontStretch: '106%' }}>
+                {title}
+                {ours && <span className="rounded-full bg-accent px-2 py-[3px] text-[11px] font-[720] leading-none text-white">The Trinity</span>}
+              </p>
+              <p className="p-body mt-1.5 text-[14.5px]">{body}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="mt-3 flex justify-center gap-2" role="tablist" aria-label="Strategies">
+        {STRATEGIES.map((s, i) => (
+          <button key={s.key} type="button" role="tab" aria-selected={at === i} onClick={() => go(i)} className="grid h-6 w-6 place-items-center" aria-label={s.title}>
+            <span className={`block h-1.5 rounded-full transition-all duration-300 ${at === i ? 'w-5 bg-ink' : 'w-1.5 bg-rule-2'}`} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function PProblem() {
+  return (
+    <section id="problem" className="scroll-mt-16 pt-20">
+      <Opener kicker="The problem" title="RSI is still trained task by task">
+        <More lines={5}>
+          <p className="p-lede">
+            We view multimodal intelligence as an evolving loop: worlds provide tasks, humans guide learning, and agents interact with the world to produce verifiable outcomes. As tasks and environments grow more complex, the loop faces two bottlenecks, and letting it improve on its own across heterogeneous tasks raises a challenge.
+          </p>
+        </More>
+      </Opener>
+      <div className="mt-7 px-5">
+        <PLoop walls={WALLS} />
+      </div>
+
+      <div className="mt-14 px-5">
+        <h3 className="p-subtitle">What should a Harness be evolved around?</h3>
+        <p className="p-lede mt-3">
+          Task-specific evolution overfits; a global Harness is pulled between conflicting demands. The key insight: tasks with different modalities and surface forms can share the same underlying capability requirements.
+        </p>
+      </div>
+      <div className="mt-6">
+        <Strategies />
+      </div>
+    </section>
+  );
+}
