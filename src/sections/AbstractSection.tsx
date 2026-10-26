@@ -1,11 +1,10 @@
 import { Container, Section } from '@/components/ui/Section';
-import Reveal from '@/components/ui/Reveal';
 import { PAPER } from '@/data/paper';
 
-/** The paper's abstract and its three contributions. */
+/** The paper's abstract. */
 export default function AbstractSection() {
   return (
-    <Section id="abstract" className="scroll-mt-24 py-28">
+    <Section id="abstract" className="scroll-mt-24 py-20 sm:py-28">
       <Container wide>
         <div className="grid gap-10 lg:grid-cols-[300px_1fr]">
           <div>
@@ -21,15 +20,6 @@ export default function AbstractSection() {
               <p key={i}>{para}</p>
             ))}
           </div>
-        </div>
-        <div className="mt-16 grid gap-4 lg:ml-[340px] lg:grid-cols-3">
-          {PAPER.contributions.map((c, i) => (
-            <Reveal key={c.title} delay={i * 0.08} className="relative overflow-hidden rounded-[20px] border border-rule bg-surface p-5">
-              <span className="text-[30px] font-[820] leading-none text-accent [font-stretch:120%]">{['❶', '❷', '❸'][i]}</span>
-              <p className="mt-3 text-[16px] font-[740] leading-snug text-ink">{c.title}</p>
-              <p className="mt-2 text-[14px] leading-[1.55] text-ink-2">{c.text}</p>
-            </Reveal>
-          ))}
         </div>
       </Container>
     </Section>

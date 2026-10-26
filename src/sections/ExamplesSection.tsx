@@ -66,7 +66,10 @@ export default function ExamplesSection() {
             textColor={t.ink}
           />
         </LazyMount>
-        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(56% 52% at 50% 50%, ${t.paper}f2 30%, ${t.paper}b0 62%, transparent 100%)` }} />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: wide ? `radial-gradient(56% 52% at 50% 50%, ${t.paper}f2 30%, ${t.paper}b0 62%, transparent 100%)` : `radial-gradient(95% 62% at 50% 50%, ${t.paper}f7 46%, ${t.paper}d6 74%, ${t.paper}80 100%)` }}
+        />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
           <div className="max-w-[900px] text-center">
             <p className="kicker pointer-events-auto flex flex-wrap items-center justify-center gap-x-1.5">
@@ -82,8 +85,8 @@ export default function ExamplesSection() {
               · images, video, grids and text
             </p>
             <ScrollReveal
-              baseOpacity={0.12}
-              enableBlur
+              baseOpacity={wide ? 0.12 : 0.3}
+              enableBlur={wide}
               baseRotation={2}
               blurStrength={6}
               containerClassName="!my-3"

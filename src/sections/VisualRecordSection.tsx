@@ -58,13 +58,20 @@ function Card({ b }: { b: Bench }) {
   );
 }
 
+/** shown before "show all": one benchmark from each domain, and the two robots */
+const FIRST = ['arc-agi-3', 'chess-tactics', 'soon', 'among-us', 'nethack', 'cap-x'];
+
 export default function VisualRecordSection() {
   const [f, setF] = useState<Filter>('all');
-  const list = useMemo(
+  const [all, setAll] = useState(false);
+  const full = useMemo(
     () =>
       BENCHES.filter((b) => (f === 'all' ? true : f === 'train' ? b.split !== 'unseen' : f === 'unseen' ? b.split !== 'train' : b.domain === f)),
     [f]
   );
+  // until the reader asks for all of them, a filter shows its first six, and the default view a sample across the domains
+  const list = all ? full : f === 'all' ? FIRST.map((id) => BENCHES.find((b) => b.id === id)!) : full.slice(0, 6);
+  const hidden = full.length - list.length;
   const chips: { k: Filter; l: string }[] = [
     { k: 'all', l: `All ${BENCHES.length}` },
     { k: 'train', l: 'Train' },
@@ -72,7 +79,7 @@ export default function VisualRecordSection() {
     ...DOMAINS.map((d) => ({ k: d.id as Filter, l: d.name })),
   ];
   return (
-    <Section id="visual-record" tone="alt" className="py-28">
+    <Section id="visual-record" tone="alt" className="py-20 sm:py-28">
       <Container wide>
         <SectionHeader kicker="Visual record · Appendix E.1" title="H₀ and H₄ on the same configuration">
           For every benchmark: the final frame of a failed run with the Base Harness H₀ and of a completed run with the iteration-4 Harness, from the same start. Rows come from recorded runs, demonstrations or scripted runs, as detailed in the paper; the scored results are those of Table 8.
@@ -82,7 +89,9 @@ export default function VisualRecordSection() {
             <button
               key={c.k}
               type="button"
-              onClick={() => setF(c.k)}
+              onClick={() => {
+                setF(c.k);
+              }}
               className={`relative rounded-full px-3.5 py-1.5 text-[13px] font-[650] transition-colors ${f === c.k ? 'text-paper' : 'text-ink-2 hover:text-ink'}`}
             >
               {f === c.k && <motion.span layoutId="vr-chip" className="absolute inset-0 rounded-full bg-ink" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />}
@@ -97,6 +106,22 @@ export default function VisualRecordSection() {
             ))}
           </AnimatePresence>
         </motion.div>
+        {(hidden > 0 || all) && (
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (all) document.getElementById('visual-record')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setAll((v) => !v);
+              }}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-rule bg-surface px-5 text-[14px] font-[700] text-ink shadow-[0_14px_30px_-22px_rgba(20,24,40,0.5)] transition-colors hover:border-rule-2"
+              aria-expanded={all}
+            >
+              {all ? 'Show fewer' : `Show all ${full.length}`}
+              {!all && <span className="tabular rounded-full bg-paper-2 px-2 py-0.5 text-[12px] font-[700] text-ink-3">+{hidden}</span>}
+            </button>
+          </div>
+        )}
       </Container>
     </Section>
   );

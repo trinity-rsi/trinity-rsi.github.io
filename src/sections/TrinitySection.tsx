@@ -1,33 +1,27 @@
 import TrueFocus from '@/components/reactbits/TrueFocus/TrueFocus';
-import ProfileCard from '@/components/reactbits/ProfileCard/ProfileCard';
 import ScrollStack, { ScrollStackItem } from '@/components/reactbits/ScrollStack/ScrollStack';
 import { Container, Section } from '@/components/ui/Section';
 import Icon from '@/components/ui/Icon';
 import PaperFigure from '@/components/ui/PaperFigure';
-import { ROLES, STAGES } from '@/data/paper';
+import { STAGES } from '@/data/paper';
 import { PAPER_FIGS } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { scrollToId, useMediaQuery } from '@/lib/hooks';
 import { ArrowRight02Icon } from '@hugeicons/core-free-icons';
-import creatorImg from '@/assets/cats/creator.webp';
-import explorerImg from '@/assets/cats/explorer.webp';
-import evolverImg from '@/assets/cats/evolver.webp';
 import evolverCollect from '@/assets/cats/evolver-collect.webp';
 import evolverDiagnose from '@/assets/cats/evolver-diagnose.webp';
 import group from '@/assets/cats/group.webp';
 import titleCat from '@/assets/cats/titlecat.webp';
 
-const AVATAR: Record<string, string> = { creator: creatorImg, explorer: explorerImg, evolver: evolverImg };
-const GO: Record<string, string> = { creator: 'world-creation', explorer: 'stage-1', evolver: 'stage-2' };
 const STAGE_CAT = [evolverCollect, evolverDiagnose, group, titleCat];
 
 export default function TrinitySection() {
-  const { t, theme } = useTokens();
+  const { t } = useTokens();
   const wide = useMediaQuery('(min-width: 900px)');
   const roleColor = (who: string) => (who === 'creator' ? t.creator : who === 'explorer' ? t.explorer : who === 'evolver' ? t.evolver : t.ink2);
 
   return (
-    <Section id="trinity" tone="alt" className="py-28">
+    <Section id="trinity" tone="alt" className="py-20 sm:py-28">
       <Container wide>
         <div className="grid gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:items-end">
           <div>
@@ -36,7 +30,7 @@ export default function TrinitySection() {
               <TrueFocus
                 sentence="Creator Explorer Evolver"
                 separator=" "
-                blurAmount={3}
+                blurAmount={wide ? 3 : 0}
                 borderColor={t.accent}
                 glowColor={`${t.accent}66`}
                 animationDuration={0.55}
@@ -55,35 +49,10 @@ export default function TrinitySection() {
           </div>
         </div>
 
-        <div className="mt-14 grid justify-items-center gap-10 md:grid-cols-3">
-          {ROLES.map((r) => (
-            <div key={r.id} className="flex w-full max-w-[340px] flex-col items-center">
-              <ProfileCard
-                avatarUrl={AVATAR[r.id]}
-                miniAvatarUrl={AVATAR[r.id]}
-                name={r.name}
-                title={r.verb}
-                handle={r.id}
-                status={r.stages}
-                statusColor={roleColor(r.id)}
-                contactText="See it"
-                onContactClick={() => scrollToId(GO[r.id])}
-                theme={theme}
-                backdropColor={roleColor(r.id)}
-                holo={0.7}
-                glare={0.45}
-                enableTilt
-                enableMobileTilt={false}
-                className="w-full"
-              />
-              <p className="mt-5 max-w-[34ch] text-center text-[14.5px] leading-[1.6] text-ink-2">{r.text}</p>
-            </div>
-          ))}
-        </div>
       </Container>
 
       {/* the method, stage by stage (Section 3) */}
-      <Container wide className="mt-28">
+      <Container wide className="mt-14 sm:mt-24">
         <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_minmax(0,460px)] lg:items-end">
           <h2 className="display-lg text-[clamp(2rem,4.2vw,3.4rem)] text-ink">Three stages, then routing</h2>
           <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">

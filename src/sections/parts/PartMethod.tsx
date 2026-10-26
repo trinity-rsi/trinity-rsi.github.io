@@ -1,7 +1,6 @@
 import ProblemSection from '../ProblemSection';
 import ExamplesSection from '../ExamplesSection';
 import TrinitySection from '../TrinitySection';
-import DomainMarquee from '../DomainMarquee';
 import TreeSection from '../TreeSection';
 import WorldSection from '../WorldSection';
 
@@ -12,7 +11,6 @@ export default function PartMethod() {
       <ProblemSection />
       <ExamplesSection />
       <TrinitySection />
-      <DomainMarquee />
       <TreeSection />
       <WorldSection />
     </>

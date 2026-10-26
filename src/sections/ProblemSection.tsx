@@ -53,7 +53,7 @@ const WALLS: Wall[] = [
 export default function ProblemSection() {
   const { t, theme } = useTokens();
   return (
-    <Section id="problem" className="pt-24 sm:pt-28">
+    <Section id="problem" className="pt-20 sm:pt-28">
       <Container wide>
         <ProblemWalls
           walls={WALLS}
@@ -72,7 +72,7 @@ export default function ProblemSection() {
           }
         />
 
-        <div className="mt-24">
+        <div className="mt-16 sm:mt-24">
           <div className="grid gap-x-12 gap-y-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-end">
             <h3 className="display-md max-w-[20ch] text-[clamp(1.8rem,3.4vw,2.8rem)] text-ink">What should a Harness be evolved around?</h3>
             <p className="font-serif text-[1.06rem] leading-[1.6] text-ink-2">

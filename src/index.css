@@ -208,6 +208,22 @@
     color: var(--ink);
     font-weight: 620;
   }
+  /* phones: a little smaller, no hyphenation, no word broken inside a heading */
+  @media (max-width: 639px) {
+    .prose-serif {
+      font-size: 1.0625rem;
+      line-height: 1.62;
+      hyphens: manual;
+      text-wrap: pretty;
+    }
+    .display-lg,
+    .display-md {
+      hyphens: none;
+      overflow-wrap: normal;
+      word-break: normal;
+      text-wrap: balance;
+    }
+  }
   .prose-serif em {
     font-style: italic;
   }

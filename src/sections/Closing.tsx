@@ -24,7 +24,7 @@ import group from '@/assets/cats/group.webp';
 
 export function Team() {
   return (
-    <Section id="team" className="py-28">
+    <Section id="team" className="py-20 sm:py-28">
       <Container wide>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
           <div>
@@ -89,7 +89,7 @@ export function Cite() {
     window.setTimeout(() => setCopied(false), 1800);
   };
   return (
-    <Section id="cite" tone="alt" className="py-24">
+    <Section id="cite" tone="alt" className="py-16 sm:py-24">
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 className="display-lg text-[clamp(2rem,4vw,3.2rem)] text-ink">Cite the Trinity</h2>

@@ -7,11 +7,13 @@ import PaperFigure from '@/components/ui/PaperFigure';
 import MetricBars from '@/components/viz/MetricBars';
 import IterCurves from '@/components/viz/IterCurves';
 import RadialBench from '@/components/viz/RadialBench';
+import GainList from '@/components/viz/GainList';
 import CorrHeatmap from '@/components/viz/CorrHeatmap';
-import { FINDINGS, HEADLINE, TABLE2, TABLE3, TABLE5 } from '@/data/results';
+import { FINDINGS, TABLE2, TABLE3, TABLE5 } from '@/data/results';
 import { TRAIN_SETTINGS, UNSEEN_SETTINGS } from '@/data/tree';
 import { PAPER_FIGS } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
+import { useMediaQuery } from '@/lib/hooks';
 
 function Card({ tag, title, sub, children, className = '' }: { tag: string; title: string; sub?: string; children: React.ReactNode; className?: string }) {
   return (
@@ -26,11 +28,12 @@ function Card({ tag, title, sub, children, className = '' }: { tag: string; titl
 
 export default function ResultsSection() {
   const { t } = useTokens();
+  const phone = !useMediaQuery('(min-width: 640px)');
   const [f1, f2, , f4] = FINDINGS;
   const order = (xs: typeof TRAIN_SETTINGS) => [...xs].sort((a, b) => a.scores.it[4] - a.scores.it[0] - (b.scores.it[4] - b.scores.it[0])).reverse();
 
   return (
-    <Section id="results" tone="alt" className="py-28">
+    <Section id="results" tone="alt" className="py-20 sm:py-28">
       <Container wide>
         <div className="grid items-end gap-6 lg:grid-cols-[1fr_minmax(0,460px)]">
           <ScrollFloat containerClassName="!my-0" textClassName="!text-[clamp(2.6rem,6.4vw,5.6rem)] !leading-[0.95] !font-[800] tracking-[-0.04em] text-ink [font-stretch:120%]" animationDuration={1} stagger={0.025} mode="enter">
@@ -45,7 +48,7 @@ export default function ResultsSection() {
         </div>
 
         {/* recursive self-improvement */}
-        <div className="mt-16 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div className="mt-16 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <Card tag="Figure 5" title="RSI mean performance across benchmarks" sub="Train covers all 28 benchmarks, with a dashed curve for the 17 native ones; Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks. The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points.">
             <IterCurves />
           </Card>
@@ -53,26 +56,19 @@ export default function ResultsSection() {
             <Finding n={f2.n} title={f2.title}>
               {f2.text}
             </Finding>
-            <Reveal className="grid grid-cols-2 gap-3">
-              {[
-                { v: `+${HEADLINE.trainGain.toFixed(1)}`, l: `points on ${HEADLINE.trainCount} training benchmarks (39.06 → 73.16)` },
-                { v: `+${HEADLINE.unseenGain.toFixed(1)}`, l: `points on ${HEADLINE.unseenCount} unseen benchmarks, robots included (37.45 → 63.61)` },
-              ].map((x) => (
-                <div key={x.l} className="rounded-2xl border border-rule bg-surface p-4">
-                  <p className="tabular text-[34px] font-[820] leading-none tracking-[-0.03em] text-accent [font-stretch:112%]">{x.v}</p>
-                  <p className="mt-1.5 text-[13px] text-ink-3">{x.l}</p>
-                </div>
-              ))}
-            </Reveal>
           </div>
         </div>
 
         <Card className="mt-6" tag="Figure 4" title="Benchmark-level Harness evolution" sub="28 Train and 18 Unseen benchmarks; each wedge is one benchmark, its five bars Base and iterations 1–4 (sorted by gain). Scores keep each benchmark’s own metric on a 0–100 scale: ALE-Bench percentiles, BALROG progress for NetHack and Crafter, DiG-bench’s levels passed. Hover a wedge for its values.">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <RadialBench items={order(TRAIN_SETTINGS)} title="Train" />
-            <RadialBench items={order(UNSEEN_SETTINGS)} title="Unseen" />
-          </div>
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-4 text-[12px] text-ink-2">
+          {phone ? (
+            <GainList train={TRAIN_SETTINGS} unseen={UNSEEN_SETTINGS} />
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <RadialBench items={order(TRAIN_SETTINGS)} title="Train" />
+              <RadialBench items={order(UNSEEN_SETTINGS)} title="Unseen" />
+            </div>
+          )}
+          <div className={`mt-2 flex-wrap items-center justify-center gap-4 text-[12px] text-ink-2 ${phone ? 'hidden' : 'flex'}`}>
             {['Base', 'Iter. 1', 'Iter. 2', 'Iter. 3', 'Iter. 4'].map((l, k) => (
               <span key={l} className="inline-flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-sm" style={{ background: t.iters[k] }} />

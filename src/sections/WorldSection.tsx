@@ -1,11 +1,9 @@
-import { useMemo } from 'react';
 import { motion } from 'motion/react';
-import LogoLoop from '@/components/reactbits/LogoLoop/LogoLoop';
 import Icon from '@/components/ui/Icon';
 import Reveal from '@/components/ui/Reveal';
 import PaperFigure from '@/components/ui/PaperFigure';
 import { Container, Section } from '@/components/ui/Section';
-import { CAP_NODES, benchById, pathLabel, type NodeId } from '@/data/tree';
+import { benchById } from '@/data/tree';
 import { PAPER_FIGS, e1Frame, nodeLevel } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
@@ -18,7 +16,6 @@ import creatorBuild from '@/assets/cats/creator-build.webp';
  *   1. Figure 3: four tasks at node d share one decision, and Creator builds a world for it.
  *   2. The pipeline of Figure 2: generation input → verifier pool → generation world → host
  *      verification → difficulty screening.
- *   3. The levels Creator built: one per node and iteration (Appendix E.2).
  */
 const FIG3 = [
   { id: 'euro-ncap-aeb', q: 'Noisy range: break or hold?' },
@@ -170,19 +167,8 @@ function Pipeline() {
 }
 
 export default function WorldSection() {
-  const { t } = useTokens();
-  const levels = useMemo(
-    () =>
-      CAP_NODES.flatMap((n) =>
-        [1, 2, 3, 4].map((it) => ({
-          node: n.id as Exclude<NodeId, 'root'>,
-          it,
-        }))
-      ),
-    []
-  );
   return (
-    <Section id="world-creation" tone="alt" className="py-28">
+    <Section id="world-creation" tone="alt" className="py-20 sm:py-28">
       <Container wide>
         <div className="grid items-end gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
           <div>
@@ -201,7 +187,7 @@ export default function WorldSection() {
           <Converge />
         </Reveal>
 
-        <div className="mt-20">
+        <div className="mt-14 sm:mt-20">
           <h3 className="display-md text-[clamp(1.5rem,2.6vw,2.1rem)] text-ink">From a requirement to an admitted world</h3>
           <p className="mt-3 max-w-[70ch] font-serif text-[1.04rem] leading-[1.6] text-ink-2">Trial counts, performance thresholds, action budgets and retry limits are fixed in advance; worlds and verifiers stay unchanged during local training.</p>
           <div className="mt-8">
@@ -210,41 +196,6 @@ export default function WorldSection() {
         </div>
       </Container>
 
-      <div className="mt-20">
-        <Container wide>
-          <p className="mb-4 text-center text-[13.5px] font-[650] text-ink-3">
-            The 44 levels Creator built: one per node and iteration, each solved by the node’s evolving Harness (Appendix E.2)
-          </p>
-        </Container>
-        {[0, 1].map((row) => (
-          <div key={row} className={row ? 'mt-3' : ''}>
-            <LogoLoop
-              logos={levels
-                .filter((_, i) => i % 2 === row)
-                .map((l) => ({
-                  node: (
-                    <span className="relative block h-[112px] w-[176px] overflow-hidden rounded-xl border border-rule bg-surface">
-                      <img src={nodeLevel(l.node, l.it)} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-                      <span className="absolute left-1.5 top-1.5 rounded-md bg-black/65 px-1.5 py-0.5 text-[11px] font-[700] text-white">
-                        {pathLabel(l.node)} · iter {l.it}
-                      </span>
-                    </span>
-                  ),
-                  title: `${pathLabel(l.node)}, iteration ${l.it}`,
-                }))}
-              speed={row ? 34 : 26}
-              direction={row ? 'right' : 'left'}
-              logoHeight={112}
-              gap={12}
-              pauseOnHover
-              fadeOut
-              fadeOutColor={t.paper2}
-              scaleOnHover
-              ariaLabel="Levels built by Creator for each capability node"
-            />
-          </div>
-        ))}
-      </div>
     </Section>
   );
 }

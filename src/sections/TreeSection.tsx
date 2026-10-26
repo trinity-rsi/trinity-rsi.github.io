@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import BrickMorph, { createStageSignal } from '@/components/viz/BrickMorph';
+import BrickMorph, { VB_W, createStageSignal } from '@/components/viz/BrickMorph';
 import { Container, Section } from '@/components/ui/Section';
 import PaperFigure from '@/components/ui/PaperFigure';
 import RubberSegment from '@/components/reactbits/RubberSegment/RubberSegment';
@@ -138,12 +138,27 @@ export default function TreeSection() {
   const viewRef = useRef(view);
 
   // the figure reports the stage it draws; the captions follow it
+  // phones: the figure is wider than the screen, so a camera keeps the action in view
+  // (left while the task tree stands, on the sweep while Explorer runs, then on d → a)
+  const panRef = useRef<HTMLElement>(null);
+  const touched = useRef(0);
+  const follow = (s: number) => {
+    const el = panRef.current;
+    if (!el || el.scrollWidth <= el.clientWidth + 4 || performance.now() - touched.current < 3500) return;
+    const k = (el.scrollWidth - 24) / VB_W; // px per drawing unit (the figure has 12 px of padding each side)
+    const x = s < 1 ? 0 : s < 1.9 ? 20 + Math.min(1, (s - 1) / 0.85) * (VB_W - 40) : s < 2.9 ? VB_W / 2 : 795;
+    const left = s < 1 ? 0 : x * k + 12 - el.clientWidth / 2;
+    const target = Math.max(0, Math.min(el.scrollWidth - el.clientWidth, left));
+    el.scrollLeft += (target - el.scrollLeft) * (s > 1 && s < 1.9 ? 1 : 0.14);
+  };
   const onStage = useCallback((s: number) => {
+    follow(s);
     const v = viewOf(s);
     if (!sameView(v, viewRef.current)) {
       viewRef.current = v;
       setView(v);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // wide screens: the page's scroll sets the stage (the figure eases towards it)
@@ -240,12 +255,12 @@ export default function TreeSection() {
   );
 
   return (
-    <Section id="stage-1" className="pt-28">
+    <Section id="stage-1" className="pt-20 sm:pt-28">
       <Container wide>
         <div className="grid items-end gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
-          <div className="flex items-start gap-5 sm:gap-7">
-            <div className="-mt-3 shrink-0 select-none leading-none" aria-hidden>
-              <StrokeText text="1" trigger="scroll" fontSize={150} fontWeight={850} fontFamily="'Hubot Sans Variable', sans-serif" strokeColor={t.accent} fillColor={t.accentWash} strokeWidth={1.6} drawDuration={1.5} fillDelay={0.1} letterSpacing={-6} className="block w-[72px] sm:w-[108px]" />
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-7">
+            <div className="shrink-0 select-none leading-none sm:-mt-3" aria-hidden>
+              <StrokeText text="1" trigger="scroll" fontSize={150} fontWeight={850} fontFamily="'Hubot Sans Variable', sans-serif" strokeColor={t.accent} fillColor={t.accentWash} strokeWidth={1.6} drawDuration={1.5} fillDelay={0.1} letterSpacing={-6} className="block w-[52px] sm:w-[108px]" />
             </div>
             <div className="min-w-0">
               <p className="text-[14px] font-[700] text-accent">Stages 1 and 2</p>
@@ -289,15 +304,21 @@ export default function TreeSection() {
       ) : (
         <Container className="mt-10 space-y-5 pb-10">
           <span id="stage-2" aria-hidden />
-          <div className="overflow-x-auto">
+          <div className="-mx-1 overflow-x-auto px-1">
             <div className="min-w-[470px]">{segment}</div>
           </div>
-          <figure className="figure-frame overflow-x-auto p-3">
-            <div className="min-w-[860px]">
+          {caption}
+          <figure
+            ref={panRef}
+            className="figure-frame overflow-x-auto overscroll-x-contain p-3"
+            onPointerDown={() => (touched.current = performance.now())}
+            onTouchStart={() => (touched.current = performance.now())}
+          >
+            <div className="min-w-[1120px]">
               <BrickMorph signal={signal} onStage={onStage} />
             </div>
           </figure>
-          {caption}
+          <p className="-mt-2 text-center text-[12px] font-[600] text-ink-3">The figure follows each step; swipe to look around</p>
         </Container>
       )}
     </Section>

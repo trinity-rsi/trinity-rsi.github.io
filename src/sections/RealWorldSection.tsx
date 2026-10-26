@@ -397,7 +397,7 @@ function Flow() {
 export default function RealWorldSection() {
   const f5 = FINDINGS[4];
   return (
-    <Section id="real-world" className="overflow-hidden pt-28 pb-10">
+    <Section id="real-world" className="overflow-hidden pb-10 pt-20 sm:pt-28">
       <Container wide>
         <SectionHeader kicker="Embodied Real2Sim2Real · Section 4.6, Appendix E.3" title="From simulated worlds to two real robots" aside={<PaperFigure fig={PAPER_FIGS.embodied} />}>
           Each robot task runs in a simulation rebuilt from its real site, with a model of the same robot. Skills prepared in simulation are frozen, then every Harness, from H₀ to H(4), is tested in simulation and on the real robot.

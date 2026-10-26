@@ -6,7 +6,7 @@ import FilmSection from './sections/FilmSection';
 import Noise from './components/reactbits/Noise/Noise';
 import GradualBlur from './components/reactbits/GradualBlur/GradualBlur';
 import { useTheme } from './theme/ThemeProvider';
-import { useReducedMotion } from './lib/hooks';
+import { useMediaQuery, useReducedMotion } from './lib/hooks';
 
 // everything below the overview is split into three chunks that start loading right after first paint
 const loadMethod = () => import('./sections/parts/PartMethod');
@@ -21,6 +21,7 @@ const Hold = ({ h }: { h: string }) => <div style={{ minHeight: h }} aria-hidden
 export default function App() {
   const { theme } = useTheme();
   const reduce = useReducedMotion();
+  const phone = !useMediaQuery('(min-width: 640px)');
 
   useEffect(() => {
     loadMethod().then(loadIdeas).then(loadClosing);
@@ -66,7 +67,7 @@ export default function App() {
       {/* film grain over the whole page; static when motion is reduced */}
       <Noise fixed zIndex={60} opacity={theme === 'dark' ? 0.045 : 0.03} fps={reduce ? 0 : 10} size={1.2} contrast={0.55} blendMode="overlay" />
       {/* progressive blur along the bottom edge of the viewport, gone at the end of the page */}
-      <GradualBlur target="page" position="bottom" height="4.5rem" strength={1.6} layers={5} curve="bezier" exponential opacity={1} autoHide zIndex={45} />
+      <GradualBlur target="page" position="bottom" height={phone ? '2rem' : '4.5rem'} strength={phone ? 0.8 : 1.6} layers={phone ? 3 : 5} curve="bezier" exponential opacity={1} autoHide zIndex={45} />
       <main>
         <Hero />
         <FilmSection />

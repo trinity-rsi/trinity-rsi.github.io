@@ -228,6 +228,17 @@ export default function HarnessTreeViz() {
 
   const cur = at(time);
   const visiting: Nid | null = cur.k >= 0 && cur.k < ORDER.length && !cur.done ? ORDER[cur.k] : null;
+
+  // phones: keep the node being visited in view, unless the reader is looking around
+  const panRef = useRef<HTMLDivElement>(null);
+  const touched = useRef(0);
+  useEffect(() => {
+    const el = panRef.current;
+    const n = pick ?? visiting;
+    if (!el || !n || el.scrollWidth <= el.clientWidth + 4 || performance.now() - touched.current < 3500) return;
+    const x = ((ANCHOR[n].x - VB.x) / VB.w) * (el.scrollWidth - 32) + 16;
+    el.scrollTo({ left: Math.max(0, x - el.clientWidth / 2), behavior: 'smooth' });
+  }, [visiting, pick]);
   const focus: Nid = pick ?? visiting ?? (cur.done ? 'cda' : 'c');
   const iterShown = cur.done ? 4 : cur.it;
 
@@ -384,10 +395,15 @@ export default function HarnessTreeViz() {
         </div>
 
         {/* on a phone the tree keeps a readable size and scrolls sideways */}
-        <p className="px-1 pb-2 text-[12px] font-[600] text-ink-3 md:hidden">Swipe to see the whole tree →</p>
-        <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0">
+        <p className="px-1 pb-2 text-[12px] font-[600] text-ink-3 md:hidden">The view follows the node being trained; swipe to look around</p>
+        <div
+          ref={panRef}
+          className="-mx-4 overflow-x-auto overscroll-x-contain px-4 md:mx-0 md:overflow-visible md:px-0"
+          onPointerDown={() => (touched.current = performance.now())}
+          onTouchStart={() => (touched.current = performance.now())}
+        >
         <div className="relative">
-        <svg viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} className="block h-auto w-full min-w-[1040px] md:min-w-0" role="img" aria-label="Explorer's Harness tree: eleven node Harnesses gain or revise one module per iteration">
+        <svg viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} className="block h-auto w-full min-w-[1280px] md:min-w-0" role="img" aria-label="Explorer's Harness tree: eleven node Harnesses gain or revise one module per iteration">
           <BrickDefs id="ht" />
           <defs>
             <filter id="ht-glow" x="-50%" y="-50%" width="200%" height="200%">
