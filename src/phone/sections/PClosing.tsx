@@ -11,15 +11,16 @@ import logoLight from '@/assets/brand/infrec-light.webp';
 import logoDark from '@/assets/brand/infrec-dark.webp';
 import group from '@/assets/cats/group.webp';
 
-/** while the phone mode is a preview: what is still to come */
+/** the chapters not yet drawn for phones: where to find them meanwhile */
 export function PreviewNote() {
   const next = P_CHAPTERS.filter((c) => !c.ready);
+  if (!next.length) return null;
   return (
     <aside className="mx-5 mt-20 rounded-[22px] border border-dashed border-rule-2 px-5 py-5">
       <p className="text-[16px] font-[760] text-ink" style={{ fontStretch: '106%' }}>
-        More chapters in the next preview
+        More of the paper in the desktop layout
       </p>
-      <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{next.map((c) => c.title).join(', ')}. Until then, they are on the desktop layout.</p>
+      <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{next.map((c) => c.title).join(', ')}: these chapters are not drawn for phones yet.</p>
       <button type="button" onClick={() => switchView('desktop', next[0]?.id)} className="p-press mt-4 inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
         <Icon icon={ComputerIcon} size={16} stroke={1.9} />
         Open the desktop layout

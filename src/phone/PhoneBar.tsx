@@ -94,14 +94,13 @@ function ChapterSheet({ open, onClose, current }: { open: boolean; onClose: () =
               <li key={c.id}>
                 <button
                   type="button"
-                  disabled={!c.ready}
-                  onClick={() => go(c.id)}
+                  onClick={() => (c.ready ? go(c.id) : switchView('desktop', c.id))}
                   aria-current={on ? 'true' : undefined}
                   className={`relative flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors ${on ? 'bg-accent-wash' : 'active:bg-paper-2'}`}
                 >
                   <span className={`absolute inset-y-3 left-0 w-[3px] rounded-full ${on ? 'bg-accent' : 'bg-transparent'}`} aria-hidden />
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-[16px] font-[720] leading-tight ${c.ready ? 'text-ink' : 'text-ink-3'}`} style={{ fontStretch: '104%' }}>
+                    <span className={`block text-[16px] font-[720] leading-tight ${c.ready ? 'text-ink' : 'text-ink-2'}`} style={{ fontStretch: '104%' }}>
                       {c.title}
                     </span>
                     <span className="mt-0.5 block truncate text-[13px] text-ink-3">{c.note}</span>
@@ -113,7 +112,11 @@ function ChapterSheet({ open, onClose, current }: { open: boolean; onClose: () =
                       </span>
                     )
                   ) : (
-                    <span className="shrink-0 rounded-full border border-dashed border-rule-2 px-2 py-0.5 text-[11.5px] font-[650] text-ink-3">next preview</span>
+                    // not drawn for phones yet: it opens in the desktop layout
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-paper-2 px-2 py-1 text-[11.5px] font-[680] text-ink-3">
+                      <Icon icon={ComputerIcon} size={13} stroke={2} />
+                      Desktop
+                    </span>
                   )}
                 </button>
               </li>

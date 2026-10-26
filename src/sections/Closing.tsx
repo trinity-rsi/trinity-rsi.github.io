@@ -8,6 +8,7 @@ import { AFFILIATIONS, AUTHORS, BIBTEX, LINKS, PAPER } from '@/data/paper';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useTokens } from '@/theme/tokens';
 import { scrollToId } from '@/lib/hooks';
+import { playFilm } from '@/data/film';
 import {
   ArrowUp02Icon,
   Copy01Icon,
@@ -15,6 +16,7 @@ import {
   Github01Icon,
   Moon02Icon,
   Pdf02Icon,
+  PlayIcon,
   QuoteDownIcon,
   Sun03Icon,
 } from '@hugeicons/core-free-icons';
@@ -145,7 +147,9 @@ export function Footer() {
             accentColor={t.accent}
             items={[
               { icon: <Icon icon={ArrowUp02Icon} size={20} />, label: 'Back to top', onClick: () => scrollToId('top') },
-              { icon: <Icon icon={Pdf02Icon} size={20} />, label: LINKS.paper ? 'Paper' : 'Abstract', onClick: () => (LINKS.paper ? open(LINKS.paper) : scrollToId('abstract')) },
+              LINKS.paper
+                ? { icon: <Icon icon={Pdf02Icon} size={20} />, label: 'Paper', onClick: () => open(LINKS.paper) }
+                : { icon: <Icon icon={PlayIcon} size={20} />, label: 'Film', onClick: playFilm },
               { icon: <Icon icon={Github01Icon} size={20} />, label: LINKS.code ? 'Code' : 'Code (soon)', onClick: () => open(LINKS.code) },
               { icon: <span className="text-[19px]">🤗</span>, label: LINKS.huggingface ? 'Hugging Face' : 'Hugging Face (soon)', onClick: () => open(LINKS.huggingface) },
               { icon: <Icon icon={QuoteDownIcon} size={20} />, label: 'Cite', onClick: () => scrollToId('cite') },

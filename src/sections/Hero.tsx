@@ -141,42 +141,67 @@ export default function Hero() {
             </p>
 
             <div className="rise-in mt-[clamp(0.9rem,2.6vh,1.5rem)] flex flex-wrap items-center gap-1.5" style={{ animationDelay: '0.52s' }}>
-              <Magnet padding={50} magnetStrength={4}>
-                <StarBorder
-                  as="a"
-                  href={LINKS.paper || '#abstract'}
-                  onClick={(e: React.MouseEvent) => {
-                    if (!LINKS.paper) {
-                      e.preventDefault();
-                      scrollToId('abstract');
-                    }
-                  }}
-                  color={t.accent}
-                  theme={theme}
-                  radius={999}
-                  thickness={1.5}
-                  duration={5}
-                  sparkle
-                  backgroundColor={t.ink}
-                  textColor={t.paper}
-                  className="inline-flex h-10 items-center gap-1.5 px-3 text-[13.5px] font-[680] xl:px-3.5"
-                >
-                  <Icon icon={Pdf02Icon} size={17} />
-                  {LINKS.paper ? 'Read the paper' : 'Read the abstract'}
-                </StarBorder>
-              </Magnet>
-              <button
-                type="button"
-                onClick={playFilm}
-                className="group inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface pl-1.5 pr-2.5 text-[13.5px] font-[650] xl:pr-3 text-ink transition-colors hover:border-rule-2 hover:bg-surface-2"
-              >
-                <span className="relative grid h-7 w-7 place-items-center rounded-full bg-accent text-white transition-transform duration-300 group-hover:scale-110">
-                  {!reduce && <span className="film-ring absolute inset-0 rounded-full" aria-hidden />}
-                  <Icon icon={PlayIcon} size={13} stroke={2.6} className="translate-x-[1px]" />
-                </span>
-                Watch the film
-                <span className="tabular -ml-0.5 text-[12px] font-[600] text-ink-3">{fmtTime(FILM.duration)}</span>
-              </button>
+              {/* the paper itself once it is public; until then the film leads */}
+              {LINKS.paper ? (
+                <>
+                  <Magnet padding={50} magnetStrength={4}>
+                    <StarBorder
+                      as="a"
+                      href={LINKS.paper}
+                      target="_blank"
+                      rel="noreferrer"
+                      color={t.accent}
+                      theme={theme}
+                      radius={999}
+                      thickness={1.5}
+                      duration={5}
+                      sparkle
+                      backgroundColor={t.ink}
+                      textColor={t.paper}
+                      className="inline-flex h-10 items-center gap-1.5 px-3 text-[13.5px] font-[680] xl:px-3.5"
+                    >
+                      <Icon icon={Pdf02Icon} size={17} />
+                      Read the paper
+                    </StarBorder>
+                  </Magnet>
+                  <button
+                    type="button"
+                    onClick={playFilm}
+                    className="group inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface pl-1.5 pr-2.5 text-[13.5px] font-[650] xl:pr-3 text-ink transition-colors hover:border-rule-2 hover:bg-surface-2"
+                  >
+                    <span className="relative grid h-7 w-7 place-items-center rounded-full bg-accent text-white transition-transform duration-300 group-hover:scale-110">
+                      {!reduce && <span className="film-ring absolute inset-0 rounded-full" aria-hidden />}
+                      <Icon icon={PlayIcon} size={13} stroke={2.6} className="translate-x-[1px]" />
+                    </span>
+                    Watch the film
+                    <span className="tabular -ml-0.5 text-[12px] font-[600] text-ink-3">{fmtTime(FILM.duration)}</span>
+                  </button>
+                </>
+              ) : (
+                <Magnet padding={50} magnetStrength={4}>
+                  <StarBorder
+                    as="button"
+                    type="button"
+                    onClick={playFilm}
+                    color={t.accent}
+                    theme={theme}
+                    radius={999}
+                    thickness={1.5}
+                    duration={5}
+                    sparkle
+                    backgroundColor={t.ink}
+                    textColor={t.paper}
+                    className="group inline-flex h-10 items-center gap-2 pl-1.5 pr-3 text-[13.5px] font-[680] xl:pr-3.5"
+                  >
+                    <span className="relative grid h-7 w-7 place-items-center rounded-full bg-accent text-white transition-transform duration-300 group-hover:scale-110">
+                      {!reduce && <span className="film-ring absolute inset-0 rounded-full" aria-hidden />}
+                      <Icon icon={PlayIcon} size={13} stroke={2.6} className="translate-x-[1px]" />
+                    </span>
+                    Watch the film
+                    <span className="tabular -ml-0.5 text-[12px] font-[600] opacity-60">{fmtTime(FILM.duration)}</span>
+                  </StarBorder>
+                </Magnet>
+              )}
               {LINKS.code || LINKS.huggingface ? (
                 <>
                   <LinkButton href={LINKS.code} icon={<Icon icon={Github01Icon} size={17} />}>

@@ -10,8 +10,8 @@ export type View = 'phone' | 'desktop';
 const KEY = 'trinity-view';
 const SWITCHED = 'trinity-view-switched';
 
-/** while the phone mode is being previewed it only opens with ?view=phone */
-export const PHONE_BY_DEFAULT = false;
+/** phones open the phone mode unless the visitor chose the desktop page */
+export const PHONE_BY_DEFAULT = true;
 
 export const isNarrow = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
 
@@ -37,8 +37,8 @@ export function chooseView(): View {
   return saved() ?? (PHONE_BY_DEFAULT && isNarrow() ? 'phone' : 'desktop');
 }
 
-/** the switch shows once the phone mode is public, and already for anyone who has opened the preview */
-export const showViewToggle = () => PHONE_BY_DEFAULT || saved() !== null;
+/** the switch shows on every phone, and on a larger screen for anyone who has used it */
+export const showViewToggle = () => isNarrow() || saved() !== null;
 
 /** the sections both layouts share, in page order */
 const SECTIONS = ['film', 'problem', 'examples', 'trinity', 'stage-1', 'stage-2', 'world-creation', 'stage-3', 'router', 'results', 'real-world', 'visual-record', 'abstract', 'team', 'cite'];
@@ -66,8 +66,9 @@ export function switchView(v: View, anchor = '') {
   }
   const u = new URL(location.href);
   u.searchParams.delete('view');
-  // the phone mode keeps the team with the citation
-  u.hash = anchor ? `#${v === 'phone' && anchor === 'team' ? 'cite' : anchor}` : '';
+  // the phone mode keeps the team with the citation; the desktop page has no abstract (the team follows where it was)
+  const to = v === 'phone' && anchor === 'team' ? 'cite' : v === 'desktop' && anchor === 'abstract' ? 'team' : anchor;
+  u.hash = to ? `#${to}` : '';
   const veil = document.createElement('div');
   veil.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:var(--paper);opacity:0;transition:opacity .22s ease;pointer-events:none';
   document.body.appendChild(veil);
