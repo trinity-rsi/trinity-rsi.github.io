@@ -11,7 +11,7 @@ const THUMBS = import.meta.glob<string>('../assets/film/ch*-*.webp', { eager: tr
 export type FilmLang = 'en' | 'zh';
 
 /** where the page is published (GitHub Pages) */
-export const SITE_URL = 'https://mikeeeeeeeeeeeeee.github.io/Trinity/';
+export const SITE_URL = 'https://trinity-rsi.github.io/';
 const BASE = import.meta.env.MODE === 'single' ? SITE_URL : import.meta.env.BASE_URL;
 
 export const FILM = {

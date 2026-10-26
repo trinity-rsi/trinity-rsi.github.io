@@ -2,8 +2,8 @@
 
 Project page for **The Trinity: Capability-Driven Recursive Self-Improvement for Multimodal Agents** (technical report, October 2026).
 
-- Live page: https://mikeeeeeeeeeeeeee.github.io/Trinity/
-- Film (1:46, 1080p60, narrated, with subtitles): [English](https://mikeeeeeeeeeeeeee.github.io/Trinity/film/the-trinity-en.mp4) · [中文](https://mikeeeeeeeeeeeeee.github.io/Trinity/film/the-trinity-zh.mp4) · subtitles [en](https://mikeeeeeeeeeeeeee.github.io/Trinity/film/the-trinity-en.vtt) / [zh](https://mikeeeeeeeeeeeeee.github.io/Trinity/film/the-trinity-zh.vtt)
+- Live page: https://trinity-rsi.github.io/
+- Film (1:46, 1080p60, narrated, with subtitles): [English](https://trinity-rsi.github.io/film/the-trinity-en.mp4) · [中文](https://trinity-rsi.github.io/film/the-trinity-zh.mp4) · subtitles [en](https://trinity-rsi.github.io/film/the-trinity-en.vtt) / [zh](https://trinity-rsi.github.io/film/the-trinity-zh.vtt)
 
 React 19 + Vite + Tailwind CSS v4, with effects and components from [React Bits](https://reactbits.dev).
 The page opens in the light theme; the switch in the top-right corner turns on the dark theme and is remembered.
