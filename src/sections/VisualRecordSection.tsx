@@ -3,8 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Container, Section } from '@/components/ui/Section';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { BENCHES, DOMAINS, domainById, pathLabel, type Bench, type DomainId } from '@/data/tree';
-import { e1Frame } from '@/data/media';
-import { useTokens } from '@/theme/tokens';
+import CompareFrames from '@/components/viz/CompareFrames';
 
 /**
  * Appendix E.1, the visual record: for every benchmark, the final frame of a failed H0 run and of
@@ -12,8 +11,7 @@ import { useTokens } from '@/theme/tokens';
  */
 type Filter = 'all' | 'train' | 'unseen' | DomainId;
 
-function Card({ b }: { b: Bench }) {
-  const { t } = useTokens();
+function Card({ b, hint }: { b: Bench; hint: boolean }) {
   const d = domainById[b.domain];
   const s = b.scores.it;
   return (
@@ -23,20 +21,9 @@ function Card({ b }: { b: Bench }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      whileHover={{ y: -4 }}
       className="group overflow-hidden rounded-2xl border border-rule bg-surface shadow-[0_1px_0_rgba(0,0,0,0.02)] transition-shadow hover:shadow-[0_24px_50px_-30px_rgba(20,24,40,0.55)]"
     >
-      <div className="grid grid-cols-2 gap-px bg-rule">
-        {(['h0', 'h4'] as const).map((k) => (
-          <div key={k} className="relative aspect-[16/9] overflow-hidden bg-[#0c1018]">
-            <img src={e1Frame(b.id, k)} alt={`${b.name}: final frame, ${k === 'h0' ? 'H0' : 'H4'}`} loading="lazy" className="absolute inset-0 h-full w-full object-contain transition-transform duration-700 group-hover:scale-[1.05]" />
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 border-b border-rule text-center text-[11px] font-[700]">
-        <span style={{ color: t.bad }}>H₀ · Base Harness</span>
-        <span style={{ color: t.good }}>H₄ · iteration 4</span>
-      </div>
+      <CompareFrames b={b} hint={hint} />
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
         <div className="min-w-0">
           <p className="truncate text-[14px] font-[720] text-ink">
@@ -82,7 +69,7 @@ export default function VisualRecordSection() {
     <Section id="visual-record" tone="alt" className="py-20 sm:py-28">
       <Container wide>
         <SectionHeader kicker="Visual record · Appendix E.1" title="H₀ and H₄ on the same configuration">
-          For every benchmark: the final frame of a failed run with the Base Harness H₀ and of a completed run with the iteration-4 Harness, from the same start. Rows come from recorded runs, demonstrations or scripted runs, as detailed in the paper; the scored results are those of Table 8.
+          For every benchmark, the final frame of a failed H₀ run and of a completed H₄ run from the same start. Drag across a picture to compare.
         </SectionHeader>
         <div className="mt-10 flex flex-wrap gap-2">
           {chips.map((c) => (
@@ -101,8 +88,8 @@ export default function VisualRecordSection() {
         </div>
         <motion.div layout className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           <AnimatePresence mode="popLayout">
-            {list.map((b) => (
-              <Card key={b.id} b={b} />
+            {list.map((b, i) => (
+              <Card key={b.id} b={b} hint={i === 0} />
             ))}
           </AnimatePresence>
         </motion.div>

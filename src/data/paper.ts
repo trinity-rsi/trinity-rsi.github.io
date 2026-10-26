@@ -16,6 +16,8 @@ export const PAPER = {
   backbone: 'Claude Opus 5',
   position:
     'Current RSI training relies heavily on task-specific optimization, limiting capability generalization across tasks. We advocate a shift from task-driven to capability-driven self-improvement, where shared capability requirements across tasks guide the learning and optimization of multiple specialized Harnesses. This shift highlights the role of shared capabilities in cross-task generalization and naturally motivates a capability-aware Router that matches tasks to suitable Harnesses based on their capability requirements.',
+  /** the position in two short sentences, for the hero */
+  positionShort: 'Current RSI relies heavily on task-specific optimization. We advocate letting shared capability requirements across tasks guide the learning and optimization of multiple specialized Harnesses.',
   abstract: [
     'Multimodal intelligence can be viewed as human-guided co-evolution between worlds and agents through interaction. However, scaling this process faces two bottlenecks: constructing heterogeneous, verifiable environments is costly, and manual Harness iteration cannot keep pace with growing task diversity and complexity.',
     'A key insight is that tasks with different modalities and surface forms can share the same underlying capability requirements. We therefore introduce The Trinity, a recursive self-improvement framework coupling world generation with Harness evolution through three roles: Creator, Explorer, and Evolver. Drawing on verified execution trajectories, Evolver shifts the basis of task organization from surface categories to shared requirements, reorganizing the original task tree into a hierarchical capability tree.',
@@ -150,7 +152,7 @@ export const STAGES = [
     title: 'Task tree construction',
     who: ['evolver', 'explorer'],
     parts: ['Benchmark organization', 'World exploration'],
-    text: 'Public multimodal benchmarks are normalized into specifications of goals, observations, actions, feedback, completion criteria and budgets, and grouped into five domains. Explorer runs H₀ on sampled training instances.',
+    text: 'Benchmarks are normalized into specifications and grouped into five domains; Explorer runs H₀ on the training ones.',
     href: 'stage-1',
   },
   {
@@ -160,7 +162,7 @@ export const STAGES = [
     title: 'Capability tree construction',
     who: ['evolver', 'creator'],
     parts: ['Requirement organization', 'World creation'],
-    text: 'Training trajectories reveal what each task requires. Capability paths merge into a tree built from training tasks only, and Creator turns each node’s requirement into simplified, verifiable worlds.',
+    text: 'Training trajectories reveal what each task requires; capability paths merge into a tree, and Creator builds verifiable worlds for its nodes.',
     href: 'stage-2',
   },
   {
@@ -170,7 +172,7 @@ export const STAGES = [
     title: 'Harness tree construction',
     who: ['explorer', 'evolver', 'creator'],
     parts: ['Reusable modules', 'Selective inheritance'],
-    text: 'Explorer plays each node’s worlds with inherited and local modules; Evolver builds reusable modules from the runs. Creator evolves at the same nodes and consolidates its updates into a new Base Harness.',
+    text: 'Explorer plays each node’s worlds; Evolver turns the runs into reusable modules, and Creator consolidates a new Base Harness.',
     href: 'stage-3',
   },
   {
@@ -180,7 +182,7 @@ export const STAGES = [
     title: 'Capability-aware routing',
     who: ['router'],
     parts: ['Experience memory', 'Commit one Harness'],
-    text: 'For a new task, the Router reads public task information, retrieves verified experience, and commits one compatible Harness from the tree before execution.',
+    text: 'For a new task, the Router reads public information, retrieves verified experience and commits one Harness before execution.',
     href: 'router',
   },
 ] as const;

@@ -2,12 +2,12 @@ import Icon from '@/components/ui/Icon';
 import PaperFigure from '@/components/ui/PaperFigure';
 import { CheckmarkCircle02Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { benchById } from '@/data/tree';
+import { FIG3, PIPE_AT, WORLD_PIPE as PIPE } from '@/data/steps';
 import { PAPER_FIGS, e1Frame, nodeLevel } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 import { useLoopClock, seg, easeOut, easeOutBack, window01 } from '@/lib/anim';
 import { Opener } from '../ui/Opener';
-import More from '../ui/More';
 import creatorBuild from '@/assets/cats/creator-build.webp';
 
 /**
@@ -15,12 +15,7 @@ import creatorBuild from '@/assets/cats/creator-build.webp';
  * four tasks at node d that share one decision converge on the world Creator builds for it,
  * then the pipeline that admits a world, step by step down a rail.
  */
-const FIG3 = [
-  { id: 'euro-ncap-aeb', q: 'Noisy range: break or hold?' },
-  { id: 'among-us', q: 'Conflicting accounts: what to claim?' },
-  { id: 'glee-persuasion', q: 'Buyer feedback: which message?' },
-  { id: 'pinverify', q: 'Hidden detail: inspect or decide?' },
-];
+
 
 function Converge() {
   const { t } = useTokens();
@@ -84,19 +79,13 @@ function Converge() {
   );
 }
 
-const PIPE = [
-  { k: '1', title: 'Generation input', items: ['Templates', 'Capability', 'Constraints', 'Scale', 'Difficulty', 'Notes'], text: 'Evolver designs simplified levels from node requirements, descendants and representative tasks’ public specifications. No target layouts, private proofs or solution traces.' },
-  { k: '2', title: 'Verifier pool', items: ['Fixed: interface, runtime', 'Task-conditioned: goals, solvability'], text: 'Creator implements the level with a node Harness initialized from its Base Harness or inherited parent modules; Evolver’s verifier pool stays private.' },
-  { k: '3', title: 'Generation world', items: ['Browser world', '3D scene', 'Public rules'], text: 'A simplified level that preserves the core decision process. Creator omits aesthetic optimization to focus on task mechanisms.' },
-  { k: '4', title: 'Host verification', items: ['Node binding', 'Execution', 'Transitions', 'Rendering', 'Completion'], text: 'The host-executed verifier pool checks the world; private verifiers and public feedback guide Creator’s revisions.' },
-  { k: '5', title: 'Difficulty screening', items: ['Too hard', 'Admit', 'Too easy'], text: 'Explorer tests the world with a frozen screening Harness and admits it only inside a predefined intermediate-performance band; otherwise Creator adjusts the difficulty.' },
-];
+
 
 function Pipeline() {
   const { t } = useTokens();
   const reduce = useReducedMotion();
   const [ref, near] = useNearViewport<HTMLOListElement>('-10% 0px');
-  const [p] = useLoopClock(11, near && !reduce, reduce ? 0.95 : 0);
+  const [p, setP] = useLoopClock(11, near && !reduce, reduce ? 0.95 : 0);
   const stepAt = (x: number) => (x < 0.14 ? 0 : x < 0.28 ? 1 : x < 0.42 ? 2 : x < 0.66 ? 3 : 4);
   const cur = stepAt(p);
   const failing = window01(p, 0.44, 0.53, 0.02);
@@ -114,12 +103,15 @@ function Pipeline() {
         const done = i < cur;
         return (
           <li key={s.k} className="relative pb-4 pl-12 last:pb-0">
-            <span
+            <button
+              type="button"
+              onClick={() => setP(PIPE_AT[i] + 0.001)}
+              aria-label={`Jump to ${s.title}`}
               className="absolute left-0 top-1 z-10 grid h-9 w-9 place-items-center rounded-full text-[13px] font-[780] transition-colors duration-500"
               style={{ background: on || done ? t.creator : t.paper2, color: on || done ? '#fff' : t.ink3, boxShadow: on ? `0 0 0 5px ${t.creator}26` : undefined }}
             >
               {i === 3 && on && failing > 0.5 ? '✗' : done ? '✓' : s.k}
-            </span>
+            </button>
             <div className={`rounded-[18px] border bg-surface p-3.5 transition-[border-color,box-shadow] duration-500 ${on ? 'border-creator/60 shadow-[0_18px_36px_-26px_rgba(0,0,0,0.5)]' : 'border-rule'}`}>
               <p className="text-[15.5px] font-[740] leading-tight text-ink">{s.title}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -165,11 +157,7 @@ export default function PWorlds() {
   return (
     <section id="world-creation" className="scroll-mt-16 pt-20">
       <Opener kicker="Stage 2, world creation" stage="2" title="Capability-Driven Real2Sim2Real">
-        <More lines={5}>
-          <p className="p-lede">
-            Once the capability tree is built, every node is linked to training benchmarks through shared requirements. The four tasks of Figure 3 differ, yet all require evidence verification before deciding. Creator turns that shared requirement into simplified, verifiable worlds, while evaluation on the original tasks measures transfer.
-          </p>
-        </More>
+        <p className="p-lede">Four different tasks at node d all need evidence verification before deciding. Creator turns that shared requirement into simplified, verifiable worlds; the original tasks measure transfer.</p>
       </Opener>
       <div className="mt-7 px-4">
         <Converge />
@@ -180,7 +168,7 @@ export default function PWorlds() {
 
       <div className="mt-14 px-5">
         <h3 className="p-subtitle">From a requirement to an admitted world</h3>
-        <p className="p-lede mt-3">Trial counts, performance thresholds, action budgets and retry limits are fixed in advance; worlds and verifiers stay unchanged during local training.</p>
+        <p className="mt-2 text-[13px] text-ink-3">Tap a number to jump to that step.</p>
         <div className="mt-6">
           <Pipeline />
         </div>

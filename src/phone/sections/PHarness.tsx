@@ -11,7 +11,6 @@ import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 import { easeInOut, easeOutBack, seg, useLoopClock } from '@/lib/anim';
 import { Opener } from '../ui/Opener';
-import More from '../ui/More';
 
 /**
  * Stage 3 on a phone. (a) Explorer's Harness tree over iterations 1–4, drawn top-down like the
@@ -566,20 +565,12 @@ export default function PHarness() {
   return (
     <section id="stage-3" className="scroll-mt-16 pt-20">
       <Opener kicker="Stage 3, the Harness tree" stage="3" title="Harnesses evolve along the capability tree">
-        <More lines={5}>
-          <p className="p-lede">
-            Every node of the capability tree owns a Harness: one frozen model coordinated through six control-flow protocols (Perception, Memory, Inference, Planning, Orchestration and Loop), where evolved modules plug in. Explorer plays the node’s worlds with inherited and local modules, Evolver compares successful and failed runs and turns them into reusable modules, and validated updates accumulate across iterations within the fixed tree.
-          </p>
-        </More>
+        <p className="p-lede">Every node owns a Harness: one frozen model, six control-flow protocols, and evolved modules that plug in. Validated updates accumulate across iterations within the fixed tree.</p>
       </Opener>
 
       <div className="mt-10 px-5">
         <h3 className="p-subtitle">The Harness tree, iteration by iteration</h3>
-        <More lines={4} className="mt-3">
-          <p className="p-lede">
-            Each iteration is one top-down pass. At every node Explorer plays the level Creator built, a failing run becomes a new module or a revision, and the next run solves the level. Children inherit their parent’s modules (outlined bricks) and take an updated parent only if it verifies strictly better on identical validation tasks, trials and budget. M01–M29 are the paper’s own modules; M29 sits at node d in the iteration-4 tree.
-          </p>
-        </More>
+        <p className="p-lede mt-3">One top-down pass per iteration: at every node a failing run becomes a new module or a revision. Children inherit their parent’s modules (outlined).</p>
       </div>
       <div className="mt-5">
         <HarnessTree />
@@ -590,11 +581,7 @@ export default function PHarness() {
 
       <div className="mt-14 px-5">
         <h3 className="p-subtitle">Creator consolidates a new Base Harness</h3>
-        <More lines={4} className="mt-3">
-          <p className="p-lede">
-            Creator evolves along the same tree, top-down within each iteration: the root’s children start from its Base Harness, every other node inherits its parent’s updated modules, and a node evolves only when a verifier detects a failure. At the end of the iteration the validated proposals are consolidated with the Base Harness modules into the next Base Harness: revisions replace their predecessors, partial overlaps merge, near-duplicates keep the earlier-learned module.
-          </p>
-        </More>
+        <p className="p-lede mt-3">Creator evolves along the same tree; at the end of each iteration its validated proposals merge into the next Base Harness.</p>
       </div>
       <div className="mt-5">
         <CreatorPass />

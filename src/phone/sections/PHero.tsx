@@ -7,7 +7,6 @@ import { HEADLINE } from '@/data/results';
 import { FILM, fmtTime, playFilm } from '@/data/film';
 import { useTokens } from '@/theme/tokens';
 import { useReducedMotion } from '@/lib/hooks';
-import More from '../ui/More';
 import PTriangle from './PTriangle';
 import { goTo } from '../chapters';
 import logoLight from '@/assets/brand/infrec-light.webp';
@@ -125,9 +124,7 @@ export default function PHero() {
             <p className="p-kicker">Position</p>
             <p className="p-subtitle mt-1.5">From task-driven to capability-driven RSI.</p>
           </div>
-          <More lines={5} className="mt-4">
-            <p className="p-lede">{PAPER.position}</p>
-          </More>
+          <p className="p-lede mt-4">{PAPER.positionShort}</p>
           <div className="mt-7 grid grid-cols-3 gap-4 border-t border-rule pt-5">
             <Stat to={HEADLINE.trainGain} decimals={1} plus label={`points on ${HEADLINE.trainCount} training benchmarks`} delay={0.2} />
             <Stat to={HEADLINE.unseenGain} decimals={1} plus label={`points on ${HEADLINE.unseenCount} unseen benchmarks`} delay={0.3} />

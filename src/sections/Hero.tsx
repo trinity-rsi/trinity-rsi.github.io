@@ -246,7 +246,7 @@ export default function Hero() {
                 <p className="mt-2.5 text-[clamp(1.4rem,2vw,1.85rem)] font-[760] leading-[1.12] tracking-[-0.02em] text-ink [font-stretch:108%]">
                   From task-driven to <span className="text-accent">capability-driven</span> RSI.
                 </p>
-                <p className="mt-2.5 max-w-[78ch] font-serif text-[15px] leading-[1.55] text-ink-2">{PAPER.position}</p>
+                <p className="mt-2.5 max-w-[60ch] font-serif text-[16px] leading-[1.55] text-ink-2">{PAPER.positionShort}</p>
               </div>
               <div className="grid grid-cols-3 gap-4 border-t border-rule pt-4 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                 <Stat to={HEADLINE.trainGain} decimals={1} unit="+" label={`points on ${HEADLINE.trainCount} training benchmarks`} delay={0.8} />

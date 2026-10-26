@@ -28,9 +28,7 @@ export default function PTrinity() {
           </>
         }
       >
-        <p className="p-lede">
-          We propose The Trinity, a recursive self-improvement framework coupling world generation with Harness evolution. The three roles share the same frozen backbone but work through separate Harnesses, and every update enters the system only after host verification.
-        </p>
+        <p className="p-lede">World generation and Harness evolution, coupled in one loop: three roles on one frozen backbone, each with its own Harness. Every update enters only after host verification.</p>
       </Opener>
 
       {/* the roles */}

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CapabilityTree, GlobalHarness, PerTaskHarness } from '@/components/viz/Strategies';
 import { Opener } from '../ui/Opener';
-import More from '../ui/More';
 import PLoop, { type Wall } from './PLoop';
 
 /** The problem (Introduction): the loop's two bottlenecks and a challenge, then what to evolve a Harness around. */
@@ -10,19 +9,19 @@ const WALLS: Wall[] = [
     kind: 'Bottleneck',
     at: 'World',
     title: 'Verifiable worlds are costly',
-    text: 'Constructing large-scale, heterogeneous and verifiable environments by hand is costly, which calls for generating worlds automatically.',
+    text: 'Building large, heterogeneous, verifiable environments by hand is costly; worlds must be generated automatically.',
   },
   {
     kind: 'Bottleneck',
     at: 'Human',
     title: 'Manual Harness iteration lags',
-    text: 'Agent capability is increasingly constrained by the Harness, and iterating it by hand cannot keep pace with growing task complexity and diversity.',
+    text: 'The Harness increasingly limits agents, and hand-tuning it cannot keep pace with growing task diversity.',
   },
   {
     kind: 'Challenge',
     at: 'Agent',
     title: 'Harness RSI stays task-driven',
-    text: 'Current Harness RSI focuses on text-modality tasks such as coding and math and evolves task by task, which can overfit the Harness and generalize poorly across heterogeneous tasks.',
+    text: 'Harness RSI evolves task by task on text tasks such as coding and math, overfitting and generalizing poorly.',
   },
 ];
 
@@ -106,11 +105,7 @@ export default function PProblem() {
   return (
     <section id="problem" className="scroll-mt-16 pt-20">
       <Opener kicker="The problem" title="RSI is still trained task by task">
-        <More lines={5}>
-          <p className="p-lede">
-            We view multimodal intelligence as an evolving loop: worlds provide tasks, humans guide learning, and agents interact with the world to produce verifiable outcomes. As tasks and environments grow more complex, the loop faces two bottlenecks, and letting it improve on its own across heterogeneous tasks raises a challenge.
-          </p>
-        </More>
+        <p className="p-lede">Worlds provide tasks, humans guide learning, agents produce verifiable outcomes. As tasks grow more complex, this loop meets two bottlenecks and a challenge.</p>
       </Opener>
       <div className="mt-7 px-5">
         <PLoop walls={WALLS} />
@@ -118,9 +113,7 @@ export default function PProblem() {
 
       <div className="mt-14 px-5">
         <h3 className="p-subtitle">What should a Harness be evolved around?</h3>
-        <p className="p-lede mt-3">
-          Task-specific evolution overfits; a global Harness is pulled between conflicting demands. The key insight: tasks with different modalities and surface forms can share the same underlying capability requirements.
-        </p>
+        <p className="p-lede mt-3">The key insight: tasks with different modalities and surface forms can share the same underlying capability requirements.</p>
       </div>
       <div className="mt-6">
         <Strategies />

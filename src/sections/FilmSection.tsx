@@ -323,9 +323,7 @@ export default function FilmSection() {
             <h2 className="display-lg mt-1.5 text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.02] text-ink">
               <SplitText text="The Trinity in under two minutes" tag="span" splitType="words, chars" effect="rise" delay={16} duration={0.7} textAlign="left" mask className="!block" />
             </h2>
-            <p className="mt-3 max-w-[62ch] font-serif text-[1.05rem] leading-[1.55] text-ink-2">
-              The paper’s argument as a short film, in the order of this page: the position, the problem, the three stages, the Router and the results. Narrated, with subtitles, in English and Chinese.
-            </p>
+            <p className="mt-3 max-w-[62ch] font-serif text-[1.05rem] leading-[1.55] text-ink-2">The whole argument in the order of this page, narrated in English or Chinese, with subtitles.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <LangSwitch lang={lang} onChange={changeLang} />

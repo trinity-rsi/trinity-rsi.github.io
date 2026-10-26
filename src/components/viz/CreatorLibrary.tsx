@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import Icon from '@/components/ui/Icon';
+import { PauseIcon, PlayIcon } from '@hugeicons/core-free-icons';
 import { CREATOR_LIB, LIB_FAMILIES, type LibModule } from '@/data/results';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
@@ -51,7 +53,10 @@ export default function CreatorLibrary() {
   const { t, theme } = useTokens();
   const reduce = useReducedMotion();
   const [ref, near] = useNearViewport<HTMLDivElement>('-10% 0px');
-  const [p] = useLoopClock(14, near && !reduce, reduce ? 0.9 : 0);
+  const [paused, setPaused] = useState(false);
+  const [hover, setHover] = useState<string | null>(null);
+  // the clock stops while the reader looks at a module, or pauses it
+  const [p, setP] = useLoopClock(14, near && !reduce && !paused && !hover, reduce ? 0.9 : 0);
 
   const slots = useMemo(() => {
     const out: Record<string, { x: number; y: number }> = {};
@@ -91,7 +96,7 @@ export default function CreatorLibrary() {
 
   const famColor = (m: LibModule) => LIB_FAMILIES.find((f) => f.id === m.family)!.color;
   const brick = (m: LibModule, x: number, y: number, opacity: number, ring = 0, key?: string) => (
-    <g key={key ?? m.id} transform={`translate(${x} ${y})`} opacity={opacity}>
+    <g key={key ?? m.id} transform={`translate(${x} ${y})`} opacity={opacity} onMouseEnter={() => setHover(m.id)} onMouseLeave={() => setHover(null)} style={{ cursor: 'default' }}>
       {[0, 1, 2].map((s) => (
         <rect key={s} x={8 + s * 18} y={-5} width={12} height={6} rx={1.5} fill={famColor(m)} />
       ))}
@@ -105,8 +110,18 @@ export default function CreatorLibrary() {
   );
   const chipFill = theme === 'dark' ? t.surface2 : t.paper2;
 
+  const hov = hover ? CREATOR_LIB.find((m) => m.id === hover)! : null;
+  const hovAt = hov ? slots[hov.id] : null;
+  const PHASES = [
+    { a: PASS0, b: 0.41, l: 'Nodes evolve top-down' },
+    { a: 0.41, b: 0.56, l: 'Proposals pooled' },
+    { a: 0.56, b: 0.62, l: 'Merge' },
+    { a: 0.62, b: 0.8, l: 'New modules installed' },
+    { a: 0.8, b: 0.96, l: 'Rules revised' },
+  ];
   return (
-    <div ref={ref} className="figure-frame overflow-hidden p-4">
+    <div ref={ref} className="figure-frame relative overflow-hidden p-4">
+      <div className="relative">
       <svg
         viewBox={`0 0 ${VW} ${VH}`}
         className="block h-auto w-full"
@@ -243,6 +258,44 @@ export default function CreatorLibrary() {
           a coloured token = a module a node proposed
         </text>
       </svg>
+      {hov && hovAt && (
+        <div
+          className="pointer-events-none absolute z-10 w-[260px] -translate-x-1/2 rounded-xl border border-rule bg-surface/95 px-3 py-2 text-[12.5px] shadow-lg backdrop-blur"
+          style={{ left: `${Math.min(84, Math.max(16, ((hovAt.x + LB.w / 2) / VW) * 100))}%`, top: `${((hovAt.y + LB.h + 10) / VH) * 100}%` }}
+        >
+          <p className="font-[760] text-ink">
+            {hov.id} <span className="font-[600] text-ink-2">{hov.name}</span>
+          </p>
+          <p className="mt-0.5 text-ink-3">
+            {hov.origin === 'it1'
+              ? `Installed at the end of iteration 1, proposed by ${hov.from![0] === 'all eleven nodes' ? 'all eleven nodes' : hov.from!.join(', ')}`
+              : hov.origin === 'bootstrap'
+                ? 'Bootstrap audit, before the first node'
+                : `Learned before RSI${hov.revisedIt1 ? ', revised in iteration 1' : ''}`}
+          </p>
+        </div>
+      )}
+      </div>
+      {/* play, pause, and the phases of one iteration */}
+      <div className="mt-3 flex items-center gap-3 px-1">
+        <button type="button" onClick={() => setPaused((v) => !v)} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-paper" aria-label={paused ? 'Play' : 'Pause'}>
+          <Icon icon={paused ? PlayIcon : PauseIcon} size={14} stroke={2.2} />
+        </button>
+        <div className="flex flex-1 gap-1">
+          {PHASES.map((ph) => {
+            const k = Math.max(0, Math.min(1, (p - ph.a) / (ph.b - ph.a)));
+            return (
+              <button key={ph.l} type="button" onClick={() => setP(ph.a + 0.002)} className="group flex-1 text-left" style={{ flexGrow: ph.b - ph.a }}>
+                <span className="relative block h-1.5 overflow-hidden rounded-full bg-paper-2">
+                  <span className="absolute inset-y-0 left-0 rounded-full bg-creator" style={{ width: `${k * 100}%` }} />
+                </span>
+                <span className={`mt-1.5 block truncate text-[11.5px] font-[650] transition-colors ${p >= ph.a && p < ph.b ? 'text-ink' : 'text-ink-3 group-hover:text-ink-2'}`}>{ph.l}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <p className="mt-1 px-1 text-[11.5px] text-ink-3">Hover a module for its name and where it came from.</p>
     </div>
   );
 }

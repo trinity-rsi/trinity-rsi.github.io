@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import Reveal from '@/components/ui/Reveal';
 import PaperFigure from '@/components/ui/PaperFigure';
 import { Container, Section } from '@/components/ui/Section';
 import { benchById } from '@/data/tree';
+import { FIG3, PIPE_AT, WORLD_PIPE as PIPE } from '@/data/steps';
 import { PAPER_FIGS, e1Frame, nodeLevel } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
@@ -17,12 +19,7 @@ import creatorBuild from '@/assets/cats/creator-build.webp';
  *   2. The pipeline of Figure 2: generation input → verifier pool → generation world → host
  *      verification → difficulty screening.
  */
-const FIG3 = [
-  { id: 'euro-ncap-aeb', q: 'Noisy range: break or hold?' },
-  { id: 'among-us', q: 'Conflicting accounts: what to claim?' },
-  { id: 'glee-persuasion', q: 'Buyer feedback: which message?' },
-  { id: 'pinverify', q: 'Hidden detail: inspect or decide?' },
-];
+
 
 function Converge() {
   const { t } = useTokens();
@@ -85,19 +82,14 @@ function Converge() {
   );
 }
 
-const PIPE = [
-  { k: '1', title: 'Generation input', items: ['Templates', 'Capability', 'Constraints', 'Scale', 'Difficulty', 'Notes'], text: 'Evolver designs simplified levels from node requirements, descendants and representative tasks’ public specifications. No target layouts, private proofs or solution traces.' },
-  { k: '2', title: 'Verifier pool', items: ['Fixed: interface, runtime', 'Task-conditioned: goals, solvability'], text: 'Creator implements the level with a node Harness initialized from its Base Harness or inherited parent modules; Evolver’s verifier pool stays private.' },
-  { k: '3', title: 'Generation world', items: ['Browser world', '3D scene', 'Public rules'], text: 'A simplified level that preserves the core decision process. Creator omits aesthetic optimization to focus on task mechanisms.' },
-  { k: '4', title: 'Host verification', items: ['Node binding', 'Execution', 'Transitions', 'Rendering', 'Completion'], text: 'The host-executed verifier pool checks the world; private verifiers and public feedback guide Creator’s revisions.' },
-  { k: '5', title: 'Difficulty screening', items: ['Too hard', 'Admit', 'Too easy'], text: 'Explorer tests the world with a frozen screening Harness and admits it only inside a predefined intermediate-performance band; otherwise Creator adjusts the difficulty.' },
-];
+
 
 function Pipeline() {
   const { t } = useTokens();
   const reduce = useReducedMotion();
   const [ref, near] = useNearViewport<HTMLDivElement>('-10% 0px');
-  const [p] = useLoopClock(11, near && !reduce, reduce ? 0.95 : 0);
+  const [hold, setHold] = useState(false);
+  const [p, setP] = useLoopClock(11, near && !reduce && !hold, reduce ? 0.95 : 0);
   // the world token visits steps 1..5; at step 4 the first attempt fails and is revised
   const stepAt = (x: number) => (x < 0.14 ? 0 : x < 0.28 ? 1 : x < 0.42 ? 2 : x < 0.66 ? 3 : 4);
   const cur = stepAt(p);
@@ -117,7 +109,14 @@ function Pipeline() {
           const on = i === cur;
           const done = i < cur;
           return (
-            <div key={s.k} className={`relative rounded-2xl border bg-surface p-4 transition-all duration-500 ${on ? 'border-creator/60 shadow-[0_18px_40px_-26px_rgba(0,0,0,0.5)]' : 'border-rule'}`}>
+            <button
+              key={s.k}
+              type="button"
+              onClick={() => setP(PIPE_AT[i] + 0.001)}
+              onMouseEnter={() => setHold(true)}
+              onMouseLeave={() => setHold(false)}
+              className={`relative rounded-2xl border bg-surface p-4 text-left transition-all duration-500 hover:-translate-y-0.5 ${on ? 'border-creator/60 shadow-[0_18px_40px_-26px_rgba(0,0,0,0.5)]' : 'border-rule hover:border-rule-2'}`}
+            >
               <div className="flex items-center gap-2.5">
                 <span
                   className="relative z-10 grid h-9 w-9 place-items-center rounded-full text-[13px] font-[780] transition-colors duration-500"
@@ -158,7 +157,7 @@ function Pipeline() {
                 </div>
               )}
               <p className="mt-3 text-[12.5px] leading-[1.5] text-ink-2">{s.text}</p>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -177,7 +176,7 @@ export default function WorldSection() {
           </div>
           <div>
             <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">
-              Once the capability tree is built, every node is linked to training benchmarks through shared requirements. The four tasks of Figure 3 differ, yet all require evidence verification before deciding. Creator turns that shared requirement into simplified, verifiable worlds, while evaluation on the original tasks measures transfer.
+              Four different tasks at node d all need evidence verification before deciding. Creator turns that shared requirement into simplified, verifiable worlds; the original tasks measure transfer.
             </p>
             <PaperFigure fig={PAPER_FIGS.worlds} className="mt-4" />
           </div>
@@ -189,7 +188,7 @@ export default function WorldSection() {
 
         <div className="mt-14 sm:mt-20">
           <h3 className="display-md text-[clamp(1.5rem,2.6vw,2.1rem)] text-ink">From a requirement to an admitted world</h3>
-          <p className="mt-3 max-w-[70ch] font-serif text-[1.04rem] leading-[1.6] text-ink-2">Trial counts, performance thresholds, action budgets and retry limits are fixed in advance; worlds and verifiers stay unchanged during local training.</p>
+          <p className="mt-2 text-[13.5px] text-ink-3">Click a step to jump to it.</p>
           <div className="mt-8">
             <Pipeline />
           </div>

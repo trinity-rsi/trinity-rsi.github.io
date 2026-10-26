@@ -12,49 +12,14 @@ import { BENCHES, CAPS, DOMAINS, benchesNeeding } from '@/data/tree';
 import { PAPER_FIGS } from '@/data/media';
 import { useTokens } from '@/theme/tokens';
 import { useMediaQuery } from '@/lib/hooks';
+import { TREE_STEPS } from '@/data/steps';
 import evolverCollect from '@/assets/cats/evolver-collect.webp';
 import explorerCat from '@/assets/cats/explorer-explore.webp';
 import evolverDiagnose from '@/assets/cats/evolver-diagnose.webp';
 import evolverCat from '@/assets/cats/evolver.webp';
 
-const STEPS = [
-  {
-    key: 'task',
-    stage: 'Stage 1',
-    label: 'Task tree',
-    title: 'Benchmark organization',
-    who: 'Evolver',
-    cat: evolverCollect,
-    text: 'Web search across research benchmarks, AI competitions, human contests, game communities and professional practice yields 44 benchmarks. Each is normalized into a specification of goals, observations, actions, feedback, completion criteria and budgets: five domains, fifteen task families, and a training / unseen split fixed before capability induction.',
-  },
-  {
-    key: 'explore',
-    stage: 'Stage 1',
-    label: 'Explore',
-    title: 'World exploration',
-    who: 'Explorer',
-    cat: explorerCat,
-    text: 'Explorer collects trajectories from sampled training instances with the Base Harness H₀ under fixed settings. Only training records support capability-tree construction, world generation, module learning and Router training; completed runs are retained, and hash-chain checks verify the execution records.',
-  },
-  {
-    key: 'diagnose',
-    stage: 'Stage 2',
-    label: 'Requirements',
-    title: 'Requirement organization',
-    who: 'Evolver',
-    cat: evolverDiagnose,
-    text: 'Using training-task specifications and trajectories, independent agents propose capability categories, a judge consolidates them, and reviewers check definitions, evidence, assignments and coverage: six capabilities and thirty defect types. Every training task receives a fixed requirement set.',
-  },
-  {
-    key: 'cap',
-    stage: 'Stage 2',
-    label: 'Capability tree',
-    title: 'The capability tree',
-    who: 'Evolver',
-    cat: evolverCat,
-    text: 'Sorted in a fixed order, each training task’s requirement set becomes a path, and a trie merges common prefixes across domains: eleven nodes below the root. The unseen benchmarks are placed on the fixed tree afterwards, for evaluation only. An edge adds a capability; it does not say one depends on another.',
-  },
-];
+const CATS = [evolverCollect, explorerCat, evolverDiagnose, evolverCat];
+const STEPS = TREE_STEPS.map((x, i) => ({ ...x, cat: CATS[i] }));
 
 /** what the figure shows, in steps the captions follow (only these re-render the section) */
 type View = { active: number; explored: boolean; thinking: boolean; live: boolean };
@@ -239,7 +204,7 @@ export default function TreeSection() {
                 {s.title}
                 <span className="ml-2 text-[12.5px] font-[560] text-ink-3">{s.who}</span>
               </p>
-              <p className="mt-1 text-[13px] leading-[1.5] text-ink-2 lg:line-clamp-3">{s.text}</p>
+              <p className="mt-1 text-[13.5px] leading-[1.5] text-ink-2">{s.text}</p>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -268,7 +233,7 @@ export default function TreeSection() {
                 <SplitText text="From a task tree to a capability tree" tag="span" splitType="words, chars" effect="rise" delay={18} duration={0.7} textAlign="left" mask className="!block" />
               </h2>
               <p className="prose-serif mt-5">
-                Evolver regroups the benchmarks by what they <em>require</em>, not by what they look like. Scroll to watch the training benchmarks leave their five domains and build the eleven nodes of the capability tree; the unseen ones are placed on it afterwards.
+                Evolver regroups the benchmarks by what they <em>require</em>, not by what they look like. Scroll, and watch the tree build.
               </p>
             </div>
           </div>

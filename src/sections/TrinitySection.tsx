@@ -42,9 +42,7 @@ export default function TrinitySection() {
             </div>
           </div>
           <div>
-            <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">
-              A recursive self-improvement framework coupling world generation with Harness evolution. The three roles share the same frozen backbone but work through separate Harnesses, and every update enters the system only after host verification.
-            </p>
+            <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">World generation and Harness evolution, coupled in one loop. Every update enters only after host verification.</p>
             <PaperFigure fig={PAPER_FIGS.overview} className="mt-4" label="Overview: Figure 2 in the paper" />
           </div>
         </div>

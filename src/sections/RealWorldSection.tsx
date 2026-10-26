@@ -169,10 +169,9 @@ function Seg<T extends string>({ value, items, onChange, id, label }: { value: T
 }
 
 /** the paper's recorded frames, played in order */
-function Replay({ task }: { task: (typeof TASKS)[number] }) {
+function Replay({ task, mode, setMode }: { task: (typeof TASKS)[number]; mode: Mode; setMode: (m: Mode) => void }) {
   const reduce = useReducedMotion();
   const [ref, near] = useNearViewport<HTMLDivElement>('-15% 0px');
-  const [mode, setMode] = useState<Mode>('trial');
   const [real, setReal] = useState(true);
   const [cam, setCam] = useState(task.cams[0].id);
   const [k, setK] = useState(0);
@@ -312,11 +311,12 @@ export function frameSrc(task: Task, mode: Mode, real: boolean, cam: string, k: 
 
 function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
   const { t, theme } = useTokens();
+  const [mode, setMode] = useState<Mode>('trial');
   const b = benchById[task.bench];
   const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
   return (
     <Reveal delay={i * 0.08} className="overflow-hidden rounded-[26px] border border-rule bg-surface shadow-[0_40px_90px_-60px_rgba(20,24,40,0.7)]">
-      <Replay task={task} />
+      <Replay task={task} mode={mode} setMode={setMode} />
 
       {/* scores as bricks, and what changed */}
       <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-center">
@@ -334,21 +334,23 @@ function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
           <p className="mt-1.5 text-center text-[11px] text-ink-3">Table 6 · success rate (%) with prepared skills</p>
         </div>
         <div>
-          <p className="text-[14px] leading-[1.55] text-ink-2">{task.goal}</p>
-          <ul className="mt-3 space-y-2">
-            <li className="flex items-start gap-2.5 rounded-[12px] bg-paper-2/70 px-3 py-2 text-[13px] leading-snug text-ink-2">
-              <Icon icon={Cancel01Icon} size={16} stroke={2.2} color={t.bad} className="mt-0.5 shrink-0" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.p
+              key={mode}
+              className="flex items-start gap-2.5 rounded-[12px] px-3 py-2.5 text-[13.5px] leading-[1.55] text-ink-2"
+              style={{ background: mode === 'h4' ? `${t.good}14` : `${t.paper2}b3` }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.22 }}
+            >
+              {mode !== 'trial' && <Icon icon={mode === 'h0' ? Cancel01Icon : CheckmarkCircle02Icon} size={16} stroke={2.2} color={mode === 'h0' ? t.bad : t.good} className="mt-0.5 shrink-0" />}
               <span>
-                <b className="font-[750] text-ink">Base Harness H₀</b> {task.h0}
+                <b className="font-[750] text-ink">{mode === 'trial' ? 'The task' : mode === 'h0' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}</b> {mode === 'trial' ? task.goal : mode === 'h0' ? task.h0 : task.h4}
               </span>
-            </li>
-            <li className="flex items-start gap-2.5 rounded-[12px] px-3 py-2 text-[13px] leading-snug text-ink-2" style={{ background: `${t.good}14` }}>
-              <Icon icon={CheckmarkCircle02Icon} size={16} stroke={2.2} color={t.good} className="mt-0.5 shrink-0" />
-              <span>
-                <b className="font-[750] text-ink">Evolved Harness H(4)</b> {task.h4}
-              </span>
-            </li>
-          </ul>
+            </motion.p>
+          </AnimatePresence>
+          <p className="mt-2 text-[12px] text-ink-3">Switch the run on the picture: the description follows it.</p>
           <div className="mt-3.5 flex flex-wrap gap-2">
             <PaperFigure fig={figOf(task.figs.h0)} label={`All frames · H₀ (Fig. ${task.figs.h0})`} />
             <PaperFigure fig={figOf(task.figs.h4)} label={`All frames · H(4) (Fig. ${task.figs.h4})`} />
@@ -363,9 +365,9 @@ function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
 function Flow() {
   const { t } = useTokens();
   const steps = [
-    { n: '1', k: 'Real', title: 'Site and task', text: 'Each robot task is mapped by its capability requirements to node d → a and uses the Harness evolved there.', color: t.accent },
-    { n: '2', k: 'Sim', title: '5 trials → skills', text: 'Holding the Harness fixed, five trial-and-error episodes in the simulator rebuilt from the site are summarized into skills.', color: t.explorer },
-    { n: '3', k: 'Real', title: 'Test with fixed Harness and skills', text: 'The skills are frozen for the formal simulation and real-robot tests; the preparation episodes are not counted.', color: t.good },
+    { n: '1', k: 'Real', title: 'Site and task', text: 'Each robot task maps to node d → a and uses the Harness evolved there.', color: t.accent },
+    { n: '2', k: 'Sim', title: '5 trials → skills', text: 'Five trial-and-error episodes in the rebuilt simulator become skills.', color: t.explorer },
+    { n: '3', k: 'Real', title: 'Test with fixed Harness and skills', text: 'Skills stay frozen for the formal simulation and robot tests.', color: t.good },
   ];
   return (
     <Reveal className="mt-12 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1.15fr)] md:items-stretch">
@@ -400,7 +402,7 @@ export default function RealWorldSection() {
     <Section id="real-world" className="overflow-hidden pb-10 pt-20 sm:pt-28">
       <Container wide>
         <SectionHeader kicker="Embodied Real2Sim2Real · Section 4.6, Appendix E.3" title="From simulated worlds to two real robots" aside={<PaperFigure fig={PAPER_FIGS.embodied} />}>
-          Each robot task runs in a simulation rebuilt from its real site, with a model of the same robot. Skills prepared in simulation are frozen, then every Harness, from H₀ to H(4), is tested in simulation and on the real robot.
+          Skills prepared in a simulation of each real site are frozen; every Harness, from H₀ to H(4), is then tested in simulation and on the real robot.
         </SectionHeader>
         <Flow />
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -408,13 +410,10 @@ export default function RealWorldSection() {
             <RobotCard key={task.id} task={task} i={i} />
           ))}
         </div>
-        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
+        <div className="mt-6 max-w-[760px]">
           <Finding n={f5.n} title={f5.title}>
-            {f5.text}
+            {f5.text} Recorded deployments differ in message handling, interfaces, guidance and acceptance rules, so these comparisons evaluate complete Harness–skill configurations and do not isolate module evolution from skill preparation.
           </Finding>
-          <p className="text-[13px] leading-[1.55] text-ink-3">
-            Recorded deployments differ in message handling, interfaces, guidance and acceptance rules (including lifting versus pushing), so these comparisons evaluate complete Harness–skill configurations and do not isolate module evolution from skill preparation. The pictures are the paper’s recorded frames, shown in order; real and simulated scenes: Figure 68.
-          </p>
         </div>
       </Container>
     </Section>

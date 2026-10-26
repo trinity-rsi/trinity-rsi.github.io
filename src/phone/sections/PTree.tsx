@@ -12,6 +12,7 @@ import { useTokens } from '@/theme/tokens';
 import { useReducedMotion } from '@/lib/hooks';
 import { Opener } from '../ui/Opener';
 import More from '../ui/More';
+import { TREE_STEPS } from '@/data/steps';
 import evolverCollect from '@/assets/cats/evolver-collect.webp';
 import explorerCat from '@/assets/cats/explorer-explore.webp';
 import evolverDiagnose from '@/assets/cats/evolver-diagnose.webp';
@@ -27,36 +28,8 @@ import evolverCat from '@/assets/cats/evolver.webp';
  *   3  capability tree    the training bricks fly to their node, depth by depth; the unseen follow
  * The drawn stage S glides between steps; every brick is a pure function of S, moved by transform.
  */
-const STEPS = [
-  {
-    stage: 'Stage 1',
-    title: 'Benchmark organization',
-    who: 'Evolver',
-    cat: evolverCollect,
-    text: 'Web search across research benchmarks, AI competitions, human contests, game communities and professional practice yields 44 benchmarks. Each is normalized into a specification of goals, observations, actions, feedback, completion criteria and budgets: five domains, fifteen task families, and a training / unseen split fixed before capability induction.',
-  },
-  {
-    stage: 'Stage 1',
-    title: 'World exploration',
-    who: 'Explorer',
-    cat: explorerCat,
-    text: 'Explorer collects trajectories from sampled training instances with the Base Harness H₀ under fixed settings. Only training records support capability-tree construction, world generation, module learning and Router training; completed runs are retained, and hash-chain checks verify the execution records.',
-  },
-  {
-    stage: 'Stage 2',
-    title: 'Requirement organization',
-    who: 'Evolver',
-    cat: evolverDiagnose,
-    text: 'Using training-task specifications and trajectories, independent agents propose capability categories, a judge consolidates them, and reviewers check definitions, evidence, assignments and coverage: six capabilities and thirty defect types. Every training task receives a fixed requirement set.',
-  },
-  {
-    stage: 'Stage 2',
-    title: 'The capability tree',
-    who: 'Evolver',
-    cat: evolverCat,
-    text: 'Sorted in a fixed order, each training task’s requirement set becomes a path, and a trie merges common prefixes across domains: eleven nodes below the root. The unseen benchmarks are placed on the fixed tree afterwards, for evaluation only. An edge adds a capability; it does not say one depends on another.',
-  },
-];
+const CATS = [evolverCollect, explorerCat, evolverDiagnose, evolverCat];
+const STEPS = TREE_STEPS.map((x, i) => ({ ...x, cat: CATS[i] }));
 
 /* ------------------------------------------------------------------ */
 /* layout: both trees for a given width                                */
@@ -708,7 +681,7 @@ export default function PTree() {
     <section id="stage-1" className="scroll-mt-16 pt-20">
       <Opener kicker="Stages 1 and 2" stage="1–2" title="From a task tree to a capability tree">
         <p className="p-lede">
-          Evolver regroups the benchmarks by what they <em>require</em>, not by what they look like. Step through it: the training benchmarks leave their five domains and build the eleven nodes of the capability tree; the unseen ones are placed on it afterwards.
+          Evolver regroups the benchmarks by what they <em>require</em>, not by what they look like.
         </p>
       </Opener>
       <span id="stage-2" aria-hidden />
