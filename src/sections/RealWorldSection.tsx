@@ -22,9 +22,9 @@ import { useNearViewport, useReducedMotion } from '@/lib/hooks';
  * simulation, from either camera. The scores are Table 6, as brick towers, ten points a brick, each
  * brick coloured by the iteration that earned it.
  */
-type Task = 'soon' | 'capx';
-type Mode = 'trial' | 'h0' | 'h4';
-const TASKS: {
+export type Task = 'soon' | 'capx';
+export type Mode = 'trial' | 'h0' | 'h4';
+export const TASKS: {
   id: Task;
   bench: string;
   name: string;
@@ -75,15 +75,15 @@ const CAPTION: Record<number, string> = {
   71: 'Figure 71: CaP-X with the Base Harness. Rows show head, side and wrist cameras in simulation, followed by the real robot.',
   72: 'Figure 72: CaP-X with the evolved Harness. Rows follow Figure 71.',
 };
-const figOf = (n: 69 | 70 | 71 | 72): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n] });
+export const figOf = (n: 69 | 70 | 71 | 72): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n] });
 
-const STEP_MS = 1150;
+export const STEP_MS = 1150;
 
 /* tower geometry (one brick = ten points) */
 const TW = { w: 250, h: 236, col: 66, brickH: 15, gap: 3, base: 186 };
 const towerX = (k: number) => 34 + k * 112;
 
-function Towers({ sim, real, delay }: { sim: number[]; real: number[]; delay: number }) {
+export function Towers({ sim, real, delay }: { sim: number[]; real: number[]; delay: number }) {
   const { t, theme } = useTokens();
   const reduce = useReducedMotion();
   const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
@@ -304,7 +304,7 @@ function Replay({ task }: { task: (typeof TASKS)[number] }) {
   );
 }
 
-function frameSrc(task: Task, mode: Mode, real: boolean, cam: string, k: number) {
+export function frameSrc(task: Task, mode: Mode, real: boolean, cam: string, k: number) {
   if (mode === 'trial') return trial(task, k);
   const view = `${real ? 'real' : 'sim'}-${cam}` as RecordView;
   return recordFrame(task, mode, view, k);

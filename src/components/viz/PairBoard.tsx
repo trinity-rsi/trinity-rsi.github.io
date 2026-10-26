@@ -35,13 +35,13 @@ const SHORT: Record<CapId, string> = { a: 'Perception', b: 'Hypothesis', c: 'Con
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 const name = (b: Bench) => b.short ?? b.name;
-const capsOf = (b: Bench) => nodeById[b.node].path as CapId[];
+export const capsOf = (b: Bench) => nodeById[b.node].path as CapId[];
 const list = (cs: CapId[]) => {
   const n = cs.map((c) => capById[c].name.toLowerCase());
   return n.length === 1 ? n[0] : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`;
 };
 
-function caption(p: Pair) {
+export function caption(p: Pair) {
   if (p.note) return p.note;
   const A = benchById[p.a];
   const B = benchById[p.b];

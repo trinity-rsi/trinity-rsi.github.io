@@ -30,7 +30,7 @@ export function StageMark({ stage }: { stage: string }) {
 }
 
 /** a chapter's opening: the kicker (with the stage bricks for the method), the title, then its lede */
-export function Opener({ kicker, title, stage, aside, children }: { kicker: string; title: string; stage?: string; aside?: ReactNode; children?: ReactNode }) {
+export function Opener({ kicker, title, stage, aside, children }: { kicker: string; title: ReactNode; stage?: string; aside?: ReactNode; children?: ReactNode }) {
   return (
     <header className="px-5">
       <div className="flex min-h-[26px] items-center justify-between gap-3">

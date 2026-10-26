@@ -9,6 +9,7 @@ export default function Seg<T extends string>({
   onChange,
   label,
   full = false,
+  small = false,
 }: {
   id: string;
   value: T;
@@ -16,6 +17,7 @@ export default function Seg<T extends string>({
   onChange: (v: T) => void;
   label: string;
   full?: boolean;
+  small?: boolean;
 }) {
   return (
     <div role="radiogroup" aria-label={label} className={`relative rounded-full bg-paper-2 p-1 dark:bg-[#0b0f19] ${full ? 'flex' : 'inline-flex'}`}>
@@ -28,7 +30,7 @@ export default function Seg<T extends string>({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`relative h-9 rounded-full px-4 text-[14px] font-[700] transition-colors ${full ? 'flex-1' : ''} ${on ? 'text-ink' : 'text-ink-3'}`}
+            className={`relative rounded-full font-[700] transition-colors ${small ? 'h-8 px-2.5 text-[13px]' : 'h-9 px-4 text-[14px]'} ${full ? 'flex-1' : ''} ${on ? 'text-ink' : 'text-ink-3'}`}
           >
             {on && (
               <motion.span

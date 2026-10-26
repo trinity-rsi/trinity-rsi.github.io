@@ -18,11 +18,11 @@ import { LockIcon, NextIcon, PauseIcon, PlayIcon, RepeatIcon } from '@hugeicons/
  * the same plates, bricks and layout, with Creator's level for every node along the top.
  */
 type Nid = Exclude<NodeId, 'root'>;
-const ORDER: Nid[] = ['c', 'd', 'a', 'b', 'e', 'cd', 'ca', 'da', 'db', 'ef', 'cda'];
-const NODE_T = 1.05; // seconds per node visit
-const BANNER_T = 0.9; // iteration banner
-const ITER_T = BANNER_T + ORDER.length * NODE_T;
-const TOTAL = 4 * ITER_T;
+export const ORDER: Nid[] = ['c', 'd', 'a', 'b', 'e', 'cd', 'ca', 'da', 'db', 'ef', 'cda'];
+export const NODE_T = 1.05; // seconds per node visit
+export const BANNER_T = 0.9; // iteration banner
+export const ITER_T = BANNER_T + ORDER.length * NODE_T;
+export const TOTAL = 4 * ITER_T;
 
 const VB = { x: 30, y: 214, w: 1840, h: 848 }; // the film's 1920 × 1080 frame, cropped to the tree
 const PW = 252; // plate
@@ -54,12 +54,12 @@ const TH = { w: 124, h: 88, y: 272, x0: 426, step: 130 };
 const THUMBS: Nid[] = (Object.keys(ANCHOR) as (Nid | 'root')[]).filter((n): n is Nid => n !== 'root').sort((a, b) => ANCHOR[a].x - ANCHOR[b].x || ANCHOR[b].y - ANCHOR[a].y);
 
 /** a node's registry at iteration 4: inherited modules first (root side), then its own */
-const finalModules = (n: Nid) => nodeLineage(n).flatMap((x) => x.local);
+export const finalModules = (n: Nid) => nodeLineage(n).flatMap((x) => x.local);
 /** a node's own modules that its level record (Appendix E.2) gives no event for */
-const undated = (n: Nid) => nodeById[n].local.filter((m) => !nodeById[n].events.some((e) => e.module === m));
+export const undated = (n: Nid) => nodeById[n].local.filter((m) => !nodeById[n].events.some((e) => e.module === m));
 
 /** the timeline at time τ: iteration (1..4), index of the node being visited (−1 = banner), phase in [0, 1) */
-function at(time: number) {
+export function at(time: number) {
   if (time >= TOTAL) return { it: 4, k: ORDER.length, phase: 1, done: true };
   const it = Math.floor(time / ITER_T) + 1;
   const u = time - (it - 1) * ITER_T;
@@ -69,7 +69,7 @@ function at(time: number) {
 }
 
 /** has node n finished iteration `it`'s event at time τ? */
-function eventDone(n: Nid, it: number, cur: ReturnType<typeof at>) {
+export function eventDone(n: Nid, it: number, cur: ReturnType<typeof at>) {
   if (cur.done) return true;
   if (it < cur.it) return true;
   if (it > cur.it) return false;
@@ -78,7 +78,7 @@ function eventDone(n: Nid, it: number, cur: ReturnType<typeof at>) {
 }
 
 /** modules of node n (local), with how many revisions each has had so far */
-function localState(n: Nid, cur: ReturnType<typeof at>) {
+export function localState(n: Nid, cur: ReturnType<typeof at>) {
   const node = nodeById[n];
   const have = new Map<string, number>(); // module → revision count
   node.events.forEach((e, i) => {
@@ -90,7 +90,7 @@ function localState(n: Nid, cur: ReturnType<typeof at>) {
 }
 
 /** score of a benchmark setting as of time τ: H(it) once its node has solved iteration it */
-function scoreAt(nodeId: Nid, scores: number[], cur: ReturnType<typeof at>) {
+export function scoreAt(nodeId: Nid, scores: number[], cur: ReturnType<typeof at>) {
   let lvl = 0;
   for (let it = 1; it <= 4; it++) if (eventDone(nodeId, it, cur)) lvl = it;
   return { lvl, v: scores[lvl] };
@@ -139,7 +139,7 @@ function MiniMeans({ it }: { it: number }) {
 }
 
 /** a node's benchmarks, H₀ against the score as of now (Table 8); SOON and CaP-X show simulation and robot */
-function BenchBars({ focus, cur, compact = false }: { focus: Nid; cur: ReturnType<typeof at>; compact?: boolean }) {
+export function BenchBars({ focus, cur, compact = false }: { focus: Nid; cur: ReturnType<typeof at>; compact?: boolean }) {
   const { t } = useTokens();
   return (
     <ul className={compact ? 'space-y-[2px]' : 'space-y-1.5'}>
