@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import PillNav from '@/components/reactbits/PillNav/PillNav';
 import SquishSwitch from '@/components/reactbits/SquishSwitch/SquishSwitch';
 import Icon from '@/components/ui/Icon';
+import ViewToggle from '@/components/ui/ViewToggle';
+import { showViewToggle } from '@/phone/mode';
 import { Cancel01Icon, Moon02Icon, Sun03Icon } from '@hugeicons/core-free-icons';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useTokens } from '@/theme/tokens';
@@ -99,6 +101,7 @@ export default function TopNav() {
             intro
           />
         </div>
+        {showViewToggle() && <ViewToggle current="desktop" className="pointer-events-auto bg-surface/70 backdrop-blur-xl" />}
         <div className="pointer-events-auto relative flex shrink-0 items-center gap-2 rounded-full border border-rule bg-surface/70 px-2.5 py-1.5 backdrop-blur-xl">
           <Icon icon={Sun03Icon} size={16} className={theme === 'light' ? 'text-ink' : 'text-ink-3'} />
           <span className="relative inline-flex">

@@ -4,6 +4,7 @@ import Icon from '@/components/ui/Icon';
 import { ComputerIcon, Cancel01Icon, LeftToRightListBulletIcon, Moon02Icon, Sun03Icon } from '@hugeicons/core-free-icons';
 import { useTheme } from '@/theme/ThemeProvider';
 import Sheet from './ui/Sheet';
+import ViewToggle from '@/components/ui/ViewToggle';
 import Seg from './ui/Seg';
 import { StageMark } from './ui/Opener';
 import { P_CHAPTERS, goTo } from './chapters';
@@ -136,7 +137,7 @@ function ChapterSheet({ open, onClose, current }: { open: boolean; onClose: () =
         </div>
         <button
           type="button"
-          onClick={() => switchView('desktop')}
+          onClick={() => switchView('desktop', current)}
           className="p-press flex h-11 w-full items-center justify-center gap-2 rounded-full border border-rule bg-surface text-[14.5px] font-[700] text-ink"
         >
           <Icon icon={ComputerIcon} size={17} stroke={1.9} />
@@ -158,8 +159,8 @@ export default function PhoneBar() {
   return (
     <>
       <div ref={barRef} className="fixed inset-x-0 top-0 z-50">
-        <div className={`border-b bg-paper/[0.97] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 ${scrolled ? 'border-rule' : 'border-transparent'}`}>
-          <div className="mx-auto flex h-[54px] max-w-[560px] items-center gap-3 px-4">
+        <div className={`border-b bg-paper transition-colors duration-300 ${scrolled ? 'border-rule' : 'border-transparent'}`}>
+          <div className="mx-auto flex h-[54px] max-w-[560px] items-center gap-2 px-4">
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -198,15 +199,18 @@ export default function PhoneBar() {
                 )}
               </AnimatePresence>
             </div>
+            <ViewToggle current="phone" size="sm" anchor={() => id} />
             <ThemeButton />
+            {/* the label shows where there is room for it; on smaller phones the list icon alone */}
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="p-press inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-ink pl-3 pr-3.5 text-[13.5px] font-[700] text-paper"
+              className="p-press inline-flex h-9 min-w-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-ink text-[13.5px] font-[700] text-paper min-[414px]:pl-3 min-[414px]:pr-3.5"
               aria-haspopup="dialog"
+              aria-label="Chapters"
             >
               <Icon icon={LeftToRightListBulletIcon} size={16} stroke={2} />
-              Chapters
+              <span className="hidden min-[414px]:inline">Chapters</span>
             </button>
           </div>
         </div>
