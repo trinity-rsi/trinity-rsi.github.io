@@ -3,18 +3,17 @@ import { AnimatePresence, motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { Container, Section } from '@/components/ui/Section';
 import SplitText from '@/components/reactbits/SplitText/SplitText';
-import { CHAPTERS, FILM, FILM_EVENT, chapterAt, chapterEnd, chapterThumb, cueAt, fmtTime, type FilmLang } from '@/data/film';
+import FilmSubtitles, { SubtitleHint } from '@/components/ui/FilmSubtitles';
+import { CHAPTERS, FILM, FILM_EVENT, chapterAt, chapterEnd, chapterThumb, cueAt, fmtTime } from '@/data/film';
 import { scrollToId, useReducedMotion } from '@/lib/hooks';
 import { ArrowDown01Icon, ClosedCaptionIcon, Download04Icon, FullScreenIcon, Minimize01Icon, PauseIcon, PlayIcon, RepeatIcon, VolumeHighIcon, VolumeMute02Icon } from '@hugeicons/core-free-icons';
 
 /**
- * The narrated film, in English or Chinese, with chapters that follow the order of this page and
- * subtitles in a strip of their own under the picture, so they never cover it.
+ * The film, narrated in English, with chapters that follow the order of this page and subtitles in
+ * English and Chinese in a strip of their own under the picture, so they never cover it.
  * The video is streamed from the site (public/film); nothing is fetched until it is played.
  */
-const LANG_KEY = 'trinity-film-lang';
 const CC_KEY = 'trinity-film-cc';
-const LANGS: FilmLang[] = ['en', 'zh'];
 const SINGLE = import.meta.env.MODE === 'single';
 
 function initialCC() {
@@ -25,48 +24,8 @@ function initialCC() {
   }
 }
 
-function initialLang(): FilmLang {
-  try {
-    const s = localStorage.getItem(LANG_KEY);
-    if (s === 'en' || s === 'zh') return s;
-  } catch {
-    /* ignore */
-  }
-  return typeof navigator !== 'undefined' && /^zh/i.test(navigator.language) ? 'zh' : 'en';
-}
-
-const chTitle = (i: number, lang: FilmLang) => (lang === 'zh' ? CHAPTERS[i].zh : CHAPTERS[i].en);
-
-function LangSwitch({ lang, onChange, tone = 'page' }: { lang: FilmLang; onChange: (l: FilmLang) => void; tone?: 'page' | 'video' }) {
-  const video = tone === 'video';
-  return (
-    <div role="radiogroup" aria-label="Film language" className={`relative inline-flex rounded-full p-1 ${video ? 'bg-white/14 backdrop-blur-md' : 'border border-rule bg-surface'}`}>
-      {LANGS.map((l) => {
-        const on = lang === l;
-        return (
-          <button
-            key={l}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange(l);
-            }}
-            className={`relative rounded-full font-[680] transition-colors ${video ? 'px-2.5 py-1 text-[12px]' : 'px-3.5 py-1.5 text-[13px]'}`}
-          >
-            {on && <motion.span layoutId={`film-lang-${tone}`} className={`absolute inset-0 rounded-full ${video ? 'bg-white' : 'bg-ink'}`} transition={{ type: 'spring', stiffness: 420, damping: 32 }} />}
-            <span className={`relative ${on ? (video ? 'text-[#12141c]' : 'text-paper') : video ? 'text-white/85' : 'text-ink-2'}`}>{FILM.langName[l]}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function FilmSection() {
   const reduce = useReducedMotion();
-  const [lang, setLangState] = useState<FilmLang>(initialLang);
   const videoRef = useRef<HTMLVideoElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -85,7 +44,6 @@ export default function FilmSection() {
   const [flash, setFlash] = useState<{ k: number; play: boolean } | null>(null);
   const [cc, setCcState] = useState(initialCC);
   const idle = useRef(0);
-  const resume = useRef<{ t: number; play: boolean } | null>(null);
   const D = FILM.duration;
 
   /* ---------------- playback ---------------- */
@@ -114,33 +72,6 @@ export default function FilmSection() {
     setEnded(false);
     if (andPlay) play();
   };
-  const changeLang = (l: FilmLang) => {
-    if (l === lang) return;
-    const v = videoRef.current;
-    if (v && started) resume.current = { t: v.currentTime, play: !v.paused && !v.ended };
-    setLangState(l);
-    try {
-      localStorage.setItem(LANG_KEY, l);
-    } catch {
-      /* ignore */
-    }
-  };
-  // after a language switch: same moment, same play state
-  useEffect(() => {
-    const v = videoRef.current;
-    const r = resume.current;
-    if (!v || !r) return;
-    resume.current = null;
-    const apply = () => {
-      v.currentTime = r.t;
-      setTime(r.t);
-      if (r.play) v.play().catch(() => undefined);
-    };
-    v.addEventListener('loadedmetadata', apply, { once: true });
-    v.load();
-    return () => v.removeEventListener('loadedmetadata', apply);
-  }, [lang]);
-
   // the video element's own events
   useEffect(() => {
     const v = videoRef.current;
@@ -256,7 +187,7 @@ export default function FilmSection() {
       v.removeEventListener('webkitendfullscreen', sync);
       v.textTracks?.removeEventListener?.('addtrack', sync);
     };
-  }, [cc, lang]);
+  }, [cc]);
   const toggleMute = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -310,7 +241,7 @@ export default function FilmSection() {
   };
 
   const cur = chapterAt(time);
-  const cue = started ? cueAt(lang, time) : null;
+  const cue = started ? cueAt(time) : null;
   const showControls = started && !ended && (active || !playing || scrub || hover !== null);
   const hoverCh = hover ? chapterAt(hover.t) : 0;
 
@@ -323,19 +254,18 @@ export default function FilmSection() {
             <h2 className="display-lg mt-1.5 text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.02] text-ink">
               <SplitText text="The Trinity in under two minutes" tag="span" splitType="words, chars" effect="rise" delay={16} duration={0.7} textAlign="left" mask className="!block" />
             </h2>
-            <p className="mt-3 max-w-[62ch] font-serif text-[1.05rem] leading-[1.55] text-ink-2">The whole argument in the order of this page, narrated in English or Chinese, with subtitles.</p>
+            <p className="mt-3 max-w-[62ch] font-serif text-[1.05rem] leading-[1.55] text-ink-2">The whole argument in the order of this page, narrated in English, with subtitles in English and Chinese.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <LangSwitch lang={lang} onChange={changeLang} />
             <a
-              href={FILM.src[lang]}
+              href={FILM.src}
               download
               target="_blank"
               rel="noreferrer"
               className="inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-3.5 text-[13px] font-[650] text-ink-2 transition-colors hover:border-rule-2 hover:text-ink"
             >
               <Icon icon={Download04Icon} size={16} />
-              MP4 · {FILM.sizeMB[lang]} MB
+              MP4 · {FILM.sizeMB} MB
             </a>
           </div>
         </div>
@@ -352,7 +282,7 @@ export default function FilmSection() {
             ref={boxRef}
             tabIndex={0}
             role="region"
-            aria-label={`Film player, ${FILM.langName[lang]}. Space plays or pauses, arrows seek, C toggles subtitles, F toggles full screen.`}
+            aria-label="Film player. Space plays or pauses, arrows seek, C toggles subtitles, F toggles full screen."
             onKeyDown={onKey}
             onPointerMove={() => started && wake()}
             className={`group/player relative overflow-hidden bg-[#f3f4f7] outline-none ring-accent/50 focus-visible:ring-4 ${full ? 'flex flex-col' : 'rounded-[26px] border border-rule shadow-[0_50px_100px_-60px_rgba(20,24,40,0.75)]'}`}
@@ -361,17 +291,17 @@ export default function FilmSection() {
             <div className={full ? 'relative min-h-0 w-full flex-1' : 'relative aspect-video'}>
               <video
                 ref={videoRef}
-                src={FILM.src[lang]}
-                poster={FILM.poster[lang]}
+                src={FILM.src}
+                poster={FILM.poster}
                 preload="none"
                 playsInline
                 crossOrigin={SINGLE ? 'anonymous' : undefined}
                 className="absolute inset-0 h-full w-full bg-[#f3f4f7] object-contain"
                 onClick={() => toggle()}
                 onDoubleClick={toggleFull}
-                aria-label={`The Trinity, promotional film (${FILM.langName[lang]})`}
+                aria-label="The Trinity, promotional film"
               >
-                <track key={lang} kind="subtitles" srcLang={lang} label={FILM.langName[lang]} src={FILM.captions[lang]} />
+                <track kind="subtitles" srcLang="en" label="English and 中文" src={FILM.captions} />
               </video>
 
               {/* before the first play, and after the end: the poster with one clear action */}
@@ -388,7 +318,7 @@ export default function FilmSection() {
                     aria-label={ended ? 'Play the film again' : 'Play the film'}
                   >
                     <img
-                      src={FILM.poster[lang]}
+                      src={FILM.poster}
                       alt=""
                       className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1.6s] ease-out ${reduce ? '' : 'group-hover/poster:scale-[1.025]'}`}
                       draggable={false}
@@ -402,7 +332,7 @@ export default function FilmSection() {
                       <span className="hidden rounded-2xl bg-[rgba(12,14,22,0.62)] px-3.5 py-2.5 text-white backdrop-blur-md sm:block">
                         <span className="block text-[clamp(14px,1.55vw,20px)] font-[760] leading-tight tracking-[-0.01em]">{ended ? 'Watch again' : 'Watch the film'}</span>
                         <span className="mt-0.5 block text-[clamp(11px,1vw,13px)] font-[560] text-white/75">
-                          {fmtTime(D)} · {FILM.langName[lang]} · {CHAPTERS.length} chapters
+                          {fmtTime(D)} · {CHAPTERS.length} chapters · English and 中文 subtitles
                         </span>
                       </span>
                     </span>
@@ -472,7 +402,7 @@ export default function FilmSection() {
                     aria-valuemin={0}
                     aria-valuemax={Math.round(D)}
                     aria-valuenow={Math.round(time)}
-                    aria-valuetext={`${fmtTime(time)} of ${fmtTime(D)}, ${chTitle(cur, lang)}`}
+                    aria-valuetext={`${fmtTime(time)} of ${fmtTime(D)}, ${CHAPTERS[cur].title}`}
                   >
                     {CHAPTERS.map((c, i) => {
                       const a = c.t;
@@ -507,9 +437,9 @@ export default function FilmSection() {
                           exit={{ opacity: 0, y: 4, scale: 0.97 }}
                           transition={{ duration: 0.16 }}
                         >
-                          <img src={chapterThumb(hoverCh, lang)} alt="" className="block aspect-video w-full rounded-[9px] object-cover" draggable={false} />
+                          <img src={chapterThumb(hoverCh)} alt="" className="block aspect-video w-full rounded-[9px] object-cover" draggable={false} />
                           <span className="flex items-baseline justify-between gap-2 px-1 pb-0.5 pt-1.5">
-                            <span className="truncate text-[12.5px] font-[700]">{chTitle(hoverCh, lang)}</span>
+                            <span className="truncate text-[12.5px] font-[700]">{CHAPTERS[hoverCh].title}</span>
                             <span className="tabular shrink-0 text-[11.5px] font-[600] text-white/70">{fmtTime(hover.t)}</span>
                           </span>
                         </motion.span>
@@ -526,10 +456,9 @@ export default function FilmSection() {
                     </span>
                     <span className="hidden min-w-0 truncate text-[12.5px] font-[600] text-white/70 sm:inline">
                       <span className="mx-1.5 text-white/35">·</span>
-                      {chTitle(cur, lang)}
+                      {CHAPTERS[cur].title}
                     </span>
                     <span className="flex-1" />
-                    <LangSwitch lang={lang} onChange={changeLang} tone="video" />
                     <button
                       type="button"
                       onClick={() => setCc(!cc)}
@@ -580,29 +509,7 @@ export default function FilmSection() {
                   transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
                   aria-live="off"
                 >
-                  <div className={`relative flex items-center justify-center px-5 text-center sm:px-10 ${full ? 'min-h-[86px]' : 'min-h-[64px] sm:min-h-[70px]'}`}>
-                    <AnimatePresence mode="wait" initial={false}>
-                      {cue ? (
-                        <motion.p
-                          key={`${lang}-${cue[0]}`}
-                          className={`max-w-[64ch] py-3 font-[620] leading-snug tracking-[-0.005em] text-ink [text-wrap:balance] ${lang === 'zh' ? 'text-[clamp(15px,1.45vw,19px)]' : 'text-[clamp(14.5px,1.35vw,18px)]'} ${full ? '!text-[clamp(18px,2vw,26px)]' : ''}`}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.18, ease: 'easeOut' }}
-                        >
-                          {cue[2]}
-                        </motion.p>
-                      ) : (
-                        !started && (
-                          <motion.p key="hint" className="flex items-center gap-2 py-3 text-[13px] font-[600] text-ink-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                            <Icon icon={ClosedCaptionIcon} size={16} stroke={2} />
-                            {lang === 'zh' ? '中文配音，字幕已开启' : 'Narrated in English · subtitles on'}
-                          </motion.p>
-                        )
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <FilmSubtitles cue={cue} size={full ? 'full' : 'page'} hint={!started && <SubtitleHint />} className={full ? 'min-h-[86px] px-10' : 'min-h-[64px] px-5 sm:min-h-[70px] sm:px-10'} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -611,8 +518,8 @@ export default function FilmSection() {
           {/* ---------------- chapters ---------------- */}
           <div className="min-w-0">
             <div className="mb-2 flex items-baseline justify-between px-1">
-              <p className="text-[13px] font-[720] text-ink">{lang === 'zh' ? '章节' : 'Chapters'}</p>
-              <p className="text-[12px] font-[600] text-ink-3">{lang === 'zh' ? '点击跳转' : 'click to jump'}</p>
+              <p className="text-[13px] font-[720] text-ink">Chapters</p>
+              <p className="text-[12px] font-[600] text-ink-3">click to jump</p>
             </div>
             <ol className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-2 xl:mx-0 xl:flex-col xl:gap-[3px] xl:overflow-visible xl:px-0 xl:pb-0">
               {CHAPTERS.map((c, i) => {
@@ -631,7 +538,7 @@ export default function FilmSection() {
                       aria-current={on ? 'true' : undefined}
                     >
                       <span className="relative block aspect-video overflow-hidden rounded-[8px] bg-paper">
-                        <img src={chapterThumb(i, lang)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover/ch:scale-[1.07]" draggable={false} />
+                        <img src={chapterThumb(i)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover/ch:scale-[1.07]" draggable={false} />
                         <span className={`absolute inset-0 grid place-items-center bg-[rgba(12,14,22,0.35)] text-white transition-opacity duration-300 ${on && playing ? 'opacity-0' : 'opacity-0 group-hover/ch:opacity-100'}`} aria-hidden>
                           <Icon icon={PlayIcon} size={18} stroke={2.2} />
                         </span>
@@ -653,7 +560,7 @@ export default function FilmSection() {
                           <span className={on ? 'text-accent' : ''}>{String(i + 1).padStart(2, '0')}</span>
                           <span>{fmtTime(c.t)}</span>
                         </span>
-                        <span className={`mt-0.5 block truncate text-[13px] font-[700] leading-snug ${on ? 'text-ink' : 'text-ink-2 group-hover/ch:text-ink'}`}>{chTitle(i, lang)}</span>
+                        <span className={`mt-0.5 block truncate text-[13px] font-[700] leading-snug ${on ? 'text-ink' : 'text-ink-2 group-hover/ch:text-ink'}`}>{c.title}</span>
                       </span>
                     </button>
                   </li>

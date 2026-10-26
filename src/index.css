@@ -132,6 +132,8 @@
   --font-display: 'Hubot Zero', 'Hubot Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Chinese text: Latin words and digits stay in Hubot Sans, the characters come from the system's Chinese face */
+  --font-zh: 'Hubot Zero', 'Hubot Sans Variable', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', sans-serif;
 
   --color-paper: var(--paper);
   --color-paper-2: var(--paper-2);

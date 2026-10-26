@@ -2,18 +2,18 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'rea
 import { AnimatePresence, motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { ClosedCaptionIcon, Download04Icon, FullScreenIcon, PauseIcon, PlayIcon, RepeatIcon } from '@hugeicons/core-free-icons';
-import { CHAPTERS, FILM, FILM_EVENT, chapterAt, chapterEnd, chapterThumb, cueAt, fmtTime, type FilmLang } from '@/data/film';
+import FilmSubtitles, { SubtitleHint } from '@/components/ui/FilmSubtitles';
+import { CHAPTERS, FILM, FILM_EVENT, chapterAt, chapterEnd, chapterThumb, cueAt, fmtTime } from '@/data/film';
 import { useReducedMotion } from '@/lib/hooks';
 import { Opener } from '../ui/Opener';
-import Seg from '../ui/Seg';
 import { goTo } from '../chapters';
 
 /**
- * The film on a phone: the picture, its subtitles in a strip underneath (never over the picture),
- * and the chapters as a row to swipe through. A tap on the picture shows or hides the controls;
- * full screen hands over to the phone's own player, which shows the subtitles itself.
+ * The film on a phone: the picture, its subtitles (English over Chinese) in a strip underneath,
+ * never over the picture, and the chapters as a row to swipe through. A tap on the picture shows
+ * or hides the controls; full screen hands over to the phone's own player, which shows the
+ * subtitles itself.
  */
-const LANG_KEY = 'trinity-film-lang';
 const CC_KEY = 'trinity-film-cc';
 const SINGLE = import.meta.env.MODE === 'single';
 
@@ -33,13 +33,9 @@ const remember = (key: string, v: string) => {
     /* private mode */
   }
 };
-const chTitle = (i: number, lang: FilmLang) => (lang === 'zh' ? CHAPTERS[i].zh : CHAPTERS[i].en);
 
 export default function PFilm() {
   const reduce = useReducedMotion();
-  const [lang, setLang] = useState<FilmLang>(() =>
-    stored<FilmLang>(LANG_KEY, (v) => (v === 'en' || v === 'zh' ? v : null), typeof navigator !== 'undefined' && /^zh/i.test(navigator.language) ? 'zh' : 'en')
-  );
   const [cc, setCc] = useState(() => stored(CC_KEY, (v) => v !== '0', true));
   const videoRef = useRef<HTMLVideoElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -54,7 +50,6 @@ export default function PFilm() {
   const [shown, setShown] = useState(true);
   const [scrub, setScrub] = useState(false);
   const idle = useRef(0);
-  const resume = useRef<{ t: number; play: boolean } | null>(null);
   const D = FILM.duration;
 
   const play = useCallback(() => {
@@ -132,29 +127,6 @@ export default function PFilm() {
     return () => cancelAnimationFrame(raf);
   }, [playing]);
 
-  // a language switch keeps the moment and the play state
-  const changeLang = (l: FilmLang) => {
-    if (l === lang) return;
-    const v = videoRef.current;
-    if (v && started) resume.current = { t: v.currentTime, play: !v.paused && !v.ended };
-    setLang(l);
-    remember(LANG_KEY, l);
-  };
-  useEffect(() => {
-    const v = videoRef.current;
-    const r = resume.current;
-    if (!v || !r) return;
-    resume.current = null;
-    const apply = () => {
-      v.currentTime = r.t;
-      setTime(r.t);
-      if (r.play) v.play().catch(() => undefined);
-    };
-    v.addEventListener('loadedmetadata', apply, { once: true });
-    v.load();
-    return () => v.removeEventListener('loadedmetadata', apply);
-  }, [lang]);
-
   // the hero's "Watch the film": bring the player into view and start it (still inside the tap, so phones allow sound)
   useEffect(() => {
     const on = () => {
@@ -192,7 +164,7 @@ export default function PFilm() {
       document.removeEventListener('fullscreenchange', sync);
       v.textTracks?.removeEventListener?.('addtrack', sync);
     };
-  }, [cc, lang]);
+  }, [cc]);
   const fullScreen = () => {
     const v = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
     if (!v) return;
@@ -224,7 +196,7 @@ export default function PFilm() {
   };
 
   const cur = chapterAt(time);
-  const cue = started ? cueAt(lang, time) : null;
+  const cue = started ? cueAt(time) : null;
   const controls = started && !ended && (shown || !playing || scrub);
 
   // keep the chapter being played in view in the row (unless the reader is browsing it)
@@ -241,41 +213,31 @@ export default function PFilm() {
   return (
     <section id="film" className="scroll-mt-16 pt-20">
       <Opener kicker="The film" title="The Trinity in under two minutes" aside={<span className="tabular rounded-full bg-paper-2 px-2.5 py-1 text-[12.5px] font-[700] text-ink-2">{fmtTime(D)}</span>}>
-        <p className="p-lede">The whole argument in the order of this page, narrated in English or Chinese, with subtitles.</p>
+        <p className="p-lede">The whole argument in the order of this page, narrated in English, with subtitles in English and Chinese.</p>
       </Opener>
 
-      <div className="mt-6 flex items-center justify-between gap-3 px-5">
-        <Seg
-          id="film-lang"
-          label="Film language"
-          value={lang}
-          onChange={changeLang}
-          options={[
-            { value: 'en', label: 'English' },
-            { value: 'zh', label: '中文' },
-          ]}
-        />
-        <a href={FILM.src[lang]} download target="_blank" rel="noreferrer" className="p-press inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-[13.5px] font-[680] text-ink-2">
+      <div className="mt-3 px-5">
+        <a href={FILM.src} download target="_blank" rel="noreferrer" className="p-press -ml-2 inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-[13.5px] font-[680] text-ink-2">
           <Icon icon={Download04Icon} size={16} stroke={1.9} />
-          MP4, {FILM.sizeMB[lang]} MB
+          MP4, {FILM.sizeMB} MB
         </a>
       </div>
 
-      <div className="mt-3 px-3">
+      <div className="mt-2 px-3">
         <div ref={boxRef} className="overflow-hidden rounded-[22px] border border-rule bg-surface shadow-[0_30px_60px_-40px_rgba(20,24,40,0.6)]">
           <div className="relative aspect-video bg-[#f3f4f7]">
             <video
               ref={videoRef}
-              src={FILM.src[lang]}
-              poster={FILM.poster[lang]}
+              src={FILM.src}
+              poster={FILM.poster}
               preload="none"
               playsInline
               crossOrigin={SINGLE ? 'anonymous' : undefined}
               className="absolute inset-0 h-full w-full object-contain"
               onClick={() => (started && !ended ? (playing && shown ? setShown(false) : wake()) : play())}
-              aria-label={`The Trinity, the film (${FILM.langName[lang]})`}
+              aria-label="The Trinity, the film"
             >
-              <track key={lang} kind="subtitles" srcLang={lang} label={FILM.langName[lang]} src={FILM.captions[lang]} />
+              <track kind="subtitles" srcLang="en" label="English and 中文" src={FILM.captions} />
             </video>
 
             {/* before the first play, and at the end */}
@@ -288,7 +250,7 @@ export default function PFilm() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.3 } }}
                 >
-                  <img src={FILM.poster[lang]} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+                  <img src={FILM.poster} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
                   <span className="absolute inset-0 bg-[radial-gradient(90%_80%_at_50%_55%,rgba(10,12,20,0.18),transparent_70%)]" aria-hidden />
                   {/* the play button sits in a corner, so the poster's title stays readable */}
                   <button type="button" onClick={() => (ended ? seek(0, true) : play())} className="absolute inset-0" aria-label={ended ? 'Watch again' : 'Play the film'}>
@@ -349,7 +311,7 @@ export default function PFilm() {
                   aria-valuemin={0}
                   aria-valuemax={Math.round(D)}
                   aria-valuenow={Math.round(time)}
-                  aria-valuetext={`${fmtTime(time)} of ${fmtTime(D)}, ${chTitle(cur, lang)}`}
+                  aria-valuetext={`${fmtTime(time)} of ${fmtTime(D)}, ${CHAPTERS[cur].title}`}
                 >
                   {CHAPTERS.map((c, i) => {
                     const a = c.t;
@@ -370,7 +332,7 @@ export default function PFilm() {
                   />
                   {scrub && (
                     <span className="pointer-events-none absolute bottom-[calc(100%+6px)] -translate-x-1/2 whitespace-nowrap rounded-lg bg-[rgba(12,14,22,0.82)] px-2 py-1 text-[11.5px] font-[700] text-white" style={{ left: `clamp(60px, ${(time / D) * 100}%, calc(100% - 60px))` }}>
-                      {chTitle(cur, lang)} <span className="tabular font-[600] text-white/70">{fmtTime(time)}</span>
+                      {CHAPTERS[cur].title} <span className="tabular font-[600] text-white/70">{fmtTime(time)}</span>
                     </span>
                   )}
                 </div>
@@ -404,27 +366,7 @@ export default function PFilm() {
           <AnimatePresence initial={false}>
             {cc && (
               <motion.div key="cc" className="overflow-hidden border-t border-rule" initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} transition={{ duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }}>
-                <div className="flex min-h-[64px] items-center justify-center px-4 text-center">
-                  <AnimatePresence mode="wait" initial={false}>
-                    {cue ? (
-                      <motion.p
-                        key={`${lang}-${cue[0]}`}
-                        className={`py-2.5 font-[640] leading-snug text-ink [text-wrap:balance] ${lang === 'zh' ? 'text-[15.5px]' : 'text-[15px]'}`}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.16 }}
-                      >
-                        {cue[2]}
-                      </motion.p>
-                    ) : (
-                      <motion.p key="hint" className="flex items-center gap-2 py-2.5 text-[13px] font-[620] text-ink-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <Icon icon={ClosedCaptionIcon} size={16} stroke={2} />
-                        {started ? '' : lang === 'zh' ? '中文配音，字幕已开启' : 'Narrated in English, subtitles on'}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <FilmSubtitles cue={cue} size="phone" hint={!started && <SubtitleHint small />} className="min-h-[64px] px-4" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -433,7 +375,7 @@ export default function PFilm() {
 
       {/* chapters */}
       <div className="mt-6">
-        <p className="px-5 text-[14px] font-[720] text-ink">{lang === 'zh' ? '章节' : 'Chapters'}</p>
+        <p className="px-5 text-[14px] font-[720] text-ink">Chapters</p>
         <ol
           ref={listRef}
           className="p-noscroll mt-2.5 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2"
@@ -447,7 +389,7 @@ export default function PFilm() {
               <li key={i} className="w-[150px] shrink-0 snap-start">
                 <button type="button" onClick={() => seek(c.t + 0.01, true)} className="p-press block w-full text-left" aria-current={on ? 'true' : undefined}>
                   <span className={`relative block aspect-video overflow-hidden rounded-[12px] bg-paper-2 ring-offset-2 ring-offset-paper transition-shadow ${on ? 'ring-2 ring-accent' : 'ring-1 ring-rule'}`}>
-                    <img src={chapterThumb(i, lang)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" draggable={false} />
+                    <img src={chapterThumb(i)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" draggable={false} />
                     {on && (
                       <span className="absolute inset-x-0 bottom-0 h-[3px] bg-black/25" aria-hidden>
                         <span className="block h-full bg-accent" style={{ width: `${k * 100}%` }} />
@@ -458,7 +400,7 @@ export default function PFilm() {
                     <span className={on ? 'text-accent' : ''}>{String(i + 1).padStart(2, '0')}</span>
                     {fmtTime(c.t)}
                   </span>
-                  <span className={`mt-0.5 line-clamp-2 block text-[13.5px] font-[700] leading-snug ${on ? 'text-ink' : 'text-ink-2'}`}>{chTitle(i, lang)}</span>
+                  <span className={`mt-0.5 line-clamp-2 block text-[13.5px] font-[700] leading-snug ${on ? 'text-ink' : 'text-ink-2'}`}>{c.title}</span>
                 </button>
               </li>
             );

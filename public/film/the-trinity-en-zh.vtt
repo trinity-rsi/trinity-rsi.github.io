@@ -2,69 +2,92 @@ WEBVTT
 
 00:00:00.300 --> 00:00:04.034
 Today, RSI still trains agents task by task.
+现在的 RSI　还在逐个任务地训练智能体
 
 00:00:04.500 --> 00:00:06.977
 We argue it should be capability-driven.
+我们主张　转向能力驱动
 
 00:00:07.247 --> 00:00:12.389
 Every agent runs on a Harness: six protocols around one frozen model.
+每个智能体都跑在一套 Harness 上　六个协议　围绕一个冻结的模型
 
 00:00:12.810 --> 00:00:15.597
 One Harness per task transfers poorly
+每个任务一套　难以迁移
 
 00:00:15.597 --> 00:00:18.993
 one global Harness can't reconcile conflicting demands.
+全局只用一套　又顾不上相互冲突的需求
 
 00:00:19.263 --> 00:00:22.588
 Yet tasks that look different often need the same capabilities.
+可是　看起来不同的任务　往往需要同样的能力
 
 00:00:23.351 --> 00:00:28.519
 ARC-AGI-3 and Micromouse both rely on perception and state tracking.
+ARC-AGI-3 和 Micromouse　都依赖感知和状态追踪
 
 00:00:28.789 --> 00:00:31.943
 Group tasks by what they share, and learning transfers.
+按共享的能力组织任务　学到的就能迁移
 
 00:00:34.325 --> 00:00:35.943
 This is The Trinity.
+这就是 The Trinity
 
 00:00:37.425 --> 00:00:42.568
 Three roles, one frozen model: Creator builds worlds, Explorer acts in them
+三个角色　共用一个冻结的模型　Creator 造世界　Explorer 闯世界
 
 00:00:42.568 --> 00:00:45.070
 and Evolver improves the Harness.
+Evolver 改进 Harness
 
 00:00:45.090 --> 00:00:48.901
 Stage one: forty-four benchmarks form a task tree.
+第一阶段　44 个基准　组成一棵任务树
 
 00:00:49.190 --> 00:00:53.627
 Explorer runs the base Harness on the training tasks and logs each run.
+Explorer 用基础 Harness 把训练任务跑一遍　并记录每一次运行
 
 00:00:54.700 --> 00:01:00.636
 Stage two: the runs reveal six capabilities, and tasks with the same needs share a node.
+第二阶段　轨迹揭示出六种能力　需求相同的任务汇到同一个节点
 
 00:01:00.906 --> 00:01:06.846
 Creator builds simplified, verifiable worlds for each node, where Explorer can practise.
+Creator 为每个节点构建简化　可验证的世界　供 Explorer 练习
 
 00:01:07.116 --> 00:01:12.413
 Stage three: as Explorer practises, reusable modules grow along the tree.
+第三阶段　随着 Explorer 练习　可复用的模块沿树生长
 
 00:01:12.683 --> 00:01:17.601
 Children inherit their parent's modules, and keep an update only if it strictly helps.
+子节点继承父节点的模块　更新只有严格变好才保留
 
 00:01:18.283 --> 00:01:21.745
 The model never changes. Only the Harness grows.
+模型始终不变　变强的只是 Harness
 
 00:01:22.583 --> 00:01:23.965
 For a new task
+遇到新任务
 
 00:01:23.965 --> 00:01:28.669
 the Router recalls verified experience and picks one Harness before acting.
+Router 先调出已验证的经验　再选定一套 Harness
 
 00:01:28.939 --> 00:01:30.997
 The result is written back to memory.
+结果会写回经验记忆
 
 00:01:32.939 --> 00:01:40.167
 Up 34.1 points on training benchmarks and 26.2 on unseen ones, two real robots included.
+训练基准提升 34.1 分　未见基准提升 26.2 分　其中包括两台真实机器人
 
 00:01:41.798 --> 00:01:45.511
 The Trinity. Grow capabilities, brick by brick.
+The Trinity　按能力生长　一块一块搭起来
