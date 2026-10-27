@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/Icon';
-import { ArrowUp02Icon, ComputerIcon, Copy01Icon, CopyCheckIcon } from '@hugeicons/core-free-icons';
+import { ArrowUp02Icon, Cancel01Icon, ComputerIcon, Copy01Icon, CopyCheckIcon } from '@hugeicons/core-free-icons';
 import { AFFILIATIONS, AUTHORS, BIBTEX, PAPER } from '@/data/paper';
 import { useTokens } from '@/theme/tokens';
 import { Opener } from '../ui/Opener';
 import More from '../ui/More';
+import Sheet from '../ui/Sheet';
 import { P_CHAPTERS } from '../chapters';
 import { switchView } from '../mode';
 import logoLight from '@/assets/brand/infrec-light.webp';
@@ -29,24 +30,31 @@ export function PreviewNote() {
   );
 }
 
-export function PAbstract() {
+/** the abstract, in a sheet the hero opens: the page itself stays short */
+export function AbstractSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    <section id="abstract" className="scroll-mt-16 pt-20">
-      <Opener kicker="The paper" title="Abstract">
-        <p className="text-[14px] font-[600] leading-snug text-ink-3">
+    <Sheet open={open} onClose={onClose} label="Abstract">
+      <div className="flex items-center justify-between px-5 pb-2 pt-1">
+        <p className="text-[19px] font-[780] tracking-[-0.015em] text-ink" style={{ fontStretch: '108%' }}>
+          Abstract
+        </p>
+        <button type="button" onClick={onClose} className="p-press grid h-9 w-9 place-items-center rounded-full bg-paper-2 text-ink-2" aria-label="Close">
+          <Icon icon={Cancel01Icon} size={16} stroke={2} />
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))]">
+        <p className="text-[13px] font-[600] leading-snug text-ink-3">
           {PAPER.title}: {PAPER.subtitle}. {PAPER.team}, {PAPER.date}.
         </p>
-      </Opener>
-      <More lines={9} className="mt-5 px-5" label="Read the whole abstract">
-        <div className="space-y-4">
-          {PAPER.abstract.map((p, i) => (
-            <p key={i} className="p-lede">
-              {p}
+        <div className="mt-4 space-y-4">
+          {PAPER.abstract.map((x, k) => (
+            <p key={k} className="p-lede">
+              {x}
             </p>
           ))}
         </div>
-      </More>
-    </section>
+      </div>
+    </Sheet>
   );
 }
 
@@ -67,17 +75,17 @@ export function PTeam() {
     window.setTimeout(() => setCopied(false), 1800);
   };
   return (
-    <section id="cite" className="scroll-mt-16 pt-20">
+    <section id="cite" className="scroll-mt-16 pt-14">
       <Opener kicker="Team and citation" title={PAPER.team} />
       <div className="mt-6 px-5">
-        <img src={group} alt="Creator, Explorer and Evolver around a planning table" className="mx-auto w-[min(260px,70%)] drop-shadow-[0_20px_24px_rgba(0,0,0,0.18)]" />
-        <div className="mt-8 space-y-7">
+        <img src={group} alt="Creator, Explorer and Evolver around a planning table" className="mx-auto w-[min(200px,54%)] drop-shadow-[0_20px_24px_rgba(0,0,0,0.18)]" />
+        <div className="mt-6 space-y-5">
           {AUTHORS.map((g) => (
             <div key={g.group}>
               <p className="text-[13px] font-[720] text-accent">{g.group}</p>
-              <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-2">
+              <ul className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5">
                 {g.people.map((p) => (
-                  <li key={p.name} className="text-[16.5px] font-[680] tracking-[-0.01em] text-ink">
+                  <li key={p.name} className="text-[15.5px] font-[680] tracking-[-0.01em] text-ink">
                     {p.name}
                     <sup className="ml-0.5 text-[0.62em] font-[620] text-ink-3">{p.aff.join(',')}</sup>
                   </li>
@@ -85,7 +93,7 @@ export function PTeam() {
               </ul>
             </div>
           ))}
-          <ol className="space-y-1 border-t border-rule pt-5 text-[13.5px] text-ink-2">
+          <ol className="space-y-0.5 border-t border-rule pt-4 text-[12.5px] leading-snug text-ink-2">
             {AFFILIATIONS.map((a) => (
               <li key={a.n}>
                 <sup className="mr-1.5 text-ink-3">{a.n}</sup>
@@ -96,7 +104,7 @@ export function PTeam() {
         </div>
       </div>
 
-      <div className="mt-12 px-5">
+      <div className="mt-10 px-5">
         <div className="flex items-center justify-between gap-3">
           <h3 className="p-subtitle">Cite the Trinity</h3>
           <button type="button" onClick={copy} className="p-press inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-ink px-4 text-[14px] font-[700] text-paper">
@@ -104,9 +112,13 @@ export function PTeam() {
             {copied ? 'Copied' : 'Copy BibTeX'}
           </button>
         </div>
-        <pre className="mt-4 whitespace-pre-wrap break-words rounded-2xl border border-rule bg-surface p-4 font-mono text-[11.5px] leading-[1.6] text-ink-2">
-          <code>{BIBTEX}</code>
-        </pre>
+        <div className="mt-4 rounded-2xl border border-rule bg-surface px-4 pb-2 pt-4">
+          <More lines={6} lineHeight={18.4} label="Show the whole entry" on="surface">
+            <pre className="whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.6] text-ink-2">
+              <code>{BIBTEX}</code>
+            </pre>
+          </More>
+        </div>
         <p className="mt-2.5 text-[12.5px] text-ink-3">The entry will be updated with the arXiv identifier once the paper is public.</p>
       </div>
     </section>
@@ -116,7 +128,7 @@ export function PTeam() {
 export function PFooter() {
   const { theme } = useTokens();
   return (
-    <footer className="mt-20 border-t border-rule px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8">
+    <footer className="mt-14 border-t border-rule px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8">
       <img src={theme === 'dark' ? logoDark : logoLight} alt="InfRec, Cardinal AI Lab" className="h-8 w-auto" />
       <p className="mt-3 text-[13px] leading-snug text-ink-3">
         {PAPER.title}: {PAPER.subtitle}

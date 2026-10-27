@@ -678,7 +678,7 @@ export default function PTree() {
   const s = STEPS[step];
 
   return (
-    <section id="stage-1" className="scroll-mt-16 pt-20">
+    <section id="stage-1" className="scroll-mt-16 pt-14">
       <Opener kicker="Stages 1 and 2" stage="1–2" title="From a task tree to a capability tree">
         <p className="p-lede">
           Evolver regroups the benchmarks by what they <em>require</em>, not by what they look like.

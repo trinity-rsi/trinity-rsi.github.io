@@ -147,41 +147,20 @@ export default function PRobots() {
   const b = benchById[task.bench];
   const f5 = FINDINGS[4];
   const teal = theme === 'dark' ? ['#2b5f5a', '#2f857d', '#22a597', '#5fd1c4'] : ['#a7dcd6', '#62c1b8', '#25a397', '#0e8f86'];
-  const steps = [
-    { n: '1', k: 'Real', title: 'Site and task', color: t.accent },
-    { n: '2', k: 'Sim', title: '5 trials, then skills', color: t.explorer },
-    { n: '3', k: 'Real', title: 'Test, all frozen', color: t.good },
-  ];
 
   return (
-    <section id="real-world" className="scroll-mt-16 pt-20">
+    <section id="real-world" className="scroll-mt-16 pt-14">
       <Opener kicker="Embodied Real2Sim2Real" title="From simulated worlds to two real robots">
         <p className="p-lede">Skills prepared in a simulation of each real site are frozen; every Harness, from H₀ to H(4), is then tested in simulation and on the real robot.</p>
       </Opener>
 
-      {/* Figure 7's three steps */}
-      <ol className="mt-6 grid grid-cols-3 gap-2 px-4">
-        {steps.map((s) => (
-          <li key={s.n} className="rounded-[16px] border border-rule bg-surface px-2.5 py-2.5">
-            <p className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-[850] leading-none" style={{ color: s.color, fontStretch: '115%' }}>
-                {s.n}
-              </span>
-              <span className="text-[11.5px] font-[760]" style={{ color: s.color }}>
-                {s.k}
-              </span>
-            </p>
-            <p className="mt-1 text-[12.5px] font-[700] leading-snug text-ink">{s.title}</p>
-          </li>
-        ))}
-      </ol>
-      <More lines={0} lineHeight={1} label="How the skills are prepared" className="mt-1 px-5">
+      <More lines={0} lineHeight={1} label="How the skills are prepared" className="mt-2 px-5">
         <p className="pt-1 text-[13.5px] leading-[1.6] text-ink-2">
           Each robot task is mapped by its capability requirements to node d → a and uses the Harness evolved there. Holding the Harness fixed, five trial-and-error episodes in the simulator rebuilt from the site are summarized into skills, frozen for the formal simulation and real-robot tests; the preparation episodes are not counted.
         </p>
       </More>
 
-      <div className="mt-6 px-4">
+      <div className="mt-5 px-4">
         <Seg
           id="robot"
           label="Robot"

@@ -1,5 +1,5 @@
-import { useRef, useState, type PointerEvent as RPointerEvent } from 'react';
-import { motion, useInView } from 'motion/react';
+import { useRef, useState, type PointerEvent as RPointerEvent, type ReactNode } from 'react';
+import { AnimatePresence, motion, useInView } from 'motion/react';
 import PaperFigure from '@/components/ui/PaperFigure';
 import GainList from '@/components/viz/GainList';
 import { ModulesAndSkills } from '@/components/viz/ResultBits';
@@ -14,21 +14,26 @@ import Seg from '../ui/Seg';
 import PBars from '../ui/PBars';
 
 /**
- * Results on a phone. Each block leads with the paper's own finding as its title, then the figure
- * or table, made to be touched: the RSI curves are scrubbed with a finger, the tables switch
- * between scores and token costs, the correlations open on a tap. The finding's full text folds.
+ * Results on a phone. Figure 5 leads; the other findings share one card, a tab each. Every block
+ * leads with the paper's own finding as its title, then the figure or table, made to be touched:
+ * the RSI curves are scrubbed with a finger, the tables switch between scores and token costs, the
+ * correlations open on a tap. The finding's full text folds.
  */
-function Block({ tag, title, children, note }: { tag: string; title: string; children: React.ReactNode; note?: React.ReactNode }) {
+function Note({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-12 px-5">
+    <More lines={0} lineHeight={1} label="What the paper says" className="mt-1">
+      <p className="pt-1 text-[13.5px] leading-[1.6] text-ink-2">{children}</p>
+    </More>
+  );
+}
+
+function Block({ tag, title, children, note }: { tag: string; title: string; children: ReactNode; note?: ReactNode }) {
+  return (
+    <div className="mt-10 px-5">
       <p className="text-[12.5px] font-[700] text-accent">{tag}</p>
       <h3 className="p-subtitle mt-1">{title}</h3>
       <div className="mt-4">{children}</div>
-      {note && (
-        <More lines={0} lineHeight={1} label="What the paper says" className="mt-1">
-          <p className="pt-1 text-[13.5px] leading-[1.6] text-ink-2">{note}</p>
-        </More>
-      )}
+      {note && <Note>{note}</Note>}
     </div>
   );
 }
@@ -227,23 +232,20 @@ function Interventions() {
   );
 }
 
-export default function PResults() {
-  const [f1, f2, , f4] = FINDINGS;
-  return (
-    <section id="results" className="scroll-mt-16 pt-20">
-      <Opener kicker="Results" title="+34.1 on training, +26.2 on unseen benchmarks">
-        <p className="p-lede">All variants start from the same Base Harness H₀ on a frozen Claude Opus 5: 28 training and 18 unseen benchmarks, the two real robots among the unseen.</p>
-      </Opener>
+type View = 'org' | 'every' | 'mods' | 'which';
 
-      <Block tag={`Figure 5, Finding ${f2.n}`} title={f2.title} note={<>{f2.text} The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points. Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks.</>}>
-        <Curves />
-      </Block>
-
-      <Block tag="Figure 4" title="Every benchmark, from H₀ to iteration 4" note="Each benchmark keeps its own metric on a 0–100 scale: ALE-Bench percentiles, BALROG progress for NetHack and Crafter, DiG-bench’s levels passed.">
-        <GainList train={TRAIN_SETTINGS} unseen={UNSEEN_SETTINGS} />
-      </Block>
-
-      <Block tag={`Table 3, Finding ${f1.n}`} title={f1.title} note={<>{f1.text} After one RSI iteration, module-only evaluation, no skills.</>}>
+/** the findings after Figure 5, one card: a tab for each */
+function Findings() {
+  const [f1, , , f4] = FINDINGS;
+  const [v, setV] = useState<View>('org');
+  const views: { key: View; chip: string; tag: string; title: string; note: ReactNode; body: ReactNode }[] = [
+    {
+      key: 'org',
+      chip: 'Organization',
+      tag: `Table 3, Finding ${f1.n}`,
+      title: f1.title,
+      note: <>{f1.text} After one RSI iteration, module-only evaluation, no skills.</>,
+      body: (
         <PBars
           id="table3"
           range={[30, 65]}
@@ -259,25 +261,95 @@ export default function PResults() {
             muted: r.base,
           }))}
         />
+      ),
+    },
+    {
+      key: 'every',
+      chip: 'Every benchmark',
+      tag: 'Figure 4',
+      title: 'Every benchmark, from H₀ to iteration 4',
+      note: 'Each benchmark keeps its own metric on a 0–100 scale: ALE-Bench percentiles, BALROG progress for NetHack and Crafter, DiG-bench’s levels passed.',
+      body: <GainList train={TRAIN_SETTINGS} unseen={UNSEEN_SETTINGS} />,
+    },
+    {
+      key: 'mods',
+      chip: 'Modules and skills',
+      tag: 'Table 2',
+      title: 'Modules and skills work best together',
+      note: 'At iteration 1. Module means evolved modules beyond the Base Harness; a skill comes from five preparation trials per benchmark and Harness.',
+      body: (
+        <>
+          <p className="mb-2 flex items-center gap-3 text-[11.5px] font-[700] text-ink-3">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Train
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-explorer" /> Unseen
+            </span>
+          </p>
+          <ModulesAndSkills />
+        </>
+      ),
+    },
+    {
+      key: 'which',
+      chip: 'Which modules matter',
+      tag: `Figure 6, Table 5, Finding ${f4.n}`,
+      title: f4.title,
+      note: f4.text,
+      body: (
+        <>
+          <Heat />
+          <p className="mb-3 mt-7 text-[13px] font-[700] text-ink">Adding or removing one relevant module (Train, 10%)</p>
+          <Interventions />
+        </>
+      ),
+    },
+  ];
+  const cur = views.find((x) => x.key === v)!;
+  return (
+    <div className="mt-10">
+      <div className="p-noscroll flex gap-1.5 overflow-x-auto px-5 pb-1" role="tablist" aria-label="More results">
+        {views.map((x) => (
+          <button
+            key={x.key}
+            type="button"
+            role="tab"
+            aria-selected={v === x.key}
+            onClick={() => setV(x.key)}
+            className={`relative shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-[680] transition-colors ${v === x.key ? 'text-paper' : 'text-ink-2'}`}
+          >
+            {v === x.key && <motion.span layoutId="res-tab" className="absolute inset-0 rounded-full bg-ink" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+            {v !== x.key && <span className="absolute inset-0 rounded-full border border-rule bg-surface" aria-hidden />}
+            <span className="relative">{x.chip}</span>
+          </button>
+        ))}
+      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={v} role="tabpanel" className="mt-5 px-5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}>
+          <p className="text-[12.5px] font-[700] text-accent">{cur.tag}</p>
+          <h3 className="p-subtitle mt-1">{cur.title}</h3>
+          <div className="mt-4">{cur.body}</div>
+          <Note>{cur.note}</Note>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function PResults() {
+  const f2 = FINDINGS[1];
+  return (
+    <section id="results" className="scroll-mt-16 pt-14">
+      <Opener kicker="Results" title="+34.1 on training, +26.2 on unseen benchmarks">
+        <p className="p-lede">All variants start from the same Base Harness H₀ on a frozen Claude Opus 5: 28 training and 18 unseen benchmarks, the two real robots among the unseen.</p>
+      </Opener>
+
+      <Block tag={`Figure 5, Finding ${f2.n}`} title={f2.title} note={<>{f2.text} The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points. Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks.</>}>
+        <Curves />
       </Block>
 
-      <Block tag="Table 2" title="Modules and skills work best together" note="At iteration 1. Module means evolved modules beyond the Base Harness; a skill comes from five preparation trials per benchmark and Harness.">
-        <p className="mb-2 flex items-center gap-3 text-[11.5px] font-[700] text-ink-3">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Train
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-explorer" /> Unseen
-          </span>
-        </p>
-        <ModulesAndSkills />
-      </Block>
-
-      <Block tag={`Figure 6, Table 5, Finding ${f4.n}`} title={f4.title} note={f4.text}>
-        <Heat />
-        <p className="mb-3 mt-7 text-[13px] font-[700] text-ink">Adding or removing one relevant module (Train, 10%)</p>
-        <Interventions />
-      </Block>
+      <Findings />
 
       <div className="mt-6 px-5">
         <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s summary" />

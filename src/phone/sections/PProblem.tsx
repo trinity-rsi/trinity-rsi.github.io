@@ -103,7 +103,7 @@ function Strategies() {
 
 export default function PProblem() {
   return (
-    <section id="problem" className="scroll-mt-16 pt-20">
+    <section id="problem" className="scroll-mt-16 pt-14">
       <Opener kicker="The problem" title="RSI is still trained task by task">
         <p className="p-lede">Worlds provide tasks, humans guide learning, agents produce verifiable outcomes. As tasks grow more complex, this loop meets two bottlenecks and a challenge.</p>
       </Opener>
@@ -111,11 +111,10 @@ export default function PProblem() {
         <PLoop walls={WALLS} />
       </div>
 
-      <div className="mt-14 px-5">
+      <div className="mt-10 px-5">
         <h3 className="p-subtitle">What should a Harness be evolved around?</h3>
-        <p className="p-lede mt-3">The key insight: tasks with different modalities and surface forms can share the same underlying capability requirements.</p>
       </div>
-      <div className="mt-6">
+      <div className="mt-5">
         <Strategies />
       </div>
     </section>

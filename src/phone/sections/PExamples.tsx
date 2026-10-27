@@ -120,7 +120,7 @@ export default function PExamples() {
   };
 
   return (
-    <section id="examples" className="scroll-mt-16 pt-20">
+    <section id="examples" className="scroll-mt-16 pt-14">
       <Opener kicker="Shared capabilities" title="Tasks that look different often need the same capabilities.">
         <p className="p-lede">Grouping tasks by these shared requirements makes the underlying mechanisms a common learning objective, enabling generalization across tasks.</p>
       </Opener>

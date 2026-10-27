@@ -17,7 +17,6 @@ export const P_CHAPTERS: PChapter[] = [
   { id: 'results', title: 'Results', note: '+34.1 on training, +26.2 on unseen', ready: true },
   { id: 'real-world', title: 'Real robots', note: 'From simulation to two robots', ready: true },
   { id: 'visual-record', title: 'Visual record', note: 'H₀ and H₄ side by side', ready: true },
-  { id: 'abstract', title: 'Abstract', note: 'The paper’s abstract', ready: true },
   { id: 'cite', title: 'Team and citation', note: 'Authors and BibTeX', ready: true },
 ];
 

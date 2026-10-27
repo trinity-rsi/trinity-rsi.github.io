@@ -10,7 +10,7 @@ import creatorImg from '@/assets/cats/creator.webp';
 import explorerImg from '@/assets/cats/explorer.webp';
 import evolverImg from '@/assets/cats/evolver.webp';
 
-/** The Trinity's three roles, then the method as a sequence: three stages and the Router (Section 3). */
+/** The Trinity's three roles, then the method's stages and the Router (Section 3), each opening its chapter. */
 const CAT: Record<string, string> = { creator: creatorImg, explorer: explorerImg, evolver: evolverImg };
 
 export default function PTrinity() {
@@ -19,7 +19,7 @@ export default function PTrinity() {
   const name = (w: string) => (w === 'router' ? 'Router' : w[0].toUpperCase() + w.slice(1));
 
   return (
-    <section id="trinity" className="scroll-mt-16 pt-20">
+    <section id="trinity" className="scroll-mt-16 pt-14">
       <Opener
         kicker="Three roles, one frozen backbone"
         title={
@@ -45,47 +45,35 @@ export default function PTrinity() {
         ))}
       </ul>
 
-      {/* the method, stage by stage */}
-      <div className="mt-14 px-5">
+      {/* the method: the stages, each a way into its chapter */}
+      <div className="mt-10 px-5">
         <h3 className="p-subtitle">Three stages, then routing</h3>
-        <p className="p-lede mt-3">Benchmarks become a task tree, verified trajectories turn it into a capability tree, and Harnesses evolve along that tree. A Router then picks the right one for each task.</p>
-        <ol className="mt-7">
-          {STAGES.map((s, i) => (
-            <li key={s.key} className="relative pb-8 pl-[52px] last:pb-0">
-              {i < STAGES.length - 1 && <span className="absolute bottom-0 left-[14px] top-[34px] w-[2px] rounded-full bg-rule" aria-hidden />}
-              <span className="absolute left-0 top-0">
-                <StageMark stage={s.n} />
+        <p className="mt-1.5 text-[13px] text-ink-3">Tap a stage to go to it.</p>
+      </div>
+      <ol className="mx-4 mt-4 overflow-hidden rounded-[22px] border border-rule bg-surface">
+        {STAGES.map((s) => (
+          <li key={s.key} className="border-t border-rule first:border-t-0">
+            <button type="button" onClick={() => goTo(s.href)} className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-paper-2">
+              <StageMark stage={s.n} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[16px] font-[740] leading-tight tracking-[-0.01em] text-ink" style={{ fontStretch: '106%' }}>
+                  {s.title}
+                </span>
+                <span className="mt-1.5 flex flex-wrap gap-1">
+                  {s.who.map((w) => (
+                    <span key={w} className="rounded-full px-1.5 py-[1px] text-[11px] font-[720]" style={{ background: `${color(w)}1c`, color: color(w) }}>
+                      {name(w)}
+                    </span>
+                  ))}
+                </span>
               </span>
-              <p className="text-[12.5px] font-[700] text-ink-3">{s.kicker}</p>
-              <p className="mt-0.5 text-[19px] font-[760] leading-tight tracking-[-0.015em] text-ink" style={{ fontStretch: '106%' }}>
-                {s.title}
-              </p>
-              <p className="mt-2 flex flex-wrap gap-1.5">
-                {s.who.map((w) => (
-                  <span key={w} className="rounded-full px-2 py-0.5 text-[11.5px] font-[720]" style={{ background: `${color(w)}1c`, color: color(w) }}>
-                    {name(w)}
-                  </span>
-                ))}
-              </p>
-              <p className="p-body mt-2.5">{s.text}</p>
-              <p className="mt-2.5 flex flex-wrap gap-1.5">
-                {s.parts.map((st, k) => (
-                  <span key={st} className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-surface px-2.5 py-1 text-[12px] font-[620] text-ink-2">
-                    <span className="tabular text-[10.5px] font-[780] text-ink-3">{k + 1}</span>
-                    {st}
-                  </span>
-                ))}
-              </p>
-              <button type="button" onClick={() => goTo(s.href)} className="p-press mt-3 inline-flex h-8 items-center gap-1 text-[13.5px] font-[700] text-ink">
-                {s.key === 'router' ? 'See the Router' : `See ${s.title.toLowerCase()}`}
-                <Icon icon={ArrowRight01Icon} size={14} stroke={2.2} />
-              </button>
-            </li>
-          ))}
-        </ol>
-        <div className="mt-6">
-          <PaperFigure fig={PAPER_FIGS.overview} label="Overview: Figure 2 in the paper" />
-        </div>
+              <Icon icon={ArrowRight01Icon} size={16} stroke={2} className="shrink-0 text-ink-3" />
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-4 px-5">
+        <PaperFigure fig={PAPER_FIGS.overview} label="Overview: Figure 2 in the paper" />
       </div>
     </section>
   );

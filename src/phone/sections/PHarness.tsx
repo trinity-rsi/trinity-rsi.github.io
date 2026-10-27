@@ -11,6 +11,7 @@ import { useTokens } from '@/theme/tokens';
 import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 import { easeInOut, easeOutBack, seg, useLoopClock } from '@/lib/anim';
 import { Opener } from '../ui/Opener';
+import Seg from '../ui/Seg';
 
 /**
  * Stage 3 on a phone. (a) Explorer's Harness tree over iterations 1–4, drawn top-down like the
@@ -65,6 +66,7 @@ function HarnessTree() {
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [pick, setPick] = useState<Nid | null>(null);
+  const [tab, setTab] = useState<'mods' | 'bench'>('mods');
   const timeRef = useRef(0);
 
   useLayoutEffect(() => {
@@ -376,38 +378,54 @@ function HarnessTree() {
               )}
             </div>
           </div>
-          <ol className="mt-3 space-y-1 border-t border-rule pt-3">
-            {fn.events.map((e, i) => {
-              const done = eventDone(focus, i + 1, cur);
-              const m = moduleById[e.module];
-              return (
-                <li key={i} className={`flex items-start gap-2 rounded-lg px-1.5 py-1 text-[12px] ${i + 1 === focusIt && done ? 'bg-accent-wash' : ''}`} style={{ opacity: done ? 1 : 0.4 }}>
-                  <span className="tabular mt-px w-7 shrink-0 text-[11px] font-[760] text-ink-3">it {i + 1}</span>
-                  <span className="mt-px grid h-[17px] shrink-0 place-items-center rounded-[5px] px-1.5 text-[10px] font-[820] text-white" style={{ background: t.caps[m.cap] }}>
-                    {m.id}
-                  </span>
-                  <span className="min-w-0 leading-snug text-ink-2">
-                    <span className="font-[700] text-ink">{e.kind === 'new' ? 'new' : 'revised'}</span>, {m.name}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-          {cur.done && undated(focus).length > 0 && (
+          <div className="mt-3 border-t border-rule pt-3">
+            <Seg
+              id="node-tab"
+              small
+              label="Show for this node"
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: 'mods', label: 'Its modules' },
+                { value: 'bench', label: 'Its benchmarks' },
+              ]}
+            />
+          </div>
+          {tab === 'mods' ? (
+            <ol className="mt-2.5 space-y-1">
+              {fn.events.map((e, i) => {
+                const done = eventDone(focus, i + 1, cur);
+                const m = moduleById[e.module];
+                return (
+                  <li key={i} className={`flex items-start gap-2 rounded-lg px-1.5 py-1 text-[12px] ${i + 1 === focusIt && done ? 'bg-accent-wash' : ''}`} style={{ opacity: done ? 1 : 0.4 }}>
+                    <span className="tabular mt-px w-7 shrink-0 text-[11px] font-[760] text-ink-3">it {i + 1}</span>
+                    <span className="mt-px grid h-[17px] shrink-0 place-items-center rounded-[5px] px-1.5 text-[10px] font-[820] text-white" style={{ background: t.caps[m.cap] }}>
+                      {m.id}
+                    </span>
+                    <span className="min-w-0 leading-snug text-ink-2">
+                      <span className="font-[700] text-ink">{e.kind === 'new' ? 'new' : 'revised'}</span>, {m.name}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <div className="mt-2.5">
+              {benchesOfNode(focus).length > 0 ? (
+                <>
+                  <p className="mb-1.5 text-[11.5px] font-[700] text-ink-3">H₀ to now (Table 8)</p>
+                  <BenchBars focus={focus} cur={cur} compact />
+                </>
+              ) : (
+                <p className="text-[12px] leading-snug text-ink-3">No benchmark ends at this node; Video-Index and Video-MME-v2 sit one level below, at e → f.</p>
+              )}
+            </div>
+          )}
+          {tab === 'mods' && cur.done && undated(focus).length > 0 && (
             <p className="mt-2 text-[11.5px] leading-snug text-ink-3">
               {undated(focus).join(', ')} {undated(focus).length > 1 ? 'are' : 'is'} in the iteration-4 tree (Figure 11) without a recorded event.
             </p>
           )}
-          <div className="mt-3 border-t border-rule pt-3">
-            {benchesOfNode(focus).length > 0 ? (
-              <>
-                <p className="mb-1.5 text-[11.5px] font-[700] text-ink-3">Benchmarks at this node, H₀ to now (Table 8)</p>
-                <BenchBars focus={focus} cur={cur} compact />
-              </>
-            ) : (
-              <p className="text-[12px] leading-snug text-ink-3">No benchmark ends at this node; Video-Index and Video-MME-v2 sit one level below, at e → f.</p>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -563,14 +581,14 @@ function CreatorPass() {
 
 export default function PHarness() {
   return (
-    <section id="stage-3" className="scroll-mt-16 pt-20">
+    <section id="stage-3" className="scroll-mt-16 pt-14">
       <Opener kicker="Stage 3, the Harness tree" stage="3" title="Harnesses evolve along the capability tree">
-        <p className="p-lede">Every node owns a Harness: one frozen model, six control-flow protocols, and evolved modules that plug in. Validated updates accumulate across iterations within the fixed tree.</p>
+        <p className="p-lede">Every node owns a Harness: one frozen model, six control-flow protocols, and evolved modules that plug in.</p>
       </Opener>
 
-      <div className="mt-10 px-5">
+      <div className="mt-8 px-5">
         <h3 className="p-subtitle">The Harness tree, iteration by iteration</h3>
-        <p className="p-lede mt-3">One top-down pass per iteration: at every node a failing run becomes a new module or a revision. Children inherit their parent’s modules (outlined).</p>
+        <p className="mt-1.5 text-[13px] leading-snug text-ink-3">One top-down pass per iteration; children inherit their parent’s modules (outlined).</p>
       </div>
       <div className="mt-5">
         <HarnessTree />
@@ -579,9 +597,9 @@ export default function PHarness() {
         <PaperFigure fig={PAPER_FIGS.harnessTree} />
       </div>
 
-      <div className="mt-14 px-5">
+      <div className="mt-10 px-5">
         <h3 className="p-subtitle">Creator consolidates a new Base Harness</h3>
-        <p className="p-lede mt-3">Creator evolves along the same tree; at the end of each iteration its validated proposals merge into the next Base Harness.</p>
+        <p className="mt-1.5 text-[13px] leading-snug text-ink-3">At the end of each iteration, Creator’s validated proposals merge into the next Base Harness.</p>
       </div>
       <div className="mt-5">
         <CreatorPass />

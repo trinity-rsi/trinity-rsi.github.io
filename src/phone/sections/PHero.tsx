@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Icon from '@/components/ui/Icon';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
 import { Pdf02Icon, PlayIcon, QuoteDownIcon } from '@hugeicons/core-free-icons';
@@ -8,6 +8,7 @@ import { FILM, fmtTime, playFilm } from '@/data/film';
 import { useTokens } from '@/theme/tokens';
 import { useReducedMotion } from '@/lib/hooks';
 import PTriangle from './PTriangle';
+import { AbstractSheet } from './PClosing';
 import { goTo } from '../chapters';
 import logoLight from '@/assets/brand/infrec-light.webp';
 import logoDark from '@/assets/brand/infrec-dark.webp';
@@ -59,6 +60,8 @@ export default function PHero() {
   const { theme } = useTokens();
   const reduce = useReducedMotion();
   const rise = (s: number) => (reduce ? undefined : { animationDelay: `${s}s` });
+  const [abstract, setAbstract] = useState(false);
+  const closeAbstract = useCallback(() => setAbstract(false), []);
 
   return (
     <header id="top" className="relative overflow-hidden pt-[74px]">
@@ -93,13 +96,13 @@ export default function PHero() {
           </button>
           <div className="grid grid-cols-2 gap-2.5">
             <a
-              href={LINKS.paper || '#abstract'}
+              href={LINKS.paper || '#top'}
               target={LINKS.paper ? '_blank' : undefined}
               rel="noreferrer"
               onClick={(e) => {
                 if (!LINKS.paper) {
                   e.preventDefault();
-                  goTo('abstract');
+                  setAbstract(true);
                 }
               }}
               className="p-press flex h-12 items-center justify-center gap-2 rounded-full border border-rule bg-surface text-[14.5px] font-[700] text-ink"
@@ -107,6 +110,7 @@ export default function PHero() {
               <Icon icon={Pdf02Icon} size={17} stroke={1.9} />
               {LINKS.paper ? 'Read the paper' : 'Read the abstract'}
             </a>
+            <AbstractSheet open={abstract} onClose={closeAbstract} />
             <button type="button" onClick={() => goTo('cite')} className="p-press flex h-12 items-center justify-center gap-2 rounded-full border border-rule bg-surface text-[14.5px] font-[700] text-ink">
               <Icon icon={QuoteDownIcon} size={17} stroke={1.9} />
               Cite

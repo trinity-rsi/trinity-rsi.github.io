@@ -211,7 +211,7 @@ export default function PFilm() {
   }, [cur, playing]);
 
   return (
-    <section id="film" className="scroll-mt-16 pt-20">
+    <section id="film" className="scroll-mt-16 pt-14">
       <Opener kicker="The film" title="The Trinity in under two minutes" aside={<span className="tabular rounded-full bg-paper-2 px-2.5 py-1 text-[12.5px] font-[700] text-ink-2">{fmtTime(D)}</span>}>
         <p className="p-lede">The whole argument in the order of this page, narrated in English, with subtitles in English and Chinese.</p>
       </Opener>

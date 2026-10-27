@@ -13,7 +13,7 @@ import PResults from './sections/PResults';
 import PRobots from './sections/PRobots';
 import PRecord from './sections/PRecord';
 import PTree from './sections/PTree';
-import { PAbstract, PFooter, PTeam, PreviewNote } from './sections/PClosing';
+import { PFooter, PTeam, PreviewNote } from './sections/PClosing';
 import { goTo } from './chapters';
 
 /** The phone mode: the same paper, laid out for a phone held upright. */
@@ -41,7 +41,6 @@ export default function PhoneApp() {
         <PRobots />
         <PRecord />
         <PreviewNote />
-        <PAbstract />
         <PTeam />
       </main>
       <PFooter />
