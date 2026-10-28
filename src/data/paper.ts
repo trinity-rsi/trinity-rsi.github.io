@@ -40,7 +40,7 @@ export const PAPER = {
   ],
 };
 
-/** numbered as in the paper (there is no affiliation 8) */
+/** numbered as in the paper; 8, unused in the 10-25 version, is Kaipeng Zhang's Shanghai Innovation Institute (updated by the authors) */
 export const AFFILIATIONS: { n: number; name: string }[] = [
   { n: 1, name: 'InfRec' },
   { n: 2, name: 'Xidian University' },
@@ -49,6 +49,7 @@ export const AFFILIATIONS: { n: number; name: string }[] = [
   { n: 5, name: 'University of California, Berkeley' },
   { n: 6, name: 'The Chinese University of Hong Kong' },
   { n: 7, name: 'The Hong Kong University of Science and Technology' },
+  { n: 8, name: 'Shanghai Innovation Institute' },
   { n: 9, name: 'The University of Hong Kong' },
 ];
 
@@ -79,7 +80,7 @@ export const AUTHORS: { group: string; people: Author[] }[] = [
       { name: 'Zhenglin Wan', aff: [4] },
       { name: 'Hongzhan Lin', aff: [4] },
       { name: 'Wangbo Zhao', aff: [7] },
-      { name: 'Kaipeng Zhang', aff: [1] },
+      { name: 'Kaipeng Zhang', aff: [8] },
     ],
   },
   {
