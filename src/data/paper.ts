@@ -87,7 +87,7 @@ export const AUTHORS: { group: string; people: Author[] }[] = [
     group: 'Corresponding authors',
     people: [
       { name: 'Pengfei Zhou', aff: [1, 4] },
-      { name: 'Odin Zhang', aff: [5] },
+      { name: 'Odin Zhang', aff: [6] },
       { name: 'Yang You', aff: [4] },
     ],
   },
