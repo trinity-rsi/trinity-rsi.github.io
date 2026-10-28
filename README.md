@@ -3,6 +3,7 @@
 Project page for **The Trinity: Capability-Driven Recursive Self-Improvement for Multimodal Agents** (technical report, October 2026).
 
 - Live page: https://trinity-rsi.github.io/
+- Code: https://github.com/InfRec-Cardinal/The-Trinity
 - Film (1:46, 1080p60, narrated in English): [MP4](https://trinity-rsi.github.io/film/the-trinity-en.mp4) · [subtitles in English and Chinese](https://trinity-rsi.github.io/film/the-trinity-en-zh.vtt)
 
 React 19 + Vite + Tailwind CSS v4, with effects and components from [React Bits](https://reactbits.dev).

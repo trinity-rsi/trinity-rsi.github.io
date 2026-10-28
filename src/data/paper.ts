@@ -3,7 +3,7 @@
  */
 export const LINKS = {
   paper: '', // e.g. https://arxiv.org/abs/xxxx.xxxxx  (empty = button shows "coming soon")
-  code: '', // e.g. https://github.com/<org>/the-trinity
+  code: 'https://github.com/InfRec-Cardinal/The-Trinity',
   huggingface: '', // e.g. https://huggingface.co/<org>
 };
 

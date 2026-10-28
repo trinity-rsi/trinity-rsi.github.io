@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Icon from '@/components/ui/Icon';
 import CountUp from '@/components/reactbits/CountUp/CountUp';
-import { Pdf02Icon, PlayIcon, QuoteDownIcon } from '@hugeicons/core-free-icons';
+import { Github01Icon, Pdf02Icon, PlayIcon, QuoteDownIcon } from '@hugeicons/core-free-icons';
 import { LINKS, PAPER } from '@/data/paper';
 import { HEADLINE } from '@/data/results';
 import { FILM, fmtTime, playFilm } from '@/data/film';
@@ -94,7 +94,7 @@ export default function PHero() {
             <span className="flex-1 text-[16.5px] font-[740] tracking-[-0.01em]">Watch the film</span>
             <span className="tabular text-[14px] font-[650] text-white/80">{fmtTime(FILM.duration)}</span>
           </button>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className={`grid gap-2.5 ${LINKS.code ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <a
               href={LINKS.paper || '#top'}
               target={LINKS.paper ? '_blank' : undefined}
@@ -108,9 +108,15 @@ export default function PHero() {
               className="p-press flex h-12 items-center justify-center gap-2 rounded-full border border-rule bg-surface text-[14.5px] font-[700] text-ink"
             >
               <Icon icon={Pdf02Icon} size={17} stroke={1.9} />
-              {LINKS.paper ? 'Read the paper' : 'Read the abstract'}
+              {LINKS.paper ? 'Paper' : 'Abstract'}
             </a>
             <AbstractSheet open={abstract} onClose={closeAbstract} />
+            {LINKS.code && (
+              <a href={LINKS.code} target="_blank" rel="noreferrer" className="p-press flex h-12 items-center justify-center gap-2 rounded-full border border-rule bg-surface text-[14.5px] font-[700] text-ink">
+                <Icon icon={Github01Icon} size={17} stroke={1.9} />
+                Code
+              </a>
+            )}
             <button type="button" onClick={() => goTo('cite')} className="p-press flex h-12 items-center justify-center gap-2 rounded-full border border-rule bg-surface text-[14.5px] font-[700] text-ink">
               <Icon icon={QuoteDownIcon} size={17} stroke={1.9} />
               Cite

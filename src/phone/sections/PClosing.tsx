@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/Icon';
-import { ArrowUp02Icon, Cancel01Icon, ComputerIcon, Copy01Icon, CopyCheckIcon } from '@hugeicons/core-free-icons';
-import { AFFILIATIONS, AUTHORS, BIBTEX, PAPER } from '@/data/paper';
+import { ArrowUp02Icon, Cancel01Icon, ComputerIcon, Copy01Icon, CopyCheckIcon, Github01Icon } from '@hugeicons/core-free-icons';
+import { AFFILIATIONS, AUTHORS, BIBTEX, LINKS, PAPER } from '@/data/paper';
 import { useTokens } from '@/theme/tokens';
 import { Opener } from '../ui/Opener';
 import More from '../ui/More';
@@ -140,6 +140,12 @@ export function PFooter() {
           <Icon icon={ArrowUp02Icon} size={16} stroke={1.9} />
           Back to the top
         </button>
+        {LINKS.code && (
+          <a href={LINKS.code} target="_blank" rel="noreferrer" className="p-press inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
+            <Icon icon={Github01Icon} size={16} stroke={1.9} />
+            Code
+          </a>
+        )}
         <button type="button" onClick={() => switchView('desktop')} className="p-press inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
           <Icon icon={ComputerIcon} size={16} stroke={1.9} />
           Desktop layout
