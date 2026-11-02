@@ -15,8 +15,8 @@ import Seg from '../ui/Seg';
 
 /**
  * Embodied Real2Sim2Real on a phone (Section 4.6, Appendix E.3): one robot at a time. The paper's
- * recorded frames play in order (the real-robot trial of Figure 7, or the Base and evolved runs of
- * Figures 69–72), with the choices under the picture rather than over it; the scores (Table 6) are
+ * recorded frames play in order (the real-robot trial of Figure 8, or the Base and evolved runs of
+ * Figures 70–73), with the choices under the picture rather than over it; the scores (Table 6) are
  * brick towers, ten points a brick, coloured by the iteration that earned them.
  */
 type T = (typeof TASKS)[number];
@@ -78,7 +78,7 @@ function Replay({ task, mode, setMode }: { task: T; mode: Mode; setMode: (m: Mod
               <p className="truncate text-[14px] font-[760] text-white">{label}</p>
               <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11.5px] font-[620] text-white/80">
                 <Icon icon={good ? CheckmarkCircle02Icon : Cancel01Icon} size={13} stroke={2.2} color={good ? '#5fe08a' : '#ff8a8a'} />
-                {mode === 'trial' ? `Real-robot trial, Figure 7` : `${mode === 'h0' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}, Figure ${task.figs[mode]}`}
+                {mode === 'trial' ? `Real-robot trial, Figure 8` : `${mode === 'h0' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}, Figure ${task.figs[mode]}`}
               </p>
             </div>
             <button type="button" onClick={() => setPlaying((v) => !v)} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/90 text-[#12141c] shadow" aria-label={playing ? 'Pause' : 'Play'}>

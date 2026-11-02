@@ -10,7 +10,7 @@ import { Opener } from '../ui/Opener';
 /**
  * Shared capabilities, on a phone: eight pairs of tasks from different domains. For the pair in
  * front, both start frames, then the six capabilities as rows, each task's key filled when it
- * requires that capability (its capability-tree branch, Figures 9 and 10); the rows both need light
+ * requires that capability (its capability-tree branch, Figures 10 and 11); the rows both need light
  * up. Pairs move on by themselves while the card is in view; a tap on the row of pairs or a swipe
  * on the card takes over.
  */
@@ -233,7 +233,7 @@ export default function PExamples() {
           </div>
         </div>
         <p className="mt-3 px-5 text-[12px] leading-snug text-ink-3">
-          A task requires the capabilities on its capability-tree branch (Figures 9 and 10). Frames from Appendix E.1; * marks a rebuilt environment.
+          A task requires the capabilities on its capability-tree branch (Figures 10 and 11). Frames from Appendix E.1; * marks a rebuilt environment.
         </p>
       </div>
     </section>

@@ -12,7 +12,7 @@ const round2 = (x: number) => Math.round(x * 100) / 100;
 export const ITERS = [0, 1, 2, 3, 4] as const;
 
 /**
- * Benchmark-equal means, Base to iteration 4 (Table 8). Figure 5 plots Train over all 28 settings and
+ * Benchmark-equal means, Base to iteration 4 (Table 8). Figure 6 plots Train over all 28 settings and
  * Unseen over the 16 non-robot benchmarks, the ones Codex and DeepSeek also ran; the headline counts
  * all 18 unseen settings, the two real robots included.
  */
@@ -116,7 +116,7 @@ export const TABLE6 = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Figure 6: capability–protocol correlations at iteration 4           */
+/* Figure 7: capability–protocol correlations at iteration 4           */
 /* ------------------------------------------------------------------ */
 export const FIG6_COLS: ProtocolId[] = ['per', 'mem', 'inf', 'plan', 'orch', 'loop'];
 export const FIG6_ROWS: CapId[] = ['a', 'b', 'c', 'd', 'e', 'f'];
@@ -161,7 +161,7 @@ export const FINDINGS = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Creator's shared library, its Base Harness (Appendix C.2, Figure 12) */
+/* Creator's shared library, its Base Harness (Appendix C.2, Figure 13) */
 /* ------------------------------------------------------------------ */
 export type LibFamily = 'visual' | 'evidence' | 'difficulty' | 'budget' | 'impl' | 'schema';
 export const LIB_FAMILIES: { id: LibFamily; name: string; color: string }[] = [

@@ -8,7 +8,7 @@ import { easeInOut, easeOutBack, seg, useLoopClock } from '@/lib/anim';
 
 /**
  * Creator's RSI over one iteration (Section 3.5 "Creator Base Harness update", Appendix C.2,
- * Figure 12). Creator follows Explorer along the same capability tree, top-down: the root's
+ * Figure 13). Creator follows Explorer along the same capability tree, top-down: the root's
  * children start from its Base Harness and every other node inherits its parent's updated
  * modules. The proposals the nodes make are pooled at the end of the iteration with the Base
  * Harness modules and consolidated into the next Base Harness, the shared library: in iteration 1

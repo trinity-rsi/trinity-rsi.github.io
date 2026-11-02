@@ -1,9 +1,9 @@
 /**
  * Task tree, capability tree and Harness tree, exactly as in the paper (2026-10-25 version):
- *   - benchmarks, domains and the 15 task families: Appendix A, Table 1, Figure 8;
- *   - the six capabilities and each benchmark's node: Appendix B, Figures 9 and 10;
+ *   - benchmarks, domains and the 15 task families: Appendix A, Table 1, Figure 9;
+ *   - the six capabilities and each benchmark's node: Appendix B, Figures 10 and 11;
  *   - the eleven node Harnesses, modules M01–M29 and what each node learned in iterations 1–4:
- *     Appendix C.1, Figure 11 and the node figures of Appendix E.2;
+ *     Appendix C.1, Figure 12 and the node figures of Appendix E.2;
  *   - every score: Table 8 (Appendix D).
  * Edit this file to update every visualization on the page at once.
  */
@@ -46,7 +46,7 @@ import {
 export type IconSvg = typeof Chess01Icon;
 
 /* ------------------------------------------------------------------ */
-/* Task domains (Table 1) and task families (Figure 8)                 */
+/* Task domains (Table 1) and task families (Figure 9)                 */
 /* ------------------------------------------------------------------ */
 export type DomainId = 'rule' | 'constraint' | 'percep' | 'multi' | 'long';
 
@@ -257,7 +257,7 @@ export type CapNode = {
   /** capability path from the root, in the fixed order */
   path: CapId[];
   parent: NodeId | null;
-  /** the node Harness's name (Figure 11, Appendix E.2) */
+  /** the node Harness's name (Figure 12, Appendix E.2) */
   name: string;
   /** modules the node owns (local); descendants inherit them */
   local: string[];
@@ -267,14 +267,14 @@ export type CapNode = {
 
 const ev = (...xs: string[]): NodeEvent[] => xs.map((x) => (x.startsWith('+') ? { kind: 'new', module: x.slice(1) } : { kind: 'revised', module: x }));
 
-/** root first, then a depth-first walk in the order of Figure 10 (left to right) */
+/** root first, then a depth-first walk in the order of Figure 11 (left to right) */
 export const NODES: CapNode[] = [
   { id: 'root', path: [], parent: null, name: 'Base Harness', local: [], events: [] },
   { id: 'c', path: ['c'], parent: 'root', name: 'Gate Planning & Reachability', local: ['M07', 'M08'], events: ev('+M07', 'M07', '+M08', 'M07') },
   { id: 'cd', path: ['c', 'd'], parent: 'c', name: 'Value & Goal Commitment', local: ['M12', 'M13', 'M14'], events: ev('+M12', '+M13', '+M14', 'M14') },
   { id: 'cda', path: ['c', 'd', 'a'], parent: 'cd', name: 'Execution & Revision Memory', local: ['M15', 'M16'], events: ev('+M15', 'M15', '+M16', 'M15') },
   { id: 'ca', path: ['c', 'a'], parent: 'c', name: 'Identity, Order & Memory', local: ['M09', 'M10', 'M11'], events: ev('+M10', '+M09', '+M11', 'M09') },
-  // M29 sits at d in the iteration-4 tree (Figure 11); the node's level record (Figure 61) has no event for it
+  // M29 sits at d in the iteration-4 tree (Figure 12); the node's level record (Figure 62) has no event for it
   { id: 'd', path: ['d'], parent: 'root', name: 'Evidence-Gated Commitment', local: ['M17', 'M18', 'M29'], events: ev('+M17', 'M17', '+M18', 'M17') },
   { id: 'da', path: ['d', 'a'], parent: 'd', name: 'Exploration & Routing', local: ['M19', 'M20', 'M21'], events: ev('+M19', '+M20', '+M21', 'M19') },
   { id: 'db', path: ['d', 'b'], parent: 'd', name: 'Hypothesis Tracking & Probing', local: ['M22', 'M23'], events: ev('+M22', '+M23', 'M22', 'M22') },
@@ -449,7 +449,7 @@ export const BENCHES: Bench[] = [
 
 export const benchById = Object.fromEntries(BENCHES.map((b) => [b.id, b])) as Record<string, Bench>;
 export const benchesOfNode = (id: NodeId) => BENCHES.filter((b) => b.node === id);
-/** benches whose capability set contains every capability on the node's path (the flat tree, Figure 9) */
+/** benches whose capability set contains every capability on the node's path (the flat tree, Figure 10) */
 export const benchesNeeding = (cap: CapId) => BENCHES.filter((b) => nodeById[b.node].path.includes(cap));
 
 /**

@@ -15,7 +15,7 @@ import PBars from '../ui/PBars';
 /**
  * The Router on a phone (Section 3.6): one unseen task goes through the context–action–feedback
  * loop, five steps on a rail, the step in front as one card. Illustrative walk-through: the committed Harness is the branch
- * the task's capabilities point to (Figure 10), the retrieved records are training tasks on the
+ * the task's capabilities point to (Figure 11), the retrieved records are training tasks on the
  * same branch, the scores are Table 8. Then Table 4 and Finding 3.
  */
 type Nid = Exclude<NodeId, 'root'>;
@@ -248,7 +248,7 @@ function Walkthrough() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <p className="mt-3 text-[11.5px] leading-snug text-ink-3">{reduce || paused ? 'Tap a step to see it. ' : ''}Illustrative walk-through: the committed branch is the one Figure 10 assigns; scores are Table 8.</p>
+        <p className="mt-3 text-[11.5px] leading-snug text-ink-3">{reduce || paused ? 'Tap a step to see it. ' : ''}Illustrative walk-through: the committed branch is the one Figure 11 assigns; scores are Table 8.</p>
       </div>
     </div>
   );

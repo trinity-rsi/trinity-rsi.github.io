@@ -16,9 +16,9 @@ import Seg from '../ui/Seg';
 /**
  * Stage 3 on a phone. (a) Explorer's Harness tree over iterations 1–4, drawn top-down like the
  * capability tree: one row per node, its module bricks to the right (inherited ones outlined),
- * the node being trained lit, and the node in focus spelled out underneath (Figure 11, Appendix
+ * the node being trained lit, and the node in focus spelled out underneath (Figure 12, Appendix
  * E.2, Table 8). (b) Creator's pass over the same tree and the merge into the next Base Harness
- * (Appendix C.2, Figure 12).
+ * (Appendix C.2, Figure 13).
  */
 type Nid = Exclude<NodeId, 'root'>;
 const ROWS = CAP_NODES.map((n) => n.id as Nid);
@@ -423,7 +423,7 @@ function HarnessTree() {
           )}
           {tab === 'mods' && cur.done && undated(focus).length > 0 && (
             <p className="mt-2 text-[11.5px] leading-snug text-ink-3">
-              {undated(focus).join(', ')} {undated(focus).length > 1 ? 'are' : 'is'} in the iteration-4 tree (Figure 11) without a recorded event.
+              {undated(focus).join(', ')} {undated(focus).length > 1 ? 'are' : 'is'} in the iteration-4 tree (Figure 12) without a recorded event.
             </p>
           )}
         </div>

@@ -3,7 +3,7 @@ import { MEANS } from '@/data/results';
 import { useTokens } from '@/theme/tokens';
 import { useReducedMotion } from '@/lib/hooks';
 
-/** Figure 5: RSI mean performance across benchmarks; horizontal lines are the Unseen reference means. */
+/** Figure 6: RSI mean performance across benchmarks; horizontal lines are the Unseen reference means. */
 function Panel({ title, series, lo, hi, refs }: { title: string; series: { label: string; vals: number[]; color: string; dashed?: boolean }[]; lo: number; hi: number; refs?: { label: string; v: number }[] }) {
   const { t } = useTokens();
   const reduce = useReducedMotion();

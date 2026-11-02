@@ -5,7 +5,7 @@ import { useTokens } from '@/theme/tokens';
 import { useReducedMotion } from '@/lib/hooks';
 
 /**
- * Figure 5, to be read with the pointer: Train and Unseen side by side, one cursor across both.
+ * Figure 6, to be read with the pointer: Train and Unseen side by side, one cursor across both.
  * Moving over either chart picks the iteration; the means and their gains over H0 are read out
  * underneath. Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks.
  * The panel is shared with Table 6 (the robots), which reads whole percentages.
@@ -29,7 +29,7 @@ export function ScrubPanel({
   it,
   setIt,
   seen,
-  label = `${title}: mean performance across iterations (Figure 5)`,
+  label = `${title}: mean performance across iterations (Figure 6)`,
 }: {
   title: string;
   sub?: string;

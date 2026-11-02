@@ -18,8 +18,8 @@ import { useNearViewport, useReducedMotion } from '@/lib/hooks';
 /**
  * Section 4.6 and Appendix E.3, embodied Real2Sim2Real. Both robot tasks sit at node d → a and use
  * the Harnesses evolved there; five trial-and-error episodes in the rebuilt simulator become skills,
- * frozen for the formal tests (Figure 7). Each card plays the paper's recorded frames in order: the
- * real-robot trial of Figure 7, and the Base and evolved runs of Figures 69–72, real robot or
+ * frozen for the formal tests (Figure 8). Each card plays the paper's recorded frames in order: the
+ * real-robot trial of Figure 8, and the Base and evolved runs of Figures 70–73, real robot or
  * simulation, from either camera. The scores are Table 6, as brick towers, ten points a brick, each
  * brick coloured by the iteration that earned it.
  */
@@ -35,7 +35,7 @@ export const TASKS: {
   h4: string;
   steps: string[];
   cams: { id: 'office' | 'head' | 'wrist'; label: string }[];
-  figs: { h0: 69 | 71; h4: 70 | 72 };
+  figs: { h0: 70 | 72; h4: 71 | 73 };
 }[] = [
   {
     id: 'soon',
@@ -50,7 +50,7 @@ export const TASKS: {
       { id: 'office', label: 'Office camera' },
       { id: 'head', label: 'Head camera' },
     ],
-    figs: { h0: 69, h4: 70 },
+    figs: { h0: 70, h4: 71 },
   },
   {
     id: 'capx',
@@ -65,18 +65,18 @@ export const TASKS: {
       { id: 'head', label: 'Head camera' },
       { id: 'wrist', label: 'Wrist camera' },
     ],
-    figs: { h0: 71, h4: 72 },
+    figs: { h0: 72, h4: 73 },
   },
 ];
 
-const FIG_SIZE: Record<number, [number, number]> = { 69: [1600, 741], 70: [1600, 741], 71: [1400, 984], 72: [1400, 984] };
+const FIG_SIZE: Record<number, [number, number]> = { 70: [1600, 741], 71: [1600, 741], 72: [1400, 984], 73: [1400, 984] };
 const CAPTION: Record<number, string> = {
-  69: 'Figure 69: SOON with the Base Harness. Rows show simulation and real-robot views from the fixed office camera, followed by the head camera. Faces of people in the real scenes are pixelated.',
-  70: 'Figure 70: SOON with the evolved Harness. Rows follow Figure 69. Faces of people in the real scenes are pixelated.',
-  71: 'Figure 71: CaP-X with the Base Harness. Rows show head, side and wrist cameras in simulation, followed by the real robot.',
-  72: 'Figure 72: CaP-X with the evolved Harness. Rows follow Figure 71.',
+  70: 'Figure 70: SOON with the Base Harness. Rows show simulation and real-robot views from the fixed office camera, followed by the head camera. Faces of people in the real scenes are pixelated.',
+  71: 'Figure 71: SOON with the evolved Harness. Rows follow Figure 70. Faces of people in the real scenes are pixelated.',
+  72: 'Figure 72: CaP-X with the Base Harness. Rows show head, side, and wrist cameras in simulation, followed by the real robot.',
+  73: 'Figure 73: CaP-X with the evolved Harness. Rows follow Figure 72.',
 };
-export const figOf = (n: 69 | 70 | 71 | 72): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n], thumb: figThumb(`fig${n}`) });
+export const figOf = (n: 70 | 71 | 72 | 73): PaperFig => ({ n, src: embodied(n), w: FIG_SIZE[n][0], h: FIG_SIZE[n][1], caption: CAPTION[n], thumb: figThumb(`fig${n}`) });
 
 export const STEP_MS = 1150;
 
@@ -202,7 +202,7 @@ function Replay({ task, mode, setMode }: { task: (typeof TASKS)[number]; mode: M
     mode === 'trial'
       ? `${k + 1}. ${task.steps[k]}`
       : `${real ? 'Real robot' : 'Simulation'} · ${task.cams.find((c) => c.id === cam)!.label.toLowerCase()} · frame ${k + 1} of 6`;
-  const source = mode === 'trial' ? `Real-robot trial, Figure 7 (${task.id === 'soon' ? 'SOON E01' : 'CaP-X C-01'})` : `${mode === 'h0' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}, Figure ${task.figs[mode]}`;
+  const source = mode === 'trial' ? `Real-robot trial, Figure 8 (${task.id === 'soon' ? 'SOON E01' : 'CaP-X C-01'})` : `${mode === 'h0' ? 'Base Harness H₀' : 'Evolved Harness H(4)'}, Figure ${task.figs[mode]}`;
   const good = mode === 'h4' || mode === 'trial';
 
   return (
@@ -362,7 +362,7 @@ function RobotCard({ task, i }: { task: (typeof TASKS)[number]; i: number }) {
   );
 }
 
-/** Figure 7's three steps: real site → simulation → real test */
+/** Figure 8's three steps: real site → simulation → real test */
 function Flow() {
   const { t } = useTokens();
   const steps = [

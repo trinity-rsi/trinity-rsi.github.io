@@ -29,7 +29,7 @@ The single-file build links to the published film instead of embedding it.
 | --- | --- |
 | `src/data/paper.ts` | title, authors, affiliations, abstract, BibTeX, the arXiv identifier, and the Paper / Code / Hugging Face links (`LINKS`; Hugging Face still empty) |
 | `src/data/tree.ts` | the 44 benchmarks, 5 domains and 15 task families, the six capabilities and eleven nodes, modules M01–M28 and every score (Appendix A–D, Table 7) |
-| `src/data/results.ts` | Figures 4 and 6, Tables 2–5 and the paper's findings |
+| `src/data/results.ts` | Figures 5 and 7, Tables 2–5 and the paper's findings |
 | `src/data/media.ts` | frames and figures taken from the paper (`src/assets/paper/`) |
 | `src/data/film.ts`, `src/data/film-cues.json` | the film's files, posters, chapters and subtitles (`public/film/`, `src/assets/film/`) |
 | `src/sections/` | the page, section by section, in the order of the paper |

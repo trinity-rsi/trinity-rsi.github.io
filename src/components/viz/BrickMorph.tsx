@@ -6,7 +6,7 @@ import { useLegoPalette } from './Lego';
 import exploreCat from '@/assets/cats/explorer-explore.webp';
 
 /**
- * Task tree → capability tree, in bricks (Appendix A → B: Figure 8 → Figure 10).
+ * Task tree → capability tree, in bricks (Appendix A → B: Figure 9 → Figure 11).
  * The stage is a float in [0, 4], driven by the page (scroll on wide screens, the step buttons on
  * phones) through a signal, and eased here so the bricks glide instead of following each wheel step:
  *   0–1  task tree: 44 benchmarks on 15 task-family plates, under 5 domains
@@ -138,7 +138,7 @@ function buildLayout() {
   const taskPos: Record<string, { x: number; y: number }> = {};
   taskPlates.forEach((p) => Object.assign(taskPos, brickSlots(p)));
 
-  /* ---------- capability tree: Figure 10 arrangement */
+  /* ---------- capability tree: Figure 11 arrangement */
   const COLS: Partial<Record<NodeId, number>> = { c: 3, d: 3, ca: 3, da: 2, e: 1, ef: 1 };
   const ANCHOR: Record<Exclude<NodeId, 'root'>, { x: number; y: number }> = {
     c: { x: 175, y: 566 },

@@ -5,7 +5,7 @@ import { useTokens } from '@/theme/tokens';
 import { useReducedMotion } from '@/lib/hooks';
 
 /**
- * Figure 4 for phones, where the radial charts' labels would be too small to read: the same
+ * Figure 5 for phones, where the radial charts' labels would be too small to read: the same
  * scores (Table 8) as a ranked list, Base to iteration 4, one split at a time.
  */
 export default function GainList({ train, unseen }: { train: Setting[]; unseen: Setting[] }) {

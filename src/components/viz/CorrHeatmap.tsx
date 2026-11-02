@@ -5,7 +5,7 @@ import { capById, protocolById } from '@/data/tree';
 import { useTokens } from '@/theme/tokens';
 import { useMediaQuery, useReducedMotion } from '@/lib/hooks';
 
-/** Figure 6: capability–protocol correlations of the 29 modules at iteration 4 (red positive, blue negative). */
+/** Figure 7: capability–protocol correlations of the 29 modules at iteration 4 (red positive, blue negative). */
 export default function CorrHeatmap() {
   const { t, theme } = useTokens();
   const reduce = useReducedMotion();

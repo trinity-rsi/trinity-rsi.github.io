@@ -10,7 +10,7 @@ import { Brick, BrickDefs, Plate } from './Bricks';
 import { LockIcon, NextIcon, PauseIcon, PlayIcon, RepeatIcon } from '@hugeicons/core-free-icons';
 
 /**
- * Explorer's Harness tree evolving over iterations 1–4 (Section 3.5, Figure 11, Appendix E.2).
+ * Explorer's Harness tree evolving over iterations 1–4 (Section 3.5, Figure 12, Appendix E.2).
  * Each iteration is one top-down pass over the fixed tree. At every node Creator's level is played,
  * the failing run turns into one module event (a new module or a revision, exactly as recorded in
  * Appendix E.2), and the next run solves the level. Children show their parent's modules as
@@ -256,7 +256,7 @@ export default function HarnessTreeViz() {
         const childSeen = mine || cur.done || cur.it > 1 || ORDER.indexOf(id) < cur.k || (ORDER.indexOf(id) === cur.k && cur.phase > 0.15);
         if (!childSeen) continue;
         anc.local.forEach((m) => {
-          // a module without a recorded event (M29) appears with the iteration-4 tree (Figure 11)
+          // a module without a recorded event (M29) appears with the iteration-4 tree (Figure 12)
           if (!st.has(m)) {
             if (cur.done && !anc.events.some((e) => e.module === m)) list.push({ id: m, inherited: !mine, rev: 0, fresh: 0 });
             return;
@@ -354,7 +354,7 @@ export default function HarnessTreeViz() {
                   type="button"
                   onClick={() => {
                     setPlaying(false);
-                    // iteration 4 ends in the finished tree of Figure 11
+                    // iteration 4 ends in the finished tree of Figure 12
                     seek(i === 4 ? TOTAL : i * ITER_T - 0.001);
                   }}
                   className={`h-8 flex-1 rounded-full px-3 text-[12.5px] font-[700] transition-colors sm:flex-none ${i === cur.it && !cur.done ? 'bg-accent text-white' : i <= iterShown ? 'bg-accent-wash text-accent-ink' : 'bg-paper-2 text-ink-3'}`}
@@ -594,7 +594,7 @@ export default function HarnessTreeViz() {
                           <span className="grid h-[16px] shrink-0 place-items-center rounded-[5px] px-1.5 text-[10px] font-[800] text-white" style={{ background: t.caps[moduleById[u].cap] }}>
                             {u}
                           </span>
-                          <span className="truncate">also in the iteration-4 tree (Fig. 11), no recorded event</span>
+                          <span className="truncate">also in the iteration-4 tree (Fig. 12), no recorded event</span>
                         </p>
                       ))}
                   </div>
@@ -697,7 +697,7 @@ export default function HarnessTreeViz() {
           </ol>
           {undated(focus).length > 0 && (
             <p className="mt-3 text-[12px] leading-snug text-ink-3">
-              {undated(focus).join(', ')} {undated(focus).length > 1 ? 'are' : 'is'} in the iteration-4 tree (Figure 11) without a recorded event.
+              {undated(focus).join(', ')} {undated(focus).length > 1 ? 'are' : 'is'} in the iteration-4 tree (Figure 12) without a recorded event.
             </p>
           )}
           {fn.parent !== 'root' && (

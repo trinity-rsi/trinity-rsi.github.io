@@ -43,7 +43,7 @@ export default function TrinitySection() {
           </div>
           <div>
             <p className="font-serif text-[1.08rem] leading-[1.6] text-ink-2">World generation and Harness evolution, coupled in one loop. Every update enters only after host verification.</p>
-            <PaperFigure fig={PAPER_FIGS.overview} className="mt-4" label="Overview: Figure 2 in the paper" />
+            <PaperFigure fig={PAPER_FIGS.overview} className="mt-4" label="Pipeline: Figure 2 in the paper" />
           </div>
         </div>
 

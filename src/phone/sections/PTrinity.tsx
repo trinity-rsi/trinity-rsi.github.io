@@ -73,7 +73,7 @@ export default function PTrinity() {
         ))}
       </ol>
       <div className="mt-4 px-5">
-        <PaperFigure fig={PAPER_FIGS.overview} label="Overview: Figure 2 in the paper" />
+        <PaperFigure fig={PAPER_FIGS.overview} label="Pipeline: Figure 2 in the paper" />
       </div>
     </section>
   );

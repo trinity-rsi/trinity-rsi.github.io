@@ -13,7 +13,7 @@ import { CheckmarkBadge01Icon, Database02Icon, DatabaseAddIcon, FileSearchIcon, 
  *   ① read the public task information → ② retrieve verified experience → ③ commit one Harness
  *   → ④ execute and verify → ⑤ append the verified record to memory.
  * Illustrative walk-through: the committed Harness is the branch the task's capabilities point
- * to (Figure 10); retrieved records are training tasks on the same branch; scores are Table 8,
+ * to (Figure 11); retrieved records are training tasks on the same branch; scores are Table 8,
  * whose H(4) column is played with the Harness the Router selects.
  */
 const STEPS = [

@@ -18,7 +18,7 @@ import { useMediaQuery } from '@/lib/hooks';
 /**
  * Results, told finding by finding. Each finding of the paper is a row: its claim, the one or two
  * numbers that carry it and a folded explanation on one side, the figure or table on the other,
- * sides alternating down the page. Figure 4 (every benchmark) runs the full width between them.
+ * sides alternating down the page. Figure 5 (every benchmark) runs the full width between them.
  */
 
 /** big numbers with what they are */
@@ -63,13 +63,13 @@ export default function ResultsSection() {
             <p className="font-serif text-[1.06rem] leading-[1.6] text-ink-2">
               {HEADLINE.trainCount} training and {HEADLINE.unseenCount} unseen benchmarks, two real robots among the unseen; the same Base Harness H₀ and a frozen Claude Opus 5 throughout.
             </p>
-            <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s summary" className="mt-4" />
+            <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s overview" className="mt-4" />
           </div>
         </div>
 
         {/* Finding 2: RSI keeps improving */}
         <div className="mt-16 grid items-center gap-x-14 gap-y-8 sm:mt-20 xl:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
-          <Claim tag={`Figure 5 · Finding ${f2.n}`} title={f2.title} note={f2.text}>
+          <Claim tag={`Figure 6 · Finding ${f2.n}`} title={f2.title} note={f2.text}>
             The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points. Move across the charts to read each iteration.
           </Claim>
           <Reveal>
@@ -77,11 +77,11 @@ export default function ResultsSection() {
           </Reveal>
         </div>
 
-        {/* Figure 4: every benchmark */}
+        {/* Figure 5: every benchmark */}
         <Reveal className="figure-frame mt-16 p-5 sm:mt-20 sm:p-7">
           <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3">
             <div>
-              <p className="text-[13px] font-[700] text-accent">Figure 4</p>
+              <p className="text-[13px] font-[700] text-accent">Figure 5</p>
               <h3 className="display-md mt-2 text-[clamp(1.5rem,2.2vw,2rem)] text-ink">Every benchmark, from H₀ to iteration 4</h3>
             </div>
             <div className={`flex-wrap items-center gap-4 text-[12px] text-ink-2 ${phone ? 'hidden' : 'flex'}`}>
@@ -165,11 +165,11 @@ export default function ResultsSection() {
 
         {/* Finding 4: which modules matter */}
         <div className="mt-16 grid items-center gap-x-12 gap-y-8 sm:mt-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] xl:gap-x-14">
-          <Claim tag={`Figure 6 · Table 5 · Finding ${f4.n}`} title={f4.title} note={f4.text} figures={<Interventions />}>
+          <Claim tag={`Figure 7 · Table 5 · Finding ${f4.n}`} title={f4.title} note={f4.text} figures={<Interventions />}>
             Adding one relevant module lifts the Base Harness by 19.39 points, an irrelevant one by 1.02; removing one relevant module from H(4) costs 2.74.
           </Claim>
           <Reveal className="figure-frame p-5 sm:p-6">
-            <p className="mb-4 text-[13px] text-ink-3">Figure 6: capability–protocol correlations of the 29 modules at iteration 4; strongest, HCI–Inference 0.744</p>
+            <p className="mb-4 text-[13px] text-ink-3">Figure 7: capability–protocol correlations of the 29 modules at iteration 4; strongest, HCI–Inference 0.744</p>
             <CorrHeatmap />
           </Reveal>
         </div>

@@ -14,7 +14,7 @@ import Seg from '../ui/Seg';
 import PBars from '../ui/PBars';
 
 /**
- * Results on a phone. Figure 5 leads; the other findings share one card, a tab each. Every block
+ * Results on a phone. Figure 6 leads; the other findings share one card, a tab each. Every block
  * leads with the paper's own finding as its title, then the figure or table, made to be touched:
  * the RSI curves are scrubbed with a finger, the tables switch between scores and token costs, the
  * correlations open on a tap. The finding's full text folds.
@@ -38,7 +38,7 @@ function Block({ tag, title, children, note }: { tag: string; title: string; chi
   );
 }
 
-/** Figure 5, scrubbed: a finger on the chart picks the iteration and reads its means */
+/** Figure 6, scrubbed: a finger on the chart picks the iteration and reads its means */
 function Curves() {
   const { t } = useTokens();
   const reduce = useReducedMotion();
@@ -83,7 +83,7 @@ function Curves() {
         <p className="text-right text-[11.5px] leading-tight text-ink-3">Drag along the chart</p>
       </div>
       <div className="rounded-[18px] border border-rule bg-surface p-2">
-        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full touch-pan-y" onPointerDown={pick} onPointerMove={(e) => e.buttons && pick(e)} role="img" aria-label="Mean performance across RSI iterations (Figure 5)">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full touch-pan-y" onPointerDown={pick} onPointerMove={(e) => e.buttons && pick(e)} role="img" aria-label="Mean performance across RSI iterations (Figure 6)">
           {ticks.map((v) => (
             <g key={v}>
               <line x1={P.l} x2={W - P.r} y1={y(v)} y2={y(v)} stroke={t.rule} strokeWidth={0.8} />
@@ -144,7 +144,7 @@ function Curves() {
   );
 }
 
-/** Figure 6: tap a cell for its capability, protocol and correlation */
+/** Figure 7: tap a cell for its capability, protocol and correlation */
 function Heat() {
   const { t, theme } = useTokens();
   const [sel, setSel] = useState<{ r: number; c: number }>({ r: 1, c: 2 });
@@ -234,7 +234,7 @@ function Interventions() {
 
 type View = 'org' | 'every' | 'mods' | 'which';
 
-/** the findings after Figure 5, one card: a tab for each */
+/** the findings after Figure 6, one card: a tab for each */
 function Findings() {
   const [f1, , , f4] = FINDINGS;
   const [v, setV] = useState<View>('org');
@@ -266,7 +266,7 @@ function Findings() {
     {
       key: 'every',
       chip: 'Every benchmark',
-      tag: 'Figure 4',
+      tag: 'Figure 5',
       title: 'Every benchmark, from H₀ to iteration 4',
       note: 'Each benchmark keeps its own metric on a 0–100 scale: ALE-Bench percentiles, BALROG progress for NetHack and Crafter, DiG-bench’s levels passed.',
       body: <GainList train={TRAIN_SETTINGS} unseen={UNSEEN_SETTINGS} />,
@@ -294,7 +294,7 @@ function Findings() {
     {
       key: 'which',
       chip: 'Which modules matter',
-      tag: `Figure 6, Table 5, Finding ${f4.n}`,
+      tag: `Figure 7, Table 5, Finding ${f4.n}`,
       title: f4.title,
       note: f4.text,
       body: (
@@ -345,14 +345,14 @@ export default function PResults() {
         <p className="p-lede">All variants start from the same Base Harness H₀ on a frozen Claude Opus 5: 28 training and 18 unseen benchmarks, the two real robots among the unseen.</p>
       </Opener>
 
-      <Block tag={`Figure 5, Finding ${f2.n}`} title={f2.title} note={<>{f2.text} The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points. Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks.</>}>
+      <Block tag={`Figure 6, Finding ${f2.n}`} title={f2.title} note={<>{f2.text} The first iteration brings the largest gain; iterations 2–4 add another 9.4 Train and 6.4 Unseen points. Unseen and its Codex and DeepSeek references cover the 16 non-robot benchmarks.</>}>
         <Curves />
       </Block>
 
       <Findings />
 
       <div className="mt-6 px-5">
-        <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s summary" />
+        <PaperFigure fig={PAPER_FIGS.summary} label="Figure 1: the paper’s overview" />
       </div>
     </section>
   );

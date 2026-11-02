@@ -13,7 +13,7 @@ export default function RouterSection() {
   return (
     <Section id="router" className="pt-24 sm:pt-32">
       <Container wide>
-        <SectionHeader kicker="Capability-aware Harness routing" title="Routing a new task to the right Harness" aside={<PlaceholderNote>Walk-through: the committed branch is the one Figure 10 assigns; scores are Table 8</PlaceholderNote>}>
+        <SectionHeader kicker="Capability-aware Harness routing" title="Routing a new task to the right Harness" aside={<PlaceholderNote>Walk-through: the committed branch is the one Figure 11 assigns; scores are Table 8</PlaceholderNote>}>
           Each evolved Harness specializes in different capabilities. The Router reads public task information and retrieved experience, then commits one Harness from the tree before execution.
         </SectionHeader>
 
