@@ -1,8 +1,11 @@
 /**
- * Paper metadata (2026-10-25 version). Links are empty until the paper / code are public.
+ * Paper metadata: arXiv:2610.36077 (v1, 26 October 2026). Authors and affiliations follow its
+ * Section 8. A link left empty shows its button as "coming soon".
  */
+export const ARXIV = { id: '2610.36077', category: 'cs.AI' } as const;
+
 export const LINKS = {
-  paper: '', // e.g. https://arxiv.org/abs/xxxx.xxxxx  (empty = button shows "coming soon")
+  paper: `https://arxiv.org/abs/${ARXIV.id}`,
   code: 'https://github.com/InfRec-Cardinal/The-Trinity',
   huggingface: '', // e.g. https://huggingface.co/<org>
 };
@@ -40,7 +43,7 @@ export const PAPER = {
   ],
 };
 
-/** numbered as in the paper; 8, unused in the 10-25 version, is Kaipeng Zhang's Shanghai Innovation Institute (updated by the authors) */
+/** numbered as in the paper (arXiv v1, Section 8) */
 export const AFFILIATIONS: { n: number; name: string }[] = [
   { n: 1, name: 'InfRec' },
   { n: 2, name: 'Xidian University' },
@@ -49,8 +52,8 @@ export const AFFILIATIONS: { n: number; name: string }[] = [
   { n: 5, name: 'University of California, Berkeley' },
   { n: 6, name: 'The Chinese University of Hong Kong' },
   { n: 7, name: 'The Hong Kong University of Science and Technology' },
-  { n: 8, name: 'Shanghai Innovation Institute' },
-  { n: 9, name: 'The University of Hong Kong' },
+  { n: 8, name: 'The University of Hong Kong' },
+  { n: 9, name: 'Shanghai Innovation Institute' },
 ];
 
 export type Author = { name: string; aff: number[] };
@@ -76,11 +79,12 @@ export const AUTHORS: { group: string; people: Author[] }[] = [
       { name: 'Haodong Li', aff: [6] },
       { name: 'Zhengbo Jiao', aff: [7] },
       { name: 'Zhiqing Cui', aff: [7] },
-      { name: 'Xinxiang Yin', aff: [9] },
+      { name: 'Xinxiang Yin', aff: [8] },
+      { name: 'Shuo Liang', aff: [1, 4] },
       { name: 'Zhenglin Wan', aff: [4] },
       { name: 'Hongzhan Lin', aff: [4] },
       { name: 'Wangbo Zhao', aff: [7] },
-      { name: 'Kaipeng Zhang', aff: [8] },
+      { name: 'Kaipeng Zhang', aff: [9] },
     ],
   },
   {
@@ -100,11 +104,12 @@ export const BIBTEX = `@article{trinity2026,
              and Wang, Hexin and Chen, Haoyuan and Zhang, Zhengfeiyang
              and Ma, Yixing and Jiang, Zichen and Guo, Ziyu
              and Li, Haodong and Jiao, Zhengbo and Cui, Zhiqing
-             and Yin, Xinxiang and Wan, Zhenglin and Lin, Hongzhan
-             and Zhao, Wangbo and Zhang, Kaipeng and Zhou, Pengfei
-             and Zhang, Odin and You, Yang},
-  journal = {arXiv preprint},
-  year    = {2026}
+             and Yin, Xinxiang and Liang, Shuo and Wan, Zhenglin
+             and Lin, Hongzhan and Zhao, Wangbo and Zhang, Kaipeng
+             and Zhou, Pengfei and Zhang, Odin and You, Yang},
+  journal = {arXiv preprint arXiv:${ARXIV.id}},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/${ARXIV.id}}
 }`;
 
 export const ROLES = [

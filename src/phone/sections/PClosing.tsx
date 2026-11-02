@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/Icon';
-import { ArrowUp02Icon, Cancel01Icon, ComputerIcon, Copy01Icon, CopyCheckIcon, Github01Icon } from '@hugeicons/core-free-icons';
-import { AFFILIATIONS, AUTHORS, BIBTEX, LINKS, PAPER } from '@/data/paper';
+import { ArrowUp02Icon, Cancel01Icon, ComputerIcon, Copy01Icon, CopyCheckIcon, Github01Icon, Pdf02Icon } from '@hugeicons/core-free-icons';
+import { AFFILIATIONS, ARXIV, AUTHORS, BIBTEX, LINKS, PAPER } from '@/data/paper';
 import { useTokens } from '@/theme/tokens';
 import { Opener } from '../ui/Opener';
 import More from '../ui/More';
@@ -119,7 +119,12 @@ export function PTeam() {
             </pre>
           </More>
         </div>
-        <p className="mt-2.5 text-[12.5px] text-ink-3">The entry will be updated with the arXiv identifier once the paper is public.</p>
+        <p className="mt-2.5 text-[12.5px] text-ink-3">
+          <a href={LINKS.paper} target="_blank" rel="noreferrer" className="font-[650] text-ink-2 underline decoration-rule-2 underline-offset-[3px]">
+            arXiv:{ARXIV.id}
+          </a>{' '}
+          [{ARXIV.category}]
+        </p>
       </div>
     </section>
   );
@@ -140,6 +145,12 @@ export function PFooter() {
           <Icon icon={ArrowUp02Icon} size={16} stroke={1.9} />
           Back to the top
         </button>
+        {LINKS.paper && (
+          <a href={LINKS.paper} target="_blank" rel="noreferrer" className="p-press inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
+            <Icon icon={Pdf02Icon} size={16} stroke={1.9} />
+            Paper
+          </a>
+        )}
         {LINKS.code && (
           <a href={LINKS.code} target="_blank" rel="noreferrer" className="p-press inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
             <Icon icon={Github01Icon} size={16} stroke={1.9} />

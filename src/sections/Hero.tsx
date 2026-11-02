@@ -141,7 +141,7 @@ export default function Hero() {
             </p>
 
             <div className="rise-in mt-[clamp(0.9rem,2.6vh,1.5rem)] flex flex-wrap items-center gap-1.5" style={{ animationDelay: '0.52s' }}>
-              {/* the paper itself once it is public; until then the film leads */}
+              {/* the paper leads once it is public (short labels, as in the dock, so the row stays one line); until then the film */}
               {LINKS.paper ? (
                 <>
                   <Magnet padding={50} magnetStrength={4}>
@@ -161,7 +161,7 @@ export default function Hero() {
                       className="inline-flex h-10 items-center gap-1.5 px-3 text-[13.5px] font-[680] xl:px-3.5"
                     >
                       <Icon icon={Pdf02Icon} size={17} />
-                      Read the paper
+                      Paper
                     </StarBorder>
                   </Magnet>
                   <button
@@ -173,7 +173,7 @@ export default function Hero() {
                       {!reduce && <span className="film-ring absolute inset-0 rounded-full" aria-hidden />}
                       <Icon icon={PlayIcon} size={13} stroke={2.6} className="translate-x-[1px]" />
                     </span>
-                    Watch the film
+                    Film
                     <span className="tabular -ml-0.5 text-[12px] font-[600] text-ink-3">{fmtTime(FILM.duration)}</span>
                   </button>
                 </>

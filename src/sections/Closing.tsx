@@ -4,7 +4,7 @@ import ClickSpark from '@/components/reactbits/ClickSpark/ClickSpark';
 import Dock from '@/components/reactbits/Dock/Dock';
 import { Container, Section } from '@/components/ui/Section';
 import Icon from '@/components/ui/Icon';
-import { AFFILIATIONS, AUTHORS, BIBTEX, LINKS, PAPER } from '@/data/paper';
+import { AFFILIATIONS, ARXIV, AUTHORS, BIBTEX, LINKS, PAPER } from '@/data/paper';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useTokens } from '@/theme/tokens';
 import { scrollToId } from '@/lib/hooks';
@@ -109,7 +109,12 @@ export function Cite() {
         <pre className="mt-6 overflow-x-auto rounded-2xl border border-rule bg-surface p-6 font-mono text-[13.5px] leading-[1.7] text-ink-2">
           <code>{BIBTEX}</code>
         </pre>
-        <p className="mt-3 text-[13px] text-ink-3">The entry will be updated with the arXiv identifier once the paper is public.</p>
+        <p className="mt-3 text-[13px] text-ink-3">
+          <a href={LINKS.paper} target="_blank" rel="noreferrer" className="font-[650] text-ink-2 underline decoration-rule-2 underline-offset-[3px] transition-colors hover:text-accent hover:decoration-accent">
+            arXiv:{ARXIV.id}
+          </a>{' '}
+          [{ARXIV.category}]
+        </p>
       </Container>
     </Section>
   );
