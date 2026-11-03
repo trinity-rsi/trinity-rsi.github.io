@@ -7,7 +7,7 @@ export const ARXIV = { id: '2610.36077', category: 'cs.AI' } as const;
 export const LINKS = {
   paper: `https://arxiv.org/abs/${ARXIV.id}`,
   code: 'https://github.com/InfRec-Cardinal/The-Trinity',
-  huggingface: '', // e.g. https://huggingface.co/<org>
+  huggingface: `https://huggingface.co/papers/${ARXIV.id}`, // the paper's page on Hugging Face
 };
 
 export const PAPER = {

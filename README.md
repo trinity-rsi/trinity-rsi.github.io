@@ -3,7 +3,7 @@
 Project page for **The Trinity: Capability-Driven Recursive Self-Improvement for Multimodal Agents** (technical report, October 2026).
 
 - Live page: https://trinity-rsi.github.io/
-- Paper: https://arxiv.org/abs/2610.36077
+- Paper: https://arxiv.org/abs/2610.36077 · Hugging Face: https://huggingface.co/papers/2610.36077
 - Code: https://github.com/InfRec-Cardinal/The-Trinity
 - Film (1:46, 1080p60, narrated in English): [MP4](https://trinity-rsi.github.io/film/the-trinity-en.mp4) · [subtitles in English and Chinese](https://trinity-rsi.github.io/film/the-trinity-en-zh.vtt)
 
@@ -27,7 +27,7 @@ The single-file build links to the published film instead of embedding it.
 
 | Path | Content |
 | --- | --- |
-| `src/data/paper.ts` | title, authors, affiliations, abstract, BibTeX, the arXiv identifier, and the Paper / Code / Hugging Face links (`LINKS`; Hugging Face still empty) |
+| `src/data/paper.ts` | title, authors, affiliations, abstract, BibTeX, the arXiv identifier, and the Paper / Code / Hugging Face links (`LINKS`) |
 | `src/data/tree.ts` | the 44 benchmarks, 5 domains and 15 task families, the six capabilities and eleven nodes, modules M01–M28 and every score (Appendix A–D, Table 7) |
 | `src/data/results.ts` | Figures 5 and 7, Tables 2–5 and the paper's findings |
 | `src/data/media.ts` | frames and figures taken from the paper (`src/assets/paper/`) |

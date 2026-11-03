@@ -157,6 +157,12 @@ export function PFooter() {
             Code
           </a>
         )}
+        {LINKS.huggingface && (
+          <a href={LINKS.huggingface} target="_blank" rel="noreferrer" className="p-press inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
+            <span aria-hidden className="text-[15px] leading-none">🤗</span>
+            Hugging Face
+          </a>
+        )}
         <button type="button" onClick={() => switchView('desktop')} className="p-press inline-flex h-10 items-center gap-2 rounded-full border border-rule bg-surface px-4 text-[13.5px] font-[700] text-ink">
           <Icon icon={ComputerIcon} size={16} stroke={1.9} />
           Desktop layout
